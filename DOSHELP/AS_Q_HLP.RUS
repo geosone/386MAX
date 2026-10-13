@@ -97,6 +97,22 @@
 \par This option shows
 \par \pard the descriptions, addresses and contents of the ROM
 \par \pard BIOS area.
+\par \pard\plain \s3 \f3\fs28\cf6\lang1033 >>Q_Mem_Map
+\par \pard\plain \f3\lang1033 The BIOS memory map shows which address ranges are free memory and which are reserved by the BIOS and by devices.
+\par \pard 
+\par \pard This option shows the INT 15h E820h ranges and the reserved areas below 1 MB.
+\par \pard\plain \s3 \f3\fs28\cf6\lang1033 >>Q_Hdw_PCI
+\par \pard\plain \f3\lang1033 PCI devices are the controllers of the computer: disk, network, video, sound, USB.
+\par \pard 
+\par \pard This option shows each PCI device with its resources and the option ROMs in C0000-EFFFF.
+\par \pard\plain \s3 \f3\fs28\cf6\lang1033 >>Q_Hdw_Firm
+\par \pard\plain \f3\lang1033 The firmware describes the computer in tables.
+\par \pard 
+\par \pard This option shows:
+\par \pard 
+\par \pard  * processor (CPUID)
+\par \pard  * SMBIOS: BIOS, system, memory modules
+\par \pard  * ACPI tables
 \par \pard\plain \s3 \f3\fs28\cf6\lang1033 >>Q_Hdw_Drv
 \par \pard\plain \f3\lang1033 Disk drives allow the computer to permanently store information and to
 \par \pard exchange informa-

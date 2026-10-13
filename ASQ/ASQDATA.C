@@ -227,7 +227,11 @@ userControl:
 				doPrint( &textWin, P_MENU, infoNum, helpNum, FALSE );
 				goto userControl;
 			case KEY_F3:
-				showHelp( infoNum + TUTORIAL_Mem_Sum - 1, FALSE );
+				/* Tutorials exist for the original screens */
+				showHelp( infoNum <= INFO_SNAPSHOT ?
+					infoNum + TUTORIAL_Mem_Sum - 1 :
+					infoNum == INFO_MEM_MAP ?
+					TUTORIAL_Mem_Ext : TUTORIAL_Hdw_BIO, FALSE );
 				goto userControl;
 			case KEY_APGUP:
 			case KEY_APGDN:

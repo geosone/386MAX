@@ -17,3 +17,8 @@ void Hardware_Drives(HANDLE hinfo);
 void Hardware_Ports(HANDLE hinfo);
 void Hardware_BIOS_Detail(HANDLE hinfo);
 void Hardware_CMOS_Detail(HANDLE hinfo);
+
+/* Newer hardware (MODREPT.C) */
+void Memory_BIOS_Map(HANDLE info);
+void Hardware_PCI(HANDLE info);
+void Hardware_Firmware(HANDLE info);

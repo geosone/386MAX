@@ -107,6 +107,9 @@ typedef enum _infonum { 	/* Information code numbers */
 	INFO_HW_BIOS,	/* Hardware_BIOS_Detail */
 	INFO_HW_CMOS,	/* Hardware_CMOS_Detail */
 	INFO_SNAPSHOT,	/* Config_Snapshot */
+	INFO_MEM_MAP,	/* Memory_BIOS_Map */
+	INFO_HW_PCI,	/* Hardware_PCI */
+	INFO_HW_FIRM,	/* Hardware_Firmware */
 	INFO_TOOBIG	/* Off the scale */
 } INFONUM;
 
@@ -167,6 +170,7 @@ typedef enum _evalstate { /* Evaluation states */
 	EVAL_MCA,
 	EVAL_ADF,
 	EVAL_PNP,
+	EVAL_MODERN,	/* PCI, ACPI, SMBIOS, BIOS memory map */
 	EVAL_CDROM,
 	EVAL_DONE,
 	EVAL_TOOBIG	/* Over the edge */

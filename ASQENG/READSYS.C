@@ -62,6 +62,8 @@ static int near scn_DECWORD(WORD *value);
 static int near scn_DECINT(int *value);
 static int near scn_DECDWORD(DWORD *value);
 static int near scn_HEXDWORD(DWORD *value);
+static int near scn_MODERN(RWKEY key);
+static void near assert_EOL(void);
 static int near scn_FARPTR(void far * *value);
 static int near scn_HEXWORDS(WORD *value,WORD nvalue);
 static int near scn_HEXBYTES(BYTE *value,WORD nvalue);
@@ -144,7 +146,7 @@ int sysinfo_read(char *buf,WORD nbuf)
 	sysinfo_purge();
 	SysInfo->flags.readin = TRUE;
 
-#define THISMUCH 16384
+#define THISMUCH 32768
 
 	/* Set up the SysInfo buffer */
 	if (nbuf >= THISMUCH) {
@@ -185,7 +187,11 @@ int sysinfo_read(char *buf,WORD nbuf)
 			}
 		}
 
-		if (!RwKeyword[kk].name) return -1;
+		if (!RwKeyword[kk].name) {
+			/* Unknown keyword (newer ASQ): skip its line */
+			assert_EOL();
+			continue;
+		}
 
 #ifdef DEBUGMSG
 		do_intmsg ("Found keyword %d: key=%x-%s\n", kk, RwKeyword[kk].key, RwKeyword[kk].name);
@@ -481,6 +487,22 @@ int sysinfo_read(char *buf,WORD nbuf)
 			break;
 		case K_PNPDESC:
 			rtn = scn_STRARRAY( &SysInfo->ppszPnPDesc, SysInfo->wNumNodes, MAXPNP_DESC );
+			break;
+		case K_MODFLAGS:
+		case K_E820:
+		case K_E801:
+		case K_CPUID:
+		case K_CPUVENDOR:
+		case K_CPUBRAND:
+		case K_PCIBIOS:
+		case K_PCIDEV:
+		case K_OPTROM:
+		case K_ACPI:
+		case K_ACPITAB:
+		case K_SMBIOS:
+		case K_SMBSTR:
+		case K_SMBMEM:
+			rtn = scn_MODERN(RwKeyword[kk].key);
 			break;
 		case K_END:
 			done++;
@@ -1620,4 +1642,135 @@ static int near ltrnbln (char *s)
 
 }
 
-
+
+/*
+ *	scn_MODERN - one line of newer hardware data (see prt_MODERN)
+ */
+static int near scn_HEXDWORDS(DWORD *v, int n)
+{
+	while (n--)
+		if (scn_HEXDWORD(v++)) return -1;
+	return 0;
+}
+
+static int near scn_MODERN(RWKEY key)
+{
+	MODERNINFO *m = &SysInfo->Modern;
+	DWORD v[19];
+	char s[64];
+	int i;
+
+	switch (key) {
+	case K_MODFLAGS:
+		return scn_HEXWORD(&m->flags);
+	case K_E820: {
+		E820ENT e;
+
+		if (scn_HEXDWORDS(v, 6)) return -1;
+		if (m->nE820 >= MAXE820) break;
+		e.baselo = v[0]; e.basehi = v[1]; e.lenlo = v[2];
+		e.lenhi = v[3]; e.type = v[4]; e.attr = v[5];
+		sysbuf_append(&m->hE820, &e, sizeof(e));
+		m->nE820++;
+		break;
+	}
+	case K_E801:
+		if (scn_HEXWORD(&m->wE801[0]) || scn_HEXWORD(&m->wE801[1])) return -1;
+		break;
+	case K_CPUID:
+		if (scn_HEXDWORDS(v, 7)) return -1;
+		m->dwMaxLeaf = v[0]; m->dwMaxExt = v[1]; m->dwSig = v[2];
+		for (i = 0; i < 4; i++) m->dwFeat[i] = v[3 + i];
+		break;
+	case K_CPUVENDOR:
+		return scn_string(m->szVendor, sizeof(m->szVendor));
+	case K_CPUBRAND:
+		return scn_string(m->szBrand, sizeof(m->szBrand));
+	case K_PCIBIOS:
+		if (scn_HEXWORD(&m->wPciVer) || scn_HEXWORD(&m->wPciLastBus)) return -1;
+		break;
+	case K_PCIDEV: {
+		PCIDEV d;
+
+		if (scn_HEXDWORDS(v, 19)) return -1;
+		if (m->nPci >= MAXPCI) break;
+		d.bus = (BYTE)v[0]; d.devfn = (BYTE)v[1]; d.hdr = (BYTE)v[2];
+		d.rev = (BYTE)v[3]; d.ven = (WORD)v[4]; d.dev = (WORD)v[5];
+		d.subven = (WORD)v[6]; d.subdev = (WORD)v[7]; d.cls = (BYTE)v[8];
+		d.sub = (BYTE)v[9]; d.prog = (BYTE)v[10]; d.irq = (BYTE)v[11];
+		for (i = 0; i < 6; i++) d.bar[i] = v[12 + i];
+		d.rom = v[18];
+		sysbuf_append(&m->hPci, &d, sizeof(d));
+		m->nPci++;
+		break;
+	}
+	case K_OPTROM: {
+		OPTROM o;
+
+		if (scn_HEXDWORDS(v, 6)) return -1;
+		if (m->nOptRom >= MAXOPTROM) break;
+		o.seg = (WORD)v[0]; o.size = (WORD)v[1]; o.ven = (WORD)v[2];
+		o.dev = (WORD)v[3]; o.cls = (BYTE)v[4]; o.sub = (BYTE)v[5];
+		sysbuf_append(&m->hOptRom, &o, sizeof(o));
+		m->nOptRom++;
+		break;
+	}
+	case K_ACPI:
+		if (scn_HEXDWORDS(v, 5)) return -1;
+		m->bAcpiRev = (BYTE)v[0]; m->dwRsdp = v[1]; m->dwRsdt = v[2];
+		m->dwXsdt[0] = v[3]; m->dwXsdt[1] = v[4];
+		return scn_string(m->szAcpiOem, sizeof(m->szAcpiOem));
+	case K_ACPITAB: {
+		ACPITAB t;
+
+		memset(&t, 0, sizeof(t));
+		if (scn_string(s, 5)) return -1;
+		memcpy(t.sig, s, 4);
+		if (scn_HEXDWORDS(v, 2)) return -1;
+		t.len = v[0]; t.rev = (BYTE)v[1];
+		if (scn_string(s, 7)) return -1;
+		memcpy(t.oem, s, 6);
+		if (scn_string(s, 9)) return -1;
+		memcpy(t.oemtab, s, 8);
+		if (scn_HEXDWORD(&t.addr)) return -1;
+		if (m->nAcpi >= MAXACPI) break;
+		sysbuf_append(&m->hAcpi, &t, sizeof(t));
+		m->nAcpi++;
+		break;
+	}
+	case K_SMBIOS:
+		if (scn_HEXWORD(&m->wSmbVer) || scn_HEXDWORD(&m->dwSmbTable) ||
+		    scn_HEXWORD(&m->wSmbLen)) return -1;
+		break;
+	case K_SMBSTR: {
+		WORD item;
+		char rec[66];
+		WORD len;
+
+		if (scn_HEXWORD(&item) || scn_string(s, sizeof(s))) return -1;
+		rec[0] = (char)item;
+		strcpy(rec + 1, s);
+		len = strlen(s) + 2;
+		rec[len] = SMB_END;
+		/* replace the end mark of the previous string */
+		if (m->hSmbStr) SysInfo->buflastn--;
+		sysbuf_append(&m->hSmbStr, rec, len + 1);
+		break;
+	}
+	case K_SMBMEM: {
+		SMBMEM sm;
+		WORD w[3];
+
+		memset(&sm, 0, sizeof(sm));
+		if (scn_string(sm.loc, sizeof(sm.loc))) return -1;
+		for (i = 0; i < 3; i++)
+			if (scn_HEXWORD(&w[i])) return -1;
+		sm.sizemb = w[0]; sm.speed = w[1]; sm.type = (BYTE)w[2];
+		if (m->nSmbMem >= MAXSMBMEM) break;
+		sysbuf_append(&m->hSmbMem, &sm, sizeof(sm));
+		m->nSmbMem++;
+		break;
+	}
+	}
+	return 0;
+}

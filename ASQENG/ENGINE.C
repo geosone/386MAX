@@ -49,7 +49,10 @@ static void (*InfoFunc[INFO_TOOBIG])(HANDLE handle) = {
 	Hardware_Ports, 	/* INFO_HDW_PORTS */
 	Hardware_BIOS_Detail,	/* INFO_HDW_BIOS */
 	Hardware_CMOS_Detail,	/* INFO_HDW_CMOS */
-	Config_Snapshot 	/* INFO_SNAPSHOT */
+	Config_Snapshot,	/* INFO_SNAPSHOT */
+	Memory_BIOS_Map,	/* INFO_MEM_MAP */
+	Hardware_PCI,		/* INFO_HW_PCI */
+	Hardware_Firmware	/* INFO_HW_FIRM */
 };
 
 /* Local functions */

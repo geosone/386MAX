@@ -1012,6 +1012,7 @@ int printAllData( void )
 	&& !printInfo( INFO_MEM_EMS, FALSE )
 	&& !printInfo( INFO_MEM_XMS, FALSE )
 	&& !printInfo( INFO_MEM_TIME, FALSE )
+	&& !printInfo( INFO_MEM_MAP, FALSE )
 	&& !printInfo( INFO_CFG_SUMM, FALSE )
 	&& !printInfo( INFO_CFG_CONFIG, FALSE )
 	&& !printInfo( INFO_CFG_AUTOEXEC, FALSE )) {
@@ -1026,7 +1027,9 @@ int printAllData( void )
 		&& !printInfo( INFO_HW_VIDEO, FALSE )
 		&& !printInfo( INFO_HW_DRIVES, FALSE )
 		&& !printInfo( INFO_HW_PORTS, FALSE )
-		&& !printInfo( INFO_HW_BIOS, FALSE ))
+		&& !printInfo( INFO_HW_BIOS, FALSE )
+		&& !printInfo( INFO_HW_PCI, FALSE )
+		&& !printInfo( INFO_HW_FIRM, FALSE ))
 			return FALSE;
 	}
 	return TRUE;

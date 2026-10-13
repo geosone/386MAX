@@ -859,6 +859,54 @@ mn counter is displayed.  The first number is the current line position of the c
 \par 
 \par \pard See the {\b Tuto}{\b rial} for more information on this topic.
 \par \pard 
+\par \pard\plain \s3 \f3\fs28\cf6\lang1033 >>H.Mem_Map
+\par \pard\plain \f3\lang1033 @P H.Mem_Sum H.Mem_Tim
+\par \pard                {\i BIOS Memory Map Display
+\par }\pard 
+\par \pard The memory map that the BIOS reports with {\b INT 15h function E820h}: every address range with its size and type.
+\par \pard 
+\par \pard   {\b Type-------  Meaning------------------------------------------}
+\par \pard   Usable      Free memory
+\par \pard   Reserved    Used by the BIOS, the chipset or a device (EBDA,
+\par \pard               AHCI or USB buffers, ROMs, memory-mapped devices)
+\par \pard   ACPI data   ACPI tables (free after the operating system read them)
+\par \pard   ACPI NVS    Kept by the firmware
+\par \pard   Unusable    Defective memory
+\par \pard 
+\par \pard Reserved areas below 1 MB are not used for UMBs; 386MAX leaves them alone.
+\par \pard 
+\par \pard {\b INT 15h E801h} shows the extended memory as the older function reports it.
+\par \pard 
+\par \pard This display needs a 386 or later processor.
+\par \pard 
+\par \pard\plain \s3 \f3\fs28\cf6\lang1033 >>H.Hdw_PCI
+\par \pard\plain \f3\lang1033 @P H.Hdw_Sum H.Hdw_BIOS
+\par \pard                {\i PCI Device Display
+\par }\pard 
+\par \pard The PCI functions found through the PCI BIOS:
+\par \pard 
+\par \pard   {\b Prompt---  What is Displayed--------------------------------------}
+\par \pard   Bus:Dv.F   Bus, device and function number
+\par \pard   Ven:Dev    Vendor and device ID, vendor name if known
+\par \pard   Function   Kind of device (PCI class code)
+\par \pard   IRQ        Interrupt line
+\par \pard   I/O, Mem   I/O ports and memory ranges (base address registers)
+\par \pard   ROM        Expansion ROM address if enabled
+\par \pard 
+\par \pard {\b Option ROMs} lists the ROMs in C0000-EFFFF and the PCI device they belong to (from the PCI data structure of the ROM). These areas are not available for UMBs.
+\par \pard 
+\par \pard\plain \s3 \f3\fs28\cf6\lang1033 >>H.Hdw_Firm
+\par \pard\plain \f3\lang1033 @P H.Hdw_Sum H.Hdw_BIOS
+\par \pard                {\i Firmware and Processor Display
+\par }\pard 
+\par \pard {\b Processor (CPUID)}: vendor, name, family, model and stepping, 64-bit support, whether a hypervisor (virtual machine) is present, and the processor features.
+\par \pard 
+\par \pard {\b SMBIOS}: BIOS vendor, version and date, system, mainboard, processor and memory modules from the SMBIOS tables.
+\par \pard 
+\par \pard {\b ACPI}: the RSDP and the ACPI tables with revision, length, OEM IDs and address.
+\par \pard 
+\par \pard Tables above 1 MB are read with INT 15h function 87h. In a DOS window of Windows this may not be possible.
+\par \pard 
 \par \pard\plain \s3 \f3\fs28\cf6\lang1033 >>H.Index
 \par \pard\plain \f3\lang1033 @P H.Index H.Index
 \par \pard                            {\i ASQ Help Index

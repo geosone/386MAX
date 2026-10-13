@@ -24,6 +24,7 @@
 #include "sysbuf.h"             /* SysInfo buffer definitions */
 #include "timer.h"              /* Memory / CPU timing structure */
 #include "xmsinfo.h"            /* XMS info structure */
+#include "modinfo.h"            /* Newer hardware */
 
 #pragma pack(1)
 typedef struct _biosdata {
@@ -630,6 +631,8 @@ typedef struct _sysinfo {	/* Master system information structure */
 /* 2560 bytes for descriptions. */
 #define MAXPNP_DESC 80		/* Maximum PnP description length */
 	SYSBUFH ppszPnPDesc;	/* char [ MAXPNP_DESC ][ wNumNodes ] */
+
+	MODERNINFO Modern;	/* Newer hardware (modinfo.h) */
 
 } SYSINFO;
 

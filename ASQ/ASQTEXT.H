@@ -272,6 +272,12 @@ GLOBAL char HelpNames[(WORKSPACESIZE/HELPNAMEWIDTH)][HELPNAMEWIDTH]
 	"H.L_Tun_FILLow",
 	"H.L_Tun_FILMed",
 	"H.L_Tun_FILHi", /* 136 */
+	"H.Mem_Map",     /* 137: Open 386MAX */
+	"H.Hdw_PCI",
+	"H.Hdw_Firm",
+	"Q_Mem_Map",
+	"Q_Hdw_PCI",
+	"Q_Hdw_Firm",    /* 142 */
 #ifdef REVIVETHEMENUCALLBACKS
 	"A_D_Clear",
 	"A_D_Exit",
@@ -437,6 +443,12 @@ enum {
 	LEARN_TUNEFILLOW,
 	LEARN_TUNEFILMED,
 	LEARN_TUNEFILHI,	/* 136: Tuning */
+	HELP_MEM_MAP,		/* 137: Memory_BIOS_Map */
+	HELP_HW_PCI,		/*	Hardware_PCI */
+	HELP_HW_FIRM,		/*	Hardware_Firmware */
+	QUICK_Mem_Map,
+	QUICK_Hdw_PCI,
+	QUICK_Hdw_Firm, 	/* 142 */
 #ifdef REVIVETHEMENUCALLBACKS
 	AS_DATA_Clear,
 	AS_DATA_Exit,
@@ -606,6 +618,12 @@ GLOBAL HELPDEF HelpInfo[ HELPLAST+1 ]
 	{ HELP_ASQLEARN,HelpNames[LEARN_TUNEFILLOW],	0, NULL  },
 	{ HELP_ASQLEARN,HelpNames[LEARN_TUNEFILMED],	0, NULL  },
 	{ HELP_ASQLEARN,HelpNames[LEARN_TUNEFILHI],	0, NULL  },  /* 136 */
+	{ HELP_ASQHELP, HelpNames[HELP_MEM_MAP],	0, NULL  },  /* 137 */
+	{ HELP_ASQHELP, HelpNames[HELP_HW_PCI],	0, NULL  },
+	{ HELP_ASQHELP, HelpNames[HELP_HW_FIRM],	0, NULL  },
+	{ HELP_ASQUICK, HelpNames[QUICK_Mem_Map],	0, NULL  },
+	{ HELP_ASQUICK, HelpNames[QUICK_Hdw_PCI],	0, NULL  },
+	{ HELP_ASQUICK, HelpNames[QUICK_Hdw_Firm],	0, NULL  },  /* 142 */
 #ifdef REVIVETHEMENUCALLBACKS
 	{ HELP_AS_DATA, HelpNames[AS_DATA_Clear],	0, NULL  },
 	{ HELP_AS_DATA, HelpNames[AS_DATA_Exit],	0, NULL  },
@@ -658,6 +676,9 @@ enum {
 	HARDDRIVES,
 	HARDPORTS,
 	HARDBIOS,
+	HARDPCI,		/* Open 386MAX */
+	HARDFIRMWARE,
+	MEMORYBIOSMAP,
 
 	CONFIGCMOS,		/* 24 */
 	SNAPINFO,		/* 25: Used as an endpoint in altPg{Up,Dn} */
@@ -830,6 +851,8 @@ enum {
 	MXPOS,
 		M_POS2,
 	MAPOS,
+		M_POS3,
+	MBPOS,
 		NUMMEMORYMENUITEMS
 };
 
@@ -841,7 +864,7 @@ GLOBAL struct
 #ifdef GLINIT
 #ifdef LANG_GR
 = {
-	{ NUMMEMORYMENUITEMS, MENU_VERTICAL, { 1, 6, 15, 17 }, 0, 0, 0, FG_BLACK | BG_GRAY, NULL, CALLBACKF	},
+	{ NUMMEMORYMENUITEMS, MENU_VERTICAL, { 1, 6, 17, 17 }, 0, 0, 0, FG_BLACK | BG_GRAY, NULL, CALLBACKF	},
 	{
 		{ { 1,	1 }, MEMORYSUMMARY,	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Mem_Sum, HELP_MEM_SUMM, P_MENU, TUTORIAL_Mem_Sum, { 'g', 'G', 0 },     6,      FG_BLACK | BG_GRAY, "Gesamt" },
 		{ { 2,	1 }, 0, 		ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,		  -1,		 -1,	 -1,		   { 0,     0, 0 },	0,	FG_BLACK | BG_GRAY, ""  },
@@ -856,11 +879,13 @@ GLOBAL struct
 		{ { 11, 1 }, MEMORYXMS, 	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Mem_XMS, HELP_MEM_XMS,  P_MENU, TUTORIAL_Mem_XMS, { 'x', 'X', 0 },     3,      FG_BLACK | BG_GRAY, "XMS"    },
 		{ { 12, 1 }, 0, 		ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,		  -1,		 -1,	 -1,		   { 0,     0, 0 },	0,	FG_BLACK | BG_GRAY, ""  },
 		{ { 13, 1 }, MEMORYTIMING,	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Mem_Tim, HELP_MEM_TIME, P_MENU, TUTORIAL_Mem_Tim, { 'z', 'Z', 0 },    13,      FG_BLACK | BG_GRAY, "Zeitverhalten" },
+		{ { 14, 1 }, 0, 		ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,		  -1,		 -1,	 -1,		   { 0,     0, 0 },	0,	FG_BLACK | BG_GRAY, ""  },
+		{ { 15, 1 }, MEMORYBIOSMAP,	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Mem_Map, HELP_MEM_MAP, P_MENU, TUTORIAL_Mem_Ext, { 'b', 'B', 0 },    10,      FG_BLACK | BG_GRAY, "BIOS-Karte" },
 	}
 }
 #else
 = {
-	{ NUMMEMORYMENUITEMS, MENU_VERTICAL, { 1, 6, 15, 17 }, 0, 0, 0, FG_BLACK | BG_GRAY, NULL, CALLBACKF	},
+	{ NUMMEMORYMENUITEMS, MENU_VERTICAL, { 1, 6, 17, 17 }, 0, 0, 0, FG_BLACK | BG_GRAY, NULL, CALLBACKF	},
 	{
 		{ { 1,	1 }, MEMORYSUMMARY,		ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Mem_Sum, HELP_MEM_SUMM, P_MENU, TUTORIAL_Mem_Sum, { 's', 'S', 0 },     7,      FG_BLACK | BG_GRAY, "Summary"   },
 		{ { 2,	1 }, 0, 				ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,			  -1,			 -1,	 -1,			   { 0, 	0, 0 }, 0,	FG_BLACK | BG_GRAY, ""  },
@@ -875,6 +900,8 @@ GLOBAL struct
 		{ { 11, 1 }, MEMORYXMS, 		ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Mem_XMS, HELP_MEM_XMS,  P_MENU, TUTORIAL_Mem_XMS, { 'x', 'X', 0 },     3,      FG_BLACK | BG_GRAY, "XMS"       },
 		{ { 12, 1 }, 0, 				ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,			  -1,			 -1,	 -1,			   { 0, 	0, 0 }, 0,	FG_BLACK | BG_GRAY, ""  },
 		{ { 13, 1 }, MEMORYTIMING,		ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Mem_Tim, HELP_MEM_TIME, P_MENU, TUTORIAL_Mem_Tim, { 'a', 'A', 0 },     13,     FG_BLACK | BG_GRAY, "Access timing"     },
+		{ { 14, 1 }, 0, 		ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,		  -1,		 -1,	 -1,		   { 0,     0, 0 },	0,	FG_BLACK | BG_GRAY, ""  },
+		{ { 15, 1 }, MEMORYBIOSMAP,	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Mem_Map, HELP_MEM_MAP, P_MENU, TUTORIAL_Mem_Ext, { 'b', 'B', 0 },    8,      FG_BLACK | BG_GRAY, "BIOS map" },
 	}
 }
 #endif
@@ -951,6 +978,9 @@ enum {
 	HPPOS,
 		H_POS1,
 	HBPOS,
+		H_POS2,
+	HCPOS,
+	HFPOS,
 		NUMHARDMENUITEMS
 };
 
@@ -962,7 +992,7 @@ GLOBAL struct
 #ifdef GLINIT
 #ifdef LANG_GR
 = {
-	{ NUMHARDMENUITEMS, MENU_VERTICAL, { 1, 22, 9, 15 }, 0, 0, 0, FG_BLACK | BG_GRAY, NULL, CALLBACKF },
+	{ NUMHARDMENUITEMS, MENU_VERTICAL, { 1, 22, 12, 16 }, 0, 0, 0, FG_BLACK | BG_GRAY, NULL, CALLBACKF },
 	{
 		{ { 1,	1 }, HARDSUMMARY,	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Hdw_Sum, HELP_HW_SUMM,   P_MENU, TUTORIAL_Hdw_Sum, { 'g', 'G', 0 },    6,      FG_BLACK | BG_GRAY, "Gesamt"  },
 		{ { 2,	1 }, 0, 		ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,		  -1,		  -1,	  -1,		    { 0,    0,	0 },	0,	FG_BLACK | BG_GRAY, ""  },
@@ -971,11 +1001,14 @@ GLOBAL struct
 		{ { 5,	1 }, HARDPORTS, 	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Hdw_Por, HELP_HW_PORTS,  P_MENU, TUTORIAL_Hdw_Por, { 'p', 'P', 0 },    5,      FG_BLACK | BG_GRAY, "Ports"   },
 		{ { 6,	1 }, 0, 		ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,		  -1,		  -1,	  -1,		    { 0,    0,	0 },	0,	FG_BLACK | BG_GRAY, ""  },
 		{ { 7,	1 }, HARDBIOS,		ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Hdw_BIO, HELP_HW_BIOS,   P_MENU, TUTORIAL_Hdw_BIO, { 'b', 'B', 0 },    11,     FG_BLACK | BG_GRAY, "BIOS-Detail" },
+		{ { 8, 1 }, 0, 		ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,		  -1,		 -1,	 -1,		   { 0,     0, 0 },	0,	FG_BLACK | BG_GRAY, ""  },
+		{ { 9, 1 }, HARDPCI,	ITEM_ACTIVE,	{ 0, 0}, NULL, 2,  QUICK_Hdw_PCI, HELP_HW_PCI, P_MENU, TUTORIAL_Hdw_BIO, { 'c', 'C', 0 },    10,      FG_BLACK | BG_GRAY, "PCI-Ger„te" },
+		{ { 10, 1 }, HARDFIRMWARE,	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Hdw_Firm, HELP_HW_FIRM, P_MENU, TUTORIAL_Hdw_BIO, { 'f', 'F', 0 },    12,      FG_BLACK | BG_GRAY, "Firmware/CPU" },
 	}
 }
 #else
 = {
-	{ NUMHARDMENUITEMS, MENU_VERTICAL, { 1, 22, 9, 15 }, 0, 0, 0, FG_BLACK | BG_GRAY, NULL, CALLBACKF },
+	{ NUMHARDMENUITEMS, MENU_VERTICAL, { 1, 22, 12, 16 }, 0, 0, 0, FG_BLACK | BG_GRAY, NULL, CALLBACKF },
 	{
 		{ { 1,	1 }, HARDSUMMARY,	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Hdw_Sum, HELP_HW_SUMM,   P_MENU, TUTORIAL_Hdw_Sum,	{ 's', 'S', 0 },        7,      FG_BLACK | BG_GRAY, "Summary"   },
 		{ { 2,	1 }, 0, 			ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,			  -1,			  -1,	  -1,				{ 0,		0, 0 }, 0,	FG_BLACK | BG_GRAY, ""  },
@@ -984,6 +1017,9 @@ GLOBAL struct
 		{ { 5,	1 }, HARDPORTS, 	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Hdw_Por, HELP_HW_PORTS,  P_MENU, TUTORIAL_Hdw_Por, { 'p', 'P', 0 },    5,      FG_BLACK | BG_GRAY, "Ports"     },
 		{ { 6,	1 }, 0, 			ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,			  -1,			  -1,	  -1,				{ 0,		0, 0 }, 0,	FG_BLACK | BG_GRAY, ""  },
 		{ { 7,	1 }, HARDBIOS,		ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Hdw_BIO, HELP_HW_BIOS,   P_MENU, TUTORIAL_Hdw_BIO, { 'b', 'B', 0 },    11,     FG_BLACK | BG_GRAY, "BIOS detail"       },
+		{ { 8, 1 }, 0, 		ITEM_SEPARATOR, { 0, 0}, NULL, -1, -1,		  -1,		 -1,	 -1,		   { 0,     0, 0 },	0,	FG_BLACK | BG_GRAY, ""  },
+		{ { 9, 1 }, HARDPCI,	ITEM_ACTIVE,	{ 0, 0}, NULL, 2,  QUICK_Hdw_PCI, HELP_HW_PCI, P_MENU, TUTORIAL_Hdw_BIO, { 'c', 'C', 0 },    11,      FG_BLACK | BG_GRAY, "PCI devices" },
+		{ { 10, 1 }, HARDFIRMWARE,	ITEM_ACTIVE,	{ 0, 0}, NULL, 1,  QUICK_Hdw_Firm, HELP_HW_FIRM, P_MENU, TUTORIAL_Hdw_BIO, { 'f', 'F', 0 },    12,      FG_BLACK | BG_GRAY, "Firmware/CPU" },
 	}
 }
 #endif
@@ -1211,7 +1247,10 @@ GLOBAL DATAINFO DataInfo[]
 	{ FALSE, "Maschine: Ports" },
 	{ FALSE, "Maschine: BIOS-Detail" },
 	{ TRUE,  "Konfiguration CMOS-Detail" },
-	{ FALSE, "Snapshot-Information" }
+	{ FALSE, "Snapshot-Information" },
+	{ FALSE, "BIOS-Speicherkarte" },
+	{ FALSE, "Maschine: PCI-Ger„te" },
+	{ FALSE, "Maschine: Firmware/CPU" }
 }
 #else
 = {
@@ -1240,7 +1279,10 @@ GLOBAL DATAINFO DataInfo[]
 	{ FALSE, "Equipment Ports" },
 	{ FALSE, "Equipment BIOS Detail" },
 	{ TRUE,  "Configuration CMOS Detail" }, /* 24 */
-	{ FALSE, "Snapshot Information" }       /* 25 */
+	{ FALSE, "Snapshot Information" },      /* 25 */
+	{ FALSE, "Memory BIOS Map" },		/* 26 */
+	{ FALSE, "Equipment PCI Devices" },
+	{ FALSE, "Equipment Firmware/CPU" }	/* 28 */
 }
 #endif
 #endif
@@ -1625,6 +1667,7 @@ GLOBAL char * EvalText[EVAL_TOOBIG]
 	".ADF-Dateien",         /* EVAL_ADF             */
 //#error Translation?
 	"Plug and Play",	/* EVAL_PNP		*/
+	"PCI, ACPI, SMBIOS",	/* EVAL_MODERN		*/
 	"CD-ROM",		/* EVAL_CDROM		*/
 	""                      /* EVAL_DONE            */
 }
@@ -1679,6 +1722,7 @@ GLOBAL char * EvalText[EVAL_TOOBIG]
 	"MicroChannel",         /* EVAL_MCA             */
 	".ADF files",           /* EVAL_ADF             */
 	"Plug and Play",	/* EVAL_PNP		*/
+	"PCI, ACPI, SMBIOS",	/* EVAL_MODERN		*/
 	"CD-ROM",		/* EVAL_CDROM		*/
 	""                      /* EVAL_DONE            */
 }
@@ -1803,7 +1847,7 @@ GLOBAL char *SnapADFDefault
 	/* MEMORYEMS	*/	MEMORYEXPANDED,
 	/* MEMORYXMS	*/	MEMORYEMS,
 	/* MEMORYTIMING */	MEMORYXMS,
-	/* CONFIGSUMMARY */	MEMORYTIMING,
+	/* CONFIGSUMMARY */	MEMORYBIOSMAP,
 	/* CONFIGSYS	*/	CONFIGSUMMARY,
 	/* CONFIGAUTOEXEC */	CONFIGSYS,
 	/* CONFIGMAXPRO */	CONFIGAUTOEXEC,
@@ -1816,8 +1860,11 @@ GLOBAL char *SnapADFDefault
 	/* HARDDRIVES	*/	HARDVIDEO,
 	/* HARDPORTS	*/	HARDDRIVES,
 	/* HARDBIOS	*/	HARDPORTS,
+	/* HARDPCI	*/	HARDBIOS,
+	/* HARDFIRMWARE */	HARDPCI,
+	/* MEMORYBIOSMAP */	MEMORYTIMING,
 	/* CONFIGCMOS	*/	CONFIGEXTRADOSPRO,
-	/* SNAPINFO	*/	HARDBIOS,
+	/* SNAPINFO	*/	HARDFIRMWARE,
 	};
 
 	static altPgDn[] = {
@@ -1831,7 +1878,7 @@ GLOBAL char *SnapADFDefault
 	/* MEMORYEXPANDED */	MEMORYEMS,
 	/* MEMORYEMS	*/	MEMORYXMS,
 	/* MEMORYXMS	*/	MEMORYTIMING,
-	/* MEMORYTIMING */	CONFIGSUMMARY,
+	/* MEMORYTIMING */	MEMORYBIOSMAP,
 	/* CONFIGSUMMARY */	CONFIGSYS,
 	/* CONFIGSYS	*/	CONFIGAUTOEXEC,
 	/* CONFIGAUTOEXEC */	CONFIGMAXPRO,
@@ -1844,7 +1891,10 @@ GLOBAL char *SnapADFDefault
 	/* HARDVIDEO	*/	HARDDRIVES,
 	/* HARDDRIVES	*/	HARDPORTS,
 	/* HARDPORTS	*/	HARDBIOS,
-	/* HARDBIOS	*/	SNAPINFO,
+	/* HARDBIOS	*/	HARDPCI,
+	/* HARDPCI	*/	HARDFIRMWARE,
+	/* HARDFIRMWARE */	SNAPINFO,
+	/* MEMORYBIOSMAP */	CONFIGSUMMARY,
 	/* CONFIGCMOS	*/	HARDSUMMARY,
 	/* SNAPINFO	*/	MEMORYSUMMARY,
 	};

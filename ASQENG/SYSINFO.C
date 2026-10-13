@@ -454,7 +454,9 @@ int sysinfo_init(void *scrat,WORD nscrat)
 		get_adf();
 	}
 
-	/* FIXME Collect data on PCI adapters - but how? */
+	/* PCI functions, option ROMs, ACPI, SMBIOS, BIOS memory map, CPUID */
+	reportEval(EVAL_MODERN);
+	modinfo_get();
 
 	/* Collect Plug'n'Play data */
 	if (is_pnp()) {

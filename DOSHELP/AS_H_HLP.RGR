@@ -955,6 +955,54 @@ nnen zur Fehlerbehebung vorteilhaft sein.
 \par 
 \par Die {\b Lernhilfe }enth\'84lt weitere Informationen zu diesem Thema.
 \par 
+\par {\fs28\cf6 >>H.Mem_Map
+\par }@P H.Mem_Sum H.Mem_Tim
+\par                       {\i Anzeige der BIOS-Speicherkarte
+\par }
+\par Die Speicherkarte, die das BIOS mit {\b INT 15h Funktion E820h} meldet: jeder Adre\'e1bereich mit Gr\'94\'e1e und Typ.
+\par 
+\par   {\b Typ--------  Bedeutung----------------------------------------}
+\par   Frei        Freier Speicher
+\par   Reserviert  Vom BIOS, Chipsatz oder einem Ger\'84t belegt (EBDA,
+\par               AHCI- oder USB-Puffer, ROMs, Ger\'84te-Speicher)
+\par   ACPI-Daten  ACPI-Tabellen
+\par   ACPI NVS    Von der Firmware belegt
+\par   Defekt      Defekter Speicher
+\par 
+\par Reservierte Bereiche unter 1 MB werden nicht als UMBs verwendet; 386MAX l\'84\'e1t sie unber\'81hrt.
+\par 
+\par {\b INT 15h E801h} zeigt den Extended Memory, wie ihn die \'84ltere Funktion meldet.
+\par 
+\par Diese Anzeige ben\'94tigt einen 386 oder neueren Prozessor.
+\par 
+\par {\fs28\cf6 >>H.Hdw_PCI
+\par }@P H.Hdw_Sum H.Hdw_BIOS
+\par                       {\i Anzeige der PCI-Ger\'84te
+\par }
+\par Die PCI-Funktionen, die \'81ber das PCI-BIOS gefunden werden:
+\par 
+\par   {\b Information   Beschreibung-------------------------------------}
+\par   Bus:Gr.F      Bus-, Ger\'84te- und Funktionsnummer
+\par   Herst:Ger     Hersteller- und Ger\'84te-ID, Herstellername
+\par   Funktion      Art des Ger\'84ts (PCI-Klasse)
+\par   IRQ           Interrupt-Leitung
+\par   E/A, Spch     E/A-Ports und Speicherbereiche
+\par   ROM           Adresse des Erweiterungs-ROMs, falls eingeschaltet
+\par 
+\par {\b Options-ROMs} zeigt die ROMs in C0000-EFFFF und das PCI-Ger\'84t, zu dem sie geh\'94ren. Diese Bereiche stehen nicht als UMBs zur Verf\'81gung.
+\par 
+\par {\fs28\cf6 >>H.Hdw_Firm
+\par }@P H.Hdw_Sum H.Hdw_BIOS
+\par                       {\i Anzeige von Firmware und Prozessor
+\par }
+\par {\b Prozessor (CPUID)}: Hersteller, Name, Familie, Modell und Stepping, 64-Bit-Unterst\'81tzung, ob ein Hypervisor (virtuelle Maschine) vorhanden ist, und die Merkmale des Prozessors.
+\par 
+\par {\b SMBIOS}: BIOS-Hersteller, -Version und -Datum, System, Hauptplatine, Prozessor und Speichermodule aus den SMBIOS-Tabellen.
+\par 
+\par {\b ACPI}: der RSDP und die ACPI-Tabellen mit Revision, L\'84nge, OEM-Kennungen und Adresse.
+\par 
+\par Tabellen \'81ber 1 MB werden mit INT 15h Funktion 87h gelesen. In einem DOS-Fenster von Windows ist das eventuell nicht m\'94glich.
+\par 
 \par {\fs28\cf6 >>H.Index
 \par }@P H.Index H.Index
 \par                       {\i ASQ Stichwort-Verzeichnis

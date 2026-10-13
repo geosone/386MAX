@@ -173,6 +173,9 @@ gotRequest:
 			case MEMORYTIMING:
 				resKey = presentData(INFO_MEM_TIME, HELP_MEM_TIME, FALSE);
 				break;
+			case MEMORYBIOSMAP:
+				resKey = presentData(INFO_MEM_MAP, HELP_MEM_MAP, FALSE);
+				break;
 
 			case CONFIGSUMMARY:
 				resKey = presentData(INFO_CFG_SUMM, HELP_CFG_SUMM, FALSE);
@@ -267,6 +270,12 @@ gotRequest:
 				break;
 			case HARDBIOS:
 				resKey = presentData(INFO_HW_BIOS, HELP_HW_BIOS, FALSE);
+				break;
+			case HARDPCI:
+				resKey = presentData(INFO_HW_PCI, HELP_HW_PCI, FALSE);
+				break;
+			case HARDFIRMWARE:
+				resKey = presentData(INFO_HW_FIRM, HELP_HW_FIRM, FALSE);
 				break;
 			case MLEARNASQ:
 				helpRequest = LEARNASQ;
@@ -383,6 +392,11 @@ nextSnapDisabled:
 					MemoryMenu.info.active = MAPOS;
 					quickHelp = MemoryMenu.items[MAPOS].quickHelpNumber;
 					break;
+				case MEMORYBIOSMAP:
+					AsqTopMenu.info.active = MEMORYMENUPOS;
+					MemoryMenu.info.active = MBPOS;
+					quickHelp = MemoryMenu.items[MBPOS].quickHelpNumber;
+					break;
 				case CONFIGSUMMARY:
 					AsqTopMenu.info.active = CONFIGMENUPOS;
 					ConfigMenu.info.active = CSPOS;
@@ -478,11 +492,21 @@ nextSYSINIDisabled:
 					quickHelp = HardMenu.items[HPPOS].quickHelpNumber;
 					break;
 				case HARDBIOS:
-prevSnapDisabled:
-					request = HARDBIOS;
 					AsqTopMenu.info.active = HARDWAREMENUPOS;
 					HardMenu.info.active = HBPOS;
 					quickHelp = HardMenu.items[HBPOS].quickHelpNumber;
+					break;
+				case HARDPCI:
+					AsqTopMenu.info.active = HARDWAREMENUPOS;
+					HardMenu.info.active = HCPOS;
+					quickHelp = HardMenu.items[HCPOS].quickHelpNumber;
+					break;
+				case HARDFIRMWARE:
+prevSnapDisabled:
+					request = HARDFIRMWARE;
+					AsqTopMenu.info.active = HARDWAREMENUPOS;
+					HardMenu.info.active = HFPOS;
+					quickHelp = HardMenu.items[HFPOS].quickHelpNumber;
 					break;
 				case SNAPINFO:
 					if( SnapMenu.items[SIPOS].type == ITEM_DISABLED) {
@@ -614,6 +638,15 @@ void quickAsq( int code )	/*	Set a menu background */
 		break;
 	case HARDBIOS:
 		quickShowData(INFO_HW_BIOS);
+		break;
+	case HARDPCI:
+		quickShowData(INFO_HW_PCI);
+		break;
+	case HARDFIRMWARE:
+		quickShowData(INFO_HW_FIRM);
+		break;
+	case MEMORYBIOSMAP:
+		quickShowData(INFO_MEM_MAP);
 		break;
 	case MLEARNASQ:
 	case MLEARNQUALITAS:

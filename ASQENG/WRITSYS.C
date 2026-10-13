@@ -63,6 +63,7 @@ static void near prt_FLEXROM(SYSBUFH value,WORD nvalue);
 static void near prt_HOLES(RWKEY kw,SYSBUFH value,WORD nvalue);
 static void near prt_OPENFILE(SYSBUFH value,WORD nvalue);
 static void near prt_ENVSTR(SYSBUFH value,WORD nvalue);
+static void near prt_MODERN(void);
 static void near prt_MACINFO(RWKEY kw,SYSBUFH value,WORD nvalue);
 static void near prt_DDLIST(SYSBUFH value,WORD nvalue);
 static void near prt_DOSDATA(SYSBUFH value,WORD nvalue);
@@ -267,6 +268,8 @@ int sysinfo_write(char *name)
 
 	lprintf( "%-10s %04X %04X\n", RwKeyword[ K_CDROM ].name,
 		SysInfo->nCDs, SysInfo->nFirstCD );
+
+	prt_MODERN();
 
 	fprintf(RwFile,"%s\n",RwKeyword[K_END]);
 	return fclose(RwFile);
@@ -969,4 +972,78 @@ static void near prt_ADFCHOICE(ADFOPTION *value)
 	}
 }
 
-
+
+/*
+ *	prt_MODERN - newer hardware (modinfo.h), one line per keyword
+ */
+static void near prt_MODERN(void)
+{
+	MODERNINFO *m = &SysInfo->Modern;
+	WORD kk;
+
+	if (!m->flags) return;
+	lprintf("%-10s %04X\n", RwKeyword[K_MODFLAGS].name, m->flags);
+	if (m->nE820) {
+		E820ENT *e = sysbuf_ptr(m->hE820);
+
+		for (kk = 0; kk < m->nE820; kk++, e++)
+			lprintf("%-10s %lX %lX %lX %lX %lX %lX\n", RwKeyword[K_E820].name,
+				e->baselo, e->basehi, e->lenlo, e->lenhi, e->type, e->attr);
+	}
+	if (m->flags & MOD_E801)
+		lprintf("%-10s %X %X\n", RwKeyword[K_E801].name, m->wE801[0], m->wE801[1]);
+	if (m->flags & MOD_CPUID) {
+		lprintf("%-10s %lX %lX %lX %lX %lX %lX %lX\n", RwKeyword[K_CPUID].name,
+			m->dwMaxLeaf, m->dwMaxExt, m->dwSig,
+			m->dwFeat[0], m->dwFeat[1], m->dwFeat[2], m->dwFeat[3]);
+		lprintf("%-10s \x1a%s\x1a\n", RwKeyword[K_CPUVENDOR].name, m->szVendor);
+		if (*m->szBrand)
+			lprintf("%-10s \x1a%s\x1a\n", RwKeyword[K_CPUBRAND].name, m->szBrand);
+	}
+	if (m->flags & MOD_PCI) {
+		PCIDEV *d = sysbuf_ptr(m->hPci);
+
+		lprintf("%-10s %X %X\n", RwKeyword[K_PCIBIOS].name, m->wPciVer, m->wPciLastBus);
+		for (kk = 0; kk < m->nPci; kk++, d++)
+			lprintf("%-10s %X %X %X %X %X %X %X %X %X %X %X %X %lX %lX %lX %lX %lX %lX %lX\n",
+				RwKeyword[K_PCIDEV].name, d->bus, d->devfn, d->hdr, d->rev,
+				d->ven, d->dev, d->subven, d->subdev, d->cls, d->sub, d->prog,
+				d->irq, d->bar[0], d->bar[1], d->bar[2], d->bar[3], d->bar[4],
+				d->bar[5], d->rom);
+	}
+	if (m->nOptRom) {
+		OPTROM *o = sysbuf_ptr(m->hOptRom);
+
+		for (kk = 0; kk < m->nOptRom; kk++, o++)
+			lprintf("%-10s %X %X %X %X %X %X\n", RwKeyword[K_OPTROM].name,
+				o->seg, o->size, o->ven, o->dev, o->cls, o->sub);
+	}
+	if (m->flags & MOD_ACPI) {
+		ACPITAB *t = sysbuf_ptr(m->hAcpi);
+
+		lprintf("%-10s %X %lX %lX %lX %lX \x1a%s\x1a\n", RwKeyword[K_ACPI].name,
+			m->bAcpiRev, m->dwRsdp, m->dwRsdt, m->dwXsdt[0], m->dwXsdt[1],
+			m->szAcpiOem);
+		for (kk = 0; kk < m->nAcpi; kk++, t++)
+			lprintf("%-10s \x1a%.4s\x1a %lX %X \x1a%.6s\x1a \x1a%.8s\x1a %lX\n",
+				RwKeyword[K_ACPITAB].name, t->sig, t->len, t->rev,
+				t->oem, t->oemtab, t->addr);
+	}
+	if (m->flags & MOD_SMBIOS) {
+		lprintf("%-10s %X %lX %X\n", RwKeyword[K_SMBIOS].name,
+			m->wSmbVer, m->dwSmbTable, m->wSmbLen);
+		if (m->hSmbStr) {
+			char *p = sysbuf_ptr(m->hSmbStr);
+
+			for (; *p != SMB_END; p += strlen(p + 1) + 2)
+				lprintf("%-10s %X \x1a%s\x1a\n", RwKeyword[K_SMBSTR].name, *p, p + 1);
+		}
+		if (m->nSmbMem) {
+			SMBMEM *s = sysbuf_ptr(m->hSmbMem);
+
+			for (kk = 0; kk < m->nSmbMem; kk++, s++)
+				lprintf("%-10s \x1a%s\x1a %X %X %X\n", RwKeyword[K_SMBMEM].name,
+					s->loc, s->sizemb, s->speed, s->type);
+		}
+	}
+}

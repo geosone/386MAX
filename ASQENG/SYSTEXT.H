@@ -127,6 +127,20 @@ typedef enum _rwkey {
 	K_PNPNODES,
 	K_CDROM,
 	K_PNPDESC,
+	K_MODFLAGS,
+	K_E820,
+	K_E801,
+	K_CPUID,
+	K_CPUVENDOR,
+	K_CPUBRAND,
+	K_PCIBIOS,
+	K_PCIDEV,
+	K_OPTROM,
+	K_ACPI,
+	K_ACPITAB,
+	K_SMBIOS,
+	K_SMBSTR,
+	K_SMBMEM,
 	K_END
 } RWKEY;
 
@@ -326,6 +340,20 @@ GLOBAL struct _rwkeyword {
 	"PnPNodes",     K_PNPNODES,
 	"CDROM",        K_CDROM,        /* nCDs, nFirstCD */
 	"PnPDesc",      K_PNPDESC,
+	"ModFlags",     K_MODFLAGS,	/* flags of the newer hardware info */
+	"E820",         K_E820,	/* BIOS memory map entry */
+	"E801",         K_E801,	/* INT 15h E801h */
+	"CpuId",        K_CPUID,	/* CPUID leaves and features */
+	"CpuVendor",    K_CPUVENDOR,	/* Open 386MAX */
+	"CpuBrand",     K_CPUBRAND,	/* Open 386MAX */
+	"PciBios",      K_PCIBIOS,	/* PCI BIOS version, last bus */
+	"PciDev",       K_PCIDEV,	/* PCI function */
+	"OptRom",       K_OPTROM,	/* option ROM */
+	"Acpi",         K_ACPI,	/* RSDP */
+	"AcpiTab",      K_ACPITAB,	/* ACPI table */
+	"SmBios",       K_SMBIOS,	/* SMBIOS entry point */
+	"SmbStr",       K_SMBSTR,	/* SMBIOS string */
+	"SmbMem",       K_SMBMEM,	/* SMBIOS memory device */
 	"End",          K_END,
 	NULL,		0
 }

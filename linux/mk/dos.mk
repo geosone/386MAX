@@ -145,7 +145,7 @@ $(foreach f,$(PROS),$(eval $(call PRORULE,$(f))))
 
 define COBJRULE
 $(OUT)/$(1): $(call srcof,$(1)) $(INCDEPS) $(wildcard $(addsuffix /*.H,$(ASMINC))) $(CINCDIR)/.done $(LX)/mk/owcompat.h $(PROFILES) $(VERSION_FILE)
-	$(WCC) $(CFLAGS) $(foreach d,$($(1)_DEFS),"-D$(d)") -fo=$$@ $$< > $(OUT)/$(1).log 2>&1 || { cat $(OUT)/$(1).log; exit 1; }
+	$(WCC) $(CFLAGS) $($(1)_CFLAGS) $(foreach d,$($(1)_DEFS),"-D$(d)") -fo=$$@ $$< > $(OUT)/$(1).log 2>&1 || { cat $(OUT)/$(1).log; exit 1; }
 endef
 $(foreach o,$(COBJS),$(eval $(call COBJRULE,$(o))))
 
@@ -191,7 +191,8 @@ CLINKCMD = cd $(2) && $(JWLINK) format dos name $(1) option quiet option map=$(1
 	    $(if $($(1)_MAP),@$(1).ORD) $($(1)_LINKOPTS) \
 	    file $(subst $(space),$(comma),$(strip $($(1)_OBJS) $(OWOBJS))) \
 	    $(if $($(1)_LIBS),library $(subst $(space),$(comma),$(strip $($(1)_LIBS)))) > $(1).log \
-	    || { cat $(1).log; exit 1; }
+	    || { cat $(1).log; exit 1; } \
+	    ; $(PYTHON) $(LX)/tools/stackcheck.py $(1) $(1).MAP >> $(1).log || { rm -f $(1); exit 1; }
 hasc = $(strip $(foreach o,$($(1)_OBJS),$(call isc,$(o))))
 
 define LINKRULE

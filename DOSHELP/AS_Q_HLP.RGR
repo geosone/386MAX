@@ -132,6 +132,22 @@
 \par 
 \par Diese Option zeigt
 \par Adressen sowie Inhalt des ROM BIOS-Bereichs.
+\par {\fs28\cf6 >>Q_Mem_Map
+\par }Die BIOS-Speicherkarte zeigt, welche Adre\'e1bereiche freier Speicher sind und welche das BIOS und Ger\'84te belegen.
+\par 
+\par Diese Option zeigt die Bereiche von INT 15h E820h und die reservierten Bereiche unter 1 MB.
+\par {\fs28\cf6 >>Q_Hdw_PCI
+\par }PCI-Ger\'84te sind die Controller des Rechners: Platte, Netzwerk, Grafik, Sound, USB.
+\par 
+\par Diese Option zeigt jedes PCI-Ger\'84t mit seinen Ressourcen und die Options-ROMs in C0000-EFFFF.
+\par {\fs28\cf6 >>Q_Hdw_Firm
+\par }Die Firmware beschreibt den Rechner in Tabellen.
+\par 
+\par Diese Option zeigt:
+\par 
+\par  * Prozessor (CPUID)
+\par  * SMBIOS: BIOS, System, Speichermodule
+\par  * ACPI-Tabellen
 \par {\fs28\cf6 >>Q_Hdw_Drv
 \par }Disk-Laufwerke speichern Infor-
 \par mationen und er-
