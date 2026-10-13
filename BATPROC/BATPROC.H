@@ -46,7 +46,9 @@
 
 
 // disable macro definitions of toupper() and tolower()
+#ifndef OWC_OWN_TOUPPER	// (OpenWatcom: keep the rename of owcompat.h)
 #undef toupper
+#endif
 #undef tolower
 
 
@@ -303,10 +305,10 @@ extern int pascal srch_dir(int, char *, DIR_ENTRY huge **, unsigned int *, int);
 
 
 // ENV.C
-extern unsigned char *pascal envget(char *, int);
+extern char *pascal envget(char *, int);	// (char: unsigned with /J)
 extern int pascal addenv(char *, int);
-extern unsigned char *pascal next_env(char *);
-extern unsigned char *pascal end_of_env(char *);
+extern char *pascal next_env(char *);
+extern char *pascal end_of_env(char *);
 
 
 // ERROR.C

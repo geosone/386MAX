@@ -169,9 +169,9 @@ endif				; IFDEF LANG_GR
 
 	 public  MSG_HELP
 ifdef LANG_GR
-MSG_HELP db	 'Dieses ist ein Zusatz-Programm fÅr Qualitas MAX/BlueMAX (tm).'
+MSG_HELP db	 'Dieses ist ein Zusatz-Programm fÅr Open 386MAX/BlueMAX (tm).'
 else
-MSG_HELP db	 'This is a supplementary program used by Qualitas MAX/BlueMAX (tm).'
+MSG_HELP db	 'This is a supplementary program used by Open 386MAX/BlueMAX (tm).'
 endif				; IFDEF LANG_GR
 	 db	 CR,LF,EOS
 
@@ -291,17 +291,17 @@ PTR_MSG_VGASWAP  dw	 ? ; Pointer to VGASWAP OK or VGASWAP FAIL message
 
 	public	MSG_MAXOK
 ifdef LANG_GR
-MSG_MAXOK db	 'Qualitas MAX ist installiert.',CR,LF,EOS
+MSG_MAXOK db	 'Open 386MAX ist installiert.',CR,LF,EOS
 else
-MSG_MAXOK db	 'Qualitas MAX is installed.',CR,LF,EOS
+MSG_MAXOK db	 'Open 386MAX is installed.',CR,LF,EOS
 endif				; IFDEF LANG_GR
 @MSG_MAXOK_LEN	 equ	($-MSG_MAXOK)-1
 
 	public	MSG_NOMAX
 ifdef LANG_GR
-MSG_NOMAX db	 'Qualitas MAX ist nicht installiert.',CR,LF,EOS
+MSG_NOMAX db	 'Open 386MAX ist nicht installiert.',CR,LF,EOS
 else
-MSG_NOMAX db	 'Qualitas MAX is not installed.',CR,LF,EOS
+MSG_NOMAX db	 'Open 386MAX is not installed.',CR,LF,EOS
 endif				; IFDEF LANG_GR
 @MSG_NOMAX_LEN	 equ	($-MSG_NOMAX)-1
 

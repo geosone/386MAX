@@ -14,7 +14,7 @@ BrowseButtons()
 CreateButton("jump_glossary","&Glossary","JumpId(`',`GlossaryOfTerms.453')")
 [MAP]
 HelpContents1	1	; Help Contents
-AboutQualitasMAX.2	2	; About Qualitas MAX
+AboutQualitasMAX.2	2	; About Open 386MAX
 Setup.3	507	; Setup
 Maximize.4	4	; Maximize
 SampleInstallation.5	5	; Sample Installation
@@ -27,17 +27,17 @@ QualitasPIFEditor.11	11	; Qualitas PIF Editor
 MAXShellandASQ.12	12	; MAX Shell and ASQ
 QualitasMemoryTester.13	508	; Qualitas Memory Tester
 386UTIL.COM.14	14	; 386UTIL.COM
-OtherQualitasMAXUtilities.15	15	; Other Qualitas MAX Utilities
+OtherQualitasMAXUtilities.15	15	; Other Open 386MAX Utilities
 386MAXand386LOADOptions.16	16	; 386MAX and 386LOAD Options
 Troubleshooting.17	17	; Troubleshooting
 Messages.18	18	; Messages
 AnOverviewofMemoryManagement.19	509	; An Overview of Memory Management
-QualitasMAXoverview.20	20	; Qualitas MAX overview
-QualitasMAXfunctions.21	510	; Qualitas MAX functions
-QualitasMAXinterface.22	511	; Qualitas MAX interface
-QualitasMAXcomponents.23	23	; Qualitas MAX components
-QualitasMAXhardwarerequirements.24	24	; Qualitas MAX hardware requirements
-QualitasMAXsoftwarerequirements.25	25	; Qualitas MAX software requirements
+QualitasMAXoverview.20	20	; Open 386MAX overview
+QualitasMAXfunctions.21	510	; Open 386MAX functions
+QualitasMAXinterface.22	511	; Open 386MAX interface
+QualitasMAXcomponents.23	23	; Open 386MAX components
+QualitasMAXhardwarerequirements.24	24	; Open 386MAX hardware requirements
+QualitasMAXsoftwarerequirements.25	25	; Open 386MAX software requirements
 On.linedocumentation.26	512	; On-line documentation
 HowtogethelpinWindows.27	27	; How to get help in Windows
 MAXHelp.28	28	; MAX Help
@@ -95,7 +95,7 @@ Maximizecommandlineoptions.79	79	; Maximize command line options
 MAXIMIZE.CFG.80	521	; MAXIMIZE.CFG
 Maximizereordering.81	81	; Maximize reordering
 Sampleinstallationoverview.82	82	; Sample installation overview
-BeforeinstallingQualitasMAX.83	83	; Before installing Qualitas MAX
+BeforeinstallingQualitasMAX.83	83	; Before installing Open 386MAX
 CONFIG.SYS.before..84	84	; CONFIG.SYS (before)
 AUTOEXEC.BAT.before..85	522	; AUTOEXEC.BAT (before)
 MEM.before..86	86	; MEM (before)
@@ -103,7 +103,7 @@ Duringinstallation.87	87	; During installation
 Maximize.PhaseI..88	88	; Maximize (Phase I)
 Maximize.PhaseII..89	89	; Maximize (Phase II)
 Maximize.PhaseIII..90	90	; Maximize (Phase III)
-AfterinstallingQualitasMAX.91	91	; After installing Qualitas MAX
+AfterinstallingQualitasMAX.91	91	; After installing Open 386MAX
 CONFIG.SYS.after..92	92	; CONFIG.SYS (after)
 AUTOEXEC.BAT.after..93	93	; AUTOEXEC.BAT (after)
 MEM.after..94	94	; MEM (after)
@@ -323,7 +323,7 @@ ROMSearch.307	307	; ROMSearch
 STRIPMGR.308	308	; STRIPMGR
 STRIPMGRsyntax.309	309	; STRIPMGR syntax
 STRIPMGRcommandlineoptions.310	310	; STRIPMGR command line options
-Snapshot.311	311	; Other Qualitas MAX Utilities - Snapshot
+Snapshot.311	311	; Other Open 386MAX Utilities - Snapshot
 Snapshotsyntax.312	312	; Snapshot syntax
 ExtraDOS.313	313	; ExtraDOS
 386MAXand386LOADoverview.314	314	; 386MAX and 386LOAD overview
@@ -431,8 +431,8 @@ ATandlaterchips.415	415	; AT and later chips
 Extendedmemory.416	416	; Extended memory
 Operatingmodes.417	417	; Operating modes
 Memoryandthe386.418	418	; Memory and the 386
-QualitasMAXandmemorymanagement.419	419	; Qualitas MAX and memory management
-QualitasMAXandDOSMemory.420	420	; Qualitas MAX and DOS Memory
+QualitasMAXandmemorymanagement.419	419	; Open 386MAX and memory management
+QualitasMAXandDOSMemory.420	420	; Open 386MAX and DOS Memory
 Videomemory.421	554	; Video memory
 SystemROM.422	422	; System ROM
 Remapping.423	423	; Remapping
@@ -440,13 +440,13 @@ Gettingthemostfromyourmegabyte.424	424	; Getting the most from your megabyte
 Hardwareadapters.425	425	; Hardware adapters
 Microchannelsystems.426	555	; Microchannel systems
 MDA.427	556	; MDA
-QualitasMAXandmemoryaboveonemegabyte.428	428	; Qualitas MAX and memory above one megabyte
-EMS.429	557	; An Overview of Memory Management - Qualitas MAX and memory above one megabyte - EMS
+QualitasMAXandmemoryaboveonemegabyte.428	428	; Open 386MAX and memory above one megabyte
+EMS.429	557	; An Overview of Memory Management - Open 386MAX and memory above one megabyte - EMS
 XMS.430	558	; XMS
 VCPI.431	431	; VCPI
-DPMI.432	432	; An Overview of Memory Management - Qualitas MAX and memory above one megabyte - DPMI
+DPMI.432	432	; An Overview of Memory Management - Open 386MAX and memory above one megabyte - DPMI
 VDS.433	559	; VDS
-SmartMemory.434	560	; An Overview of Memory Management - Qualitas MAX and memory management - SmartMemory
+SmartMemory.434	560	; An Overview of Memory Management - Open 386MAX and memory management - SmartMemory
 NotesforWindowsusers.435	435	; Notes for Windows users
 MAXreplacesHIMEM.SYSandEMM386.EXE.436	436	; MAX replaces HIMEM.SYS and EMM386.EXE
 GoAhead.437	437	; An Overview of Memory Management - Notes for Windows users - Go Ahead
@@ -457,7 +457,7 @@ SmartMemory.441	561	; An Overview of Memory Management - Notes for Windows users
 VirtualizedhighDOS.442	442	; Virtualized high DOS
 WinSmart.443	443	; WinSmart
 NotesforDOSmemorymanagementusers.444	444	; Notes for DOS memory management users
-QualitasMAXimprovesonmemorymanagement.445	445	; Qualitas MAX improves on memory management
+QualitasMAXimprovesonmemorymanagement.445	445	; Open 386MAX improves on memory management
 Specificregionselection.446	446	; Specific region selection
 Optimization.447	447	; Optimization
 Loadmanagement.448	448	; Load management
@@ -522,8 +522,8 @@ GlossXMS.506	506	; D2HGlossXMS
 Setup.3 3	; Setup
 QualitasMemoryTester.13 13	; Qualitas Memory Tester
 AnOverviewofMemoryManagement.19 19	; An Overview of Memory Management
-QualitasMAXfunctions.21 21	; Qualitas MAX functions
-QualitasMAXinterface.22 22	; Qualitas MAX interface
+QualitasMAXfunctions.21 21	; Open 386MAX functions
+QualitasMAXinterface.22 22	; Open 386MAX interface
 On.linedocumentation.26 26	; On-line documentation
 Whenyouhaveaquestion.40 40	; When you have a question
 QualitasonCompuServe.43 43	; Qualitas on CompuServe
@@ -569,10 +569,10 @@ LowandhighDOSmemory.410 410	; Low and high DOS memory
 Videomemory.421 421	; Video memory
 Microchannelsystems.426 426	; Microchannel systems
 MDA.427 427	; MDA
-EMS.429 429	; An Overview of Memory Management - Qualitas MAX and memory above one megabyte - EMS
+EMS.429 429	; An Overview of Memory Management - Open 386MAX and memory above one megabyte - EMS
 XMS.430 430	; XMS
 VDS.433 433	; VDS
-SmartMemory.434 434	; An Overview of Memory Management - Qualitas MAX and memory management - SmartMemory
+SmartMemory.434 434	; An Overview of Memory Management - Open 386MAX and memory management - SmartMemory
 SmartMemory.441 441	; An Overview of Memory Management - Notes for Windows users - SmartMemory
 GlossExpandedmemory.471 471	; D2HGlossExpandedmemory
 GlossExtendedmemory.472 472	; D2HGlossExtendedmemory

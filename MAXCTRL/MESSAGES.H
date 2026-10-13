@@ -50,10 +50,10 @@ EXTERN LPSTR szMsg_Uninstall
     DEFVAL( "Entfernen" );
 
 EXTERN LPSTR szMsg_UnOK
-    DEFVAL( "Sie haben sich zum Entfernen einiger oder sämtlicher Qualitas MAX Komponenten entschieden. Damit ist Qualitas MAX möglicherweise nicht mehr in vollem Umfang funktionsfähig. Möchten Sie die Aktion fortsetzen?" );
+    DEFVAL( "Sie haben sich zum Entfernen einiger oder sämtlicher Open 386MAX Komponenten entschieden. Damit ist Open 386MAX möglicherweise nicht mehr in vollem Umfang funktionsfähig. Möchten Sie die Aktion fortsetzen?" );
 
 EXTERN LPSTR szMsg_HiMem
-    DEFVAL( "Entfernen des Qualitas MAX hinterläßt Ihr System ohne Memory Management. Für Windows müssen Sie mindestens HIMEM.SYS installieren." );
+    DEFVAL( "Entfernen des Open 386MAX hinterläßt Ihr System ohne Memory Management. Für Windows müssen Sie mindestens HIMEM.SYS installieren." );
 
 EXTERN LPSTR szMsg_Cancel
     DEFVAL( "Abbrechen" );
@@ -112,10 +112,10 @@ EXTERN LPSTR szMsg_Uninstall
     DEFVAL( "Uninstall" );
 
 EXTERN LPSTR szMsg_UnOK
-    DEFVAL( "You have elected to Uninstall some or all components of Qualitas MAX.  By Uninstalling these items, you may be removing items essential to the operation of Qualitas MAX.  Do you wish to continue?" );
+    DEFVAL( "You have elected to Uninstall some or all components of Open 386MAX.  By Uninstalling these items, you may be removing items essential to the operation of Open 386MAX.  Do you wish to continue?" );
 
 EXTERN LPSTR szMsg_HiMem
-    DEFVAL( "Uninstalling Qualitas MAX leaves your system without memory management.  You must load HIMEM.SYS for Windows to function." );
+    DEFVAL( "Uninstalling Open 386MAX leaves your system without memory management.  You must load HIMEM.SYS for Windows to function." );
 
 EXTERN LPSTR szMsg_Cancel
     DEFVAL( "Cancel" );

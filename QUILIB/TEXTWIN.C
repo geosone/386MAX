@@ -899,6 +899,7 @@ WINRETURN vWin_show(	/*	Dump the video buffer to screen */
 		startPos += pText->size.col;
 	}
 	vWin_updateCursor(pText);
+	return WIN_OK;
 }
 
 /**

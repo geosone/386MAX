@@ -176,7 +176,7 @@ unsigned far pascal Explode_In (char far *buff, unsigned short far *size)
 		bytesread = (unsigned int) arcbytes;
 	arcbytes -= (long) bytesread;
 	if (bytesread)
-		arcCRC = crc32 (buff, &bytesread, &arcCRC);
+		arcCRC = crc32 (buff, (unsigned short *) &bytesread, &arcCRC);
 
 	return (bytesread);
 }
@@ -404,7 +404,7 @@ int do_extract (HWND hDlg, char *szDest)
 	    // Check to see if file exists
 	  ftime.dtime = 0L;
 	  if (( desthandle = _open( szTarget, O_BINARY|O_RDONLY)) != -1 ) {
-	     _dos_getftime( desthandle, &(ftime.dt.date), &(ftime.dt.time));
+	     _dos_getftime( desthandle, (unsigned *) &(ftime.dt.date), (unsigned *) &(ftime.dt.time));
 	     _close( desthandle);
 	  } // Destination file exists
 

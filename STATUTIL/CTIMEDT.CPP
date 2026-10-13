@@ -322,18 +322,18 @@ CTimeDate::Add( DWORD dwE, DWORD dwT ) {
 #error Need USE32 version of ASM code
 #else
 	_asm {
-		mov	ax,dwT[ word ptr 0 ];	// Get low word of time operator
-		add	dwTOp[ word ptr 0 ],ax;	// Add to low word of time operand
-		mov	ax,dwT[ word ptr 2 ];	// Get high word of time operator
-		adc dwTOp[ word ptr 2 ],ax;	// Add to high word of time operand
+		mov	ax,word ptr dwT;	// Get low word of time operator
+		add	word ptr dwTOp,ax;	// Add to low word of time operand
+		mov	ax,word ptr dwT+2;	// Get high word of time operator
+		adc word ptr dwTOp+2,ax;	// Add to high word of time operand
 
 		sbb	ax,ax;					// AX = ffff if overflow occurred
 		mov	nRes,ax;				// Save result
 
-		mov	ax,dwE[ word ptr 0 ];	// Get low word of epoch operator
-		adc	dwEOp[ word ptr 0 ],ax;	// Add to low word of epoch operand
-		mov	ax,dwE[ word ptr 2 ];	// Get high word of epoch operator
-		adc	dwEOp[ word ptr 2 ],ax;	// Add to high word of epoch operand
+		mov	ax,word ptr dwE;	// Get low word of epoch operator
+		adc	word ptr dwEOp,ax;	// Add to low word of epoch operand
+		mov	ax,word ptr dwE+2;	// Get high word of epoch operator
+		adc	word ptr dwEOp+2,ax;	// Add to high word of epoch operand
 
 		sbb	ax,ax;					// AX = ffff if overflow occurred
 		or	nRes,ax;				// Save result
@@ -387,17 +387,17 @@ CTimeDate::Subtract( DWORD dwE, DWORD dwT ) {
 #error Need Use32 version  of ASM code
 #else
 	_asm {
-		mov	ax,dwT[ word ptr 0 ];	// Get low word of time operator
-		sub	dwTOp[ word ptr 0 ],ax;	// Sub from low word of time operand
-		mov	ax,dwT[ word ptr 2 ];	// Get high word of time operator
-		sbb dwTOp[ word ptr 2 ],ax;	// Sub from high word of time operand
+		mov	ax,word ptr dwT;	// Get low word of time operator
+		sub	word ptr dwTOp,ax;	// Sub from low word of time operand
+		mov	ax,word ptr dwT+2;	// Get high word of time operator
+		sbb word ptr dwTOp+2,ax;	// Sub from high word of time operand
 
 									// Underflow here is acceptable
 
-		mov	ax,dwE[ word ptr 0 ];	// Get low word of epoch operator
-		sub	dwEOp[ word ptr 0 ],ax;	// Sub from low word of epoch operand
-		mov	ax,dwE[ word ptr 2 ];	// Get high word of epoch operator
-		sbb	dwEOp[ word ptr 2 ],ax;	// Sub from high word of epoch operand
+		mov	ax,word ptr dwE;	// Get low word of epoch operator
+		sub	word ptr dwEOp,ax;	// Sub from low word of epoch operand
+		mov	ax,word ptr dwE+2;	// Get high word of epoch operator
+		sbb	word ptr dwEOp+2,ax;	// Sub from high word of epoch operand
 
 		sbb	ax,ax;					// AX = ffff if underflow occurred
 		mov	nRes,ax;				// Save result

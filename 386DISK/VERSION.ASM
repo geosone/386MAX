@@ -1,4 +1,4 @@
-VERSION  equ	 800
+VERSION  equ	 850
 
 ;' $Header:   P:/PVCS/MAX/386DISK/VERSION.ASV   1.1   03 Oct 1995 10:33:52   BOB  $
 ;

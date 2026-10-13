@@ -43,12 +43,12 @@ END
 
 ABOUTDLGBOX DIALOG PRELOAD 4, 4, 184, 119
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Info über Qualitas MAXmeter"
+CAPTION "Info über MAXmeter"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",1,129,6,50,14
     ICON            MAXICON,-1,144,56,18,20
-    LTEXT           "Qualitas MAXmeter\nVersion " VER_PRODUCTVERSION_STR,-1, 12,7,112,17
+    LTEXT           "MAXmeter\nVersion " VER_PRODUCTVERSION_STR,-1, 12,7,112,17
     LTEXT           VER_LEGALCOPYRIGHT2_STR,
                     -1,12,36,125,18
     LTEXT           "Dieses Exemplar ist lizenziert für: ",101,12,68,112,8

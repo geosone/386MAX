@@ -29,14 +29,14 @@ ssen Sie die Installation nun abbrechen.
 \par 
 \par    Dr\'81cken Sie Alt+L zum {\b L}esen der Neuerungen und Online-Hinweise.
 \par {\fs28\cf6 >>L.Copyright
-\par }{\b Bitte beachten Sie, da\'e1 diese Software jeweils nur auf einem System installiert und genutzt werden darf. }
+\par }{\b Open 386MAX ist freie Software: Sie d\'81rfen sie nach den Bedingungen der GNU General Public License Version 3 nutzen, kopieren und weitergeben.}
 \par 
-\par Fertigen Sie keine Kopien von irgendeiner Qualitas Dokumentation oder den Programmdisketten an; ausgenommen ist nat\'81rlich eine Sicherungskopie der Software. F\'81r den Einsatz dieses Programmes auf mehr als einer Maschine zu einer Zeit ben\rdblquote 
-tigen Sie eine Lizenz f\'81r jede Maschine.
+\par Sie d\'81rfen das Programm auf beliebig vielen Systemen installieren, an andere weitergeben und ver\'84ndern.  Wenn Sie es oder Ihre \'8enderungen weitergeben, verlangt die GPL, da\'e1 Sie dieselben Rechte und den Quelltext weitergeben.
 \par 
-\par Weitere Einschr\'84nkungen f\'81r den Gebrauch dieser Software sind in den Lizenzvereinbarungen am Anfang des {\b Installationshandbuches }dokumentiert sind.
+\par Das Programm wird OHNE JEDE GEW\'8eHRLEISTUNG geliefert, soweit gesetzlich zul\'84ssig.  Den vollst\'84ndigen Lizenztext enth\'84lt die Datei {\b LICENSE.TXT} im Programmverzeichnis.
 \par 
-\par   (C) Copyright 1987-96 Qualitas, Inc.  Alle Rechte vorbehalten.
+\par      (C) Copyright 1987-97 Qualitas, Inc.
+\par      Open 386MAX-Mitwirkende 2022-2026, GNU General Public License Version 3.
 \par {\fs28\cf6 >>L.MMMaximiz}{\fs28\cf6 e
 \par }Standard #PROGNAME# ist abgeschlossen.
 \par 

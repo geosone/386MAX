@@ -2357,7 +2357,7 @@ typedef struct tagGroupHeader {
   BYTE wPlanes; 		// NUMPLANES in icon bitmaps
   WORD wUnk;			// Who the hell knows?
   WORD cItems;			// Number of ITEMDATA offsets in rgiItems[]
-  WORD rgiItems[0];		// ITEMDATA structure offsets (valid if != 0)
+  WORD rgiItems[];		// ITEMDATA structure offsets (valid if != 0)
 } GROUPHEADER;
 
 // Values for TAGDATA.wID:
@@ -2372,7 +2372,7 @@ typedef struct tagTagData {
   WORD wID;			// Values defined above
   WORD wItem;			// Index of ITEMDATA structure
   WORD cb;			// Size of TAGDATA structure in bytes
-  BYTE rgb[0];			// Array of length cb - sizeof (TAGDATA)
+  BYTE rgb[];			// Array of length cb - sizeof (TAGDATA)
 } TAGDATA;
 
 typedef struct tagItemData {

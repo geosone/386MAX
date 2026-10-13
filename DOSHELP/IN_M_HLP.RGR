@@ -50,12 +50,12 @@
 \par 
 \par \pard \widctlpar {\fs28\cf6 >>M.DOSHelp
 \par }\pard \ri-36\widctlpar #PROGNAME# hat auf diesem System DOS 5.x gefunden.
-\par \pard \ri-36\widctlpar Die DOS Hilfe-Information kann fr Qualitas Produkte erweitert werden.
+\par \pard \ri-36\widctlpar Die DOS Hilfe-Information kann fr Open 386MAX Produkte erweitert werden.
 \par \pard \widctlpar 
 \par {\b Soll #PROGNAME# zus„tzlichen Hilfe-Text in die
 \par DOS-Hilfedatei schreiben?
 \par }\pard \widctlpar {\fs28\cf6 >>M.DOSPath
-\par }\pard \widctlpar #PROGNAME# muá die Position des DOS-Verzeichnisses kennen, so daá es den Hilfe-Text fr Qualitas Produkte einfgen kann.
+\par }\pard \widctlpar #PROGNAME# muá die Position des DOS-Verzeichnisses kennen, so daá es den Hilfe-Text fr Open 386MAX Produkte einfgen kann.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Geben Sie Laufwerk/Pfad des DOS-Verzeichnisses an.
 \par }\pard \widctlpar 
@@ -90,7 +90,7 @@ r eine Systemoptimierung mit #QCACHE#.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Soll #QCACHE# installiert werden?
 \par }\pard \widctlpar {\fs28\cf6 >>M.NoInstall
-\par }\pard \widctlpar #PROGNAME# hat dieses System untersucht und konnte keine Hardware finden, die ein Qualitas Produkt untersttzt. Deshalb muá der Vorgang abgebrochen werden. Systemvoraussetzung fr ein Memory Management-Produkt von Qualitas ist:
+\par }\pard \widctlpar #PROGNAME# hat dieses System untersucht und konnte keine Hardware finden, die ein Open 386MAX Produkt untersttzt. Deshalb muá der Vorgang abgebrochen werden. Systemvoraussetzung fr ein Memory Management-Produkt von Qualitas ist:
 
 \par \pard \widctlpar 
 \par \pard \widctlpar   {\b\i *} ein 80386 (oder h”her) Prozessor oder
@@ -111,10 +111,10 @@ r Systemfehler, falls Sie SMARTDRV in den HiDOS-Bereich laden!
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Soll SMARTDRV durch #QCACHE# ersetzt werden?}
 \par \pard\plain \s16\widctlpar \f276\fs28\cf6 >>M.NoWinSupp
-\par \pard\plain \widctlpar \f276 Die haben die DOS Version des Qualitas MAX Setup aufgerufen. Wenn Sie den Vorgang fortsetzen, werden keine Windows-Funktionen installiert. M”chten Sie die Windows-Funktionen nutzen, m
+\par \pard\plain \widctlpar \f276 Die haben die DOS Version des Open 386MAX Setup aufgerufen. Wenn Sie den Vorgang fortsetzen, werden keine Windows-Funktionen installiert. M”chten Sie die Windows-Funktionen nutzen, m
 ssen Sie die Windows-Version des Setup-Programmes aufrufen.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b M”chten Sie die Windows-Version des Qualitas MAX Setup starten?}
+\par \pard \widctlpar {\b M”chten Sie die Windows-Version des Open 386MAX Setup starten?}
 \par \pard \widctlpar {\fs28\cf6 >>M.NoWin
 \par }\pard \widctlpar #PROGNAME# hat die Verzeichnisse der PATH-Anweisungen durchsucht und keine Windows-Dateien gefunden.
 \par \pard \widctlpar 

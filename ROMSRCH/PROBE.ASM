@@ -226,12 +226,12 @@ MSG_EOL  db	 CR,LF			; Carriage Return / Line Feed
 	 public  MSG_FINI
 ifdef LANG_GR
 MSG_FINI	db	@PROGNAME, ' empfiehlt Ihnen, folgende Zeile(n) '
-		db	'in Ihrer Qualitas MAX- oder ',CR,LF
+		db	'in Ihrer Open 386MAX- oder ',CR,LF
 		db	'BlueMAX.PROfil-Datei einzufÅgen...',CR,LF
 else
 MSG_FINI	db	@PROGNAME, ' would like to suggest that you add the '
 		db	'following line(s) ',CR,LF
-		db	'to your Qualitas MAX or BlueMAX profile...',CR,LF
+		db	'to your Open 386MAX or BlueMAX profile...',CR,LF
 endif						; ifdef LANG_GR
 @MSG_FINI_LEN	equ	$-MSG_FINI
 
@@ -262,17 +262,17 @@ endif							; ifdef LANG_GR
 
 	public	MSG_NOMAX
 ifdef LANG_GR
-MSG_NOMAX db	 'Qualitas MAX ist nicht installiert.',CR,LF
+MSG_NOMAX db	 'Open 386MAX ist nicht installiert.',CR,LF
 else
-MSG_NOMAX db	 'Sorry. Qualitas MAX is not installed.',CR,LF
+MSG_NOMAX db	 'Sorry. Open 386MAX is not installed.',CR,LF
 endif							; ifdef LANG_GR
 @MSG_NOMAX_LEN	 equ	$-MSG_NOMAX
 
 	public	MSG_BADVER
 ifdef LANG_GR
-MSG_BADVER db	 'falsche Qualitas MAX Version.',CR,LF
+MSG_BADVER db	 'falsche Open 386MAX Version.',CR,LF
 else
-MSG_BADVER db	 'Sorry. Wrong version of Qualitas MAX.',CR,LF
+MSG_BADVER db	 'Sorry. Wrong version of Open 386MAX.',CR,LF
 endif							; ifdef LANG_GR
 @MSG_BADVER_LEN  equ	$-MSG_BADVER
 

@@ -1720,6 +1720,33 @@ CHECK_MODEL_XAMI:
 	 jnz	 short CHECK_MODEL_XPCI ; Jump if not
 CHECK_MODEL_PCI:
 	 or	 SYS_FLAG,@SYS_PCIBIOS ; PCI BIOS detected
+
+; A PCI BIOS doesn't imply EISA style (32-bit) DMA:  only some early PCI
+; chipsets (e.g. the 82378 SIO) have the DMA high page registers, later ones
+; (PIIX, ICH and LPC bridges, also QEMU) have 24-bit ISA DMA only, and
+; transfers above 16MB which aren't buffered wrap around into low memory.
+; Check for the high page register of channel 3 (482h) by writing to it
+; and reading it back.
+
+	 mov	 dx,482h	; DMA channel 3 high page register
+	 in	 al,dx		; Get current value
+	 mov	 ah,al		; Save to restore
+	 mov	 al,5Ah		; First test pattern
+	 out	 dx,al		; Write it
+	 jmp	 short $+2	; I/O delay
+	 in	 al,dx		; Read it back
+	 cmp	 al,5Ah		; Izit the same?
+	 jne	 short @F	; Jump if not (ZF=0)
+
+	 mov	 al,0A5h	; Second test pattern
+	 out	 dx,al		; Write it
+	 jmp	 short $+2	; I/O delay
+	 in	 al,dx		; Read it back
+	 cmp	 al,0A5h	; Izit the same? (ZF=1 if so)
+@@:
+	 mov	 al,ah		; Restore original value
+	 out	 dx,al		; ...
+	 jne	 short CHECK_MODEL_DMA24 ; Jump if no high page registers
 CHECK_MODEL_DMA32:
 	 CPD	 '32-bit DMA supported'
 
@@ -1730,6 +1757,14 @@ if @OEM_DMA
 	 or	 CM2_FLAG,@CM2_EISA_DMA ; Mark as present (EISA style DMA)
 	 mov	 DMA_MAX_LEN,@DMA_MAX_EISALEN ; Maximum size of DMA buffer
 endif				; IF @OEM_DMA
+
+	 jmp	 CHECK_MODEL_EXIT ; Join common code
+
+CHECK_MODEL_DMA24:
+	 CPD	 '24-bit DMA only'
+
+	 mov	 REP_FAC,1	; Use repeat factor of 1 for I/O ports
+	 mov	 IO_LIM_MASK,-1 ; All I/O bits are significant
 
 	 jmp	 CHECK_MODEL_EXIT ; Join common code
 

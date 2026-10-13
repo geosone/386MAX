@@ -810,6 +810,12 @@ JDATA	 segment use16 dword public 'jcode' ; Start JDATA segment
 
 	 extrn	 JSEL_DS3:word
 
+	 public  SHDFREE_MAP,E820RSV_MAP
+SHDFREE_MAP db	 ((384/4)/8) dup (0) ; Free shadow DRAM bit map (see QMAX_MEM)
+				; 1 = writable, but not adapter RAM
+E820RSV_MAP db	 ((384/4)/8) dup (0) ; E820h reserved bit map (see QMAX_MEM)
+				; 1 = in use by the BIOS
+
 	 public  NOSCAN_MAP
 NOSCAN_MAP db	 ((384/4)/8) dup (0) ; NOSCAN bit map
 				; 0 = OK to scan
@@ -1189,9 +1195,25 @@ EMM2_RAMSCAN_NEXT:
 	 jc	 short @F	; Jump if not to be scanned
 
 	 call	 TEST_RAM	; Test for it
-	 jnc	 short @F	; Jump if not RAM
+	 jnc	 short EMM2_RAMSCAN_XRAM ; Jump if not RAM
+
+	 push	 edx		; Save for a moment
+	 shr	 edx,12-0	; Convert from bytes to 4KB
+	 sub	 dx,640/4	; Origin A000
+	 bt	 SHDFREE_MAP.ELO,dx ; Izit free shadow DRAM?
+	 pop	 edx		; Restore
+	 jc	 short EMM2_RAMSCAN_XRAM ; Jump if so (not adapter RAM)
 
 	 or	 al,mask $RAM_RAM ; Mark as RAM
+EMM2_RAMSCAN_XRAM:
+	 push	 edx		; Save for a moment
+	 shr	 edx,12-0	; Convert from bytes to 4KB
+	 sub	 dx,640/4	; Origin A000
+	 bt	 E820RSV_MAP.ELO,dx ; Izit reserved by the BIOS?
+	 pop	 edx		; Restore
+	 jnc	 short @F	; Jump if not
+
+	 or	 al,mask $RAM_RAM ; Mark as RAM (protect it)
 @@:
 
 if @OEM_SYS eq @OEMSYS_RET

@@ -970,7 +970,7 @@ void CWinmxmzApp::OnHelp()
 
 void CWinmxmzApp::WinHelp( DWORD dwData, UINT uCmd /*=HELP_CONTEXT*/ )
 {
-	static bHelp = FALSE;	// Have not been run yet
+	static BOOL bHelp = FALSE;	// Have not been run yet
 
 	if(uCmd == HELP_QUIT)
 	{

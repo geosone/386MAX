@@ -297,7 +297,7 @@ a row/column counter is displayed.  The first number is the current line positio
 \par \pard\plain \f4\lang1033 @P H.Default I_NoMaximize
 \par                             {\i DOS Directory}
 \par 
-\par If you wish, #PROGNAME# will add help information for Qualitas products #FLENME#, 386LOAD, 386UTIL, ASQ, MAX, Maximize, and SnapShot to the DOS 5.x help system.  If so, #PROGNAME# will need to reference the DOS 5.x {\b help}
+\par If you wish, #PROGNAME# will add help information for Open 386MAX products #FLENME#, 386LOAD, 386UTIL, ASQ, MAX, Maximize, and SnapShot to the DOS 5.x help system.  If so, #PROGNAME# will need to reference the DOS 5.x {\b help}
  file.  This help file - DOSHELP.HLP - is usually installed in the same location as other DOS files.
 \par 
 \par Enter the full {\b drive and path} of your primary DOS subdirectory.

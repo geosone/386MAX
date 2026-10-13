@@ -108,7 +108,7 @@
 \par                     {\ul Anzeige der Datei EXTRADOS.PRO}{\v H.Cfg_EPro}
 \par                      {\ul Anzeige der Datei SYSTEM.INI}{\v H.Cfg_SYSINI}
 \par                       {\ul Datei-Betrachter anwenden}{\v H.U_Browse}
-\par                     {\ul Qualitas Produkt-Information}{\v H.Cfg_Qualitas}
+\par                     {\ul Open 386MAX Produkt-Information}{\v H.Cfg_Qualitas}
 \par                   {\ul Anzeige von Windows-Informationen}{\v H.Cfg_Windows}
 \par  - Diese Themen erl\'84utern Bildschirme zur {\b Maschinen-Ausstattung} -
 \par                        {\ul CMOS Detail-Information}{\v H.Cfg_CMO}
@@ -770,9 +770,9 @@ t begrenzt und kann von System zu System unterschiedlich sein. Die meisten Syste
 \par 
 \par \pard\plain \s1 \f11\fs28\cf6\lang1033 >>H.Cfg_Qualitas
 \par \pard\plain \f11\lang1033 @P H.Cfg_Sum H.Cfg_CMO
-\par                     {\i Qualitas Produkt-Informationen
+\par                     {\i Open 386MAX Produkt-Informationen
 \par }
-\par \pard \fi-2\li2 Die Qualitas Produkt-Information zeigt Daten zu ben\rdblquote tigten Qualitas Programmen, deren Gr\rdblquote \'e1e und Dateidatum. Informationen \'81ber residente Programme wird ebenso gelistet; diese Daten k\rdblquote 
+\par \pard \fi-2\li2 Die Open 386MAX Produkt-Information zeigt Daten zu ben\rdblquote tigten Open 386MAX Programmen, deren Gr\rdblquote \'e1e und Dateidatum. Informationen \'81ber residente Programme wird ebenso gelistet; diese Daten k\rdblquote 
 nnen zur Fehlerbehebung vorteilhaft sein.
 \par 
 \par \pard Die {\b Lernhilfe }enth\'84lt weitere Informationen zu diesem Thema.
@@ -998,7 +998,7 @@ nnen zur Fehlerbehebung vorteilhaft sein.
 \par {\ul Men\'81ystem, Schaltfl\'84chen}{\v H.Default}   Einf\'81hrung in das Men\'81system
 \par {\ul MOVE'EM.PRO Datei}{\v H.Cfg_PRO}          Anzeige der .PRO Datei
 \par {\ul Optionsschalter}{\v H.U_Dial}            Umgang mit einem Dialogfeld
-\par {\ul Qualitas Produkt-Info}{\v\ul H.Cfg_Qualitas}      Anzeige Qualitas Produkt-Information{\ul 
+\par {\ul Open 386MAX Produkt-Info}{\v\ul H.Cfg_Qualitas}      Anzeige Open 386MAX Produkt-Information{\ul 
 \par }{\ul ROM-Information}{\v H.Mem_ROM}            ROM Scan-Information 
 \par {\ul Snapshot Beschreibung}{\v H.Snp_Save}      SnapShot-Datei laden
 \par {\ul Snapshot Information}{\v H.Snp_I}{\v nfo}       Information der SnapShot-Datei

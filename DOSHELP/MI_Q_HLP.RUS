@@ -26,12 +26,12 @@
 \par }{\cf2  use }{\b\i\cf2 BOLD ITALICS}{\cf2  for bullets= yellow text}{\cf2 
 \par }{\cf2 
 \par }\pard\plain \s3 \f5\fs28\cf6\lang1033 >>Q_I_Intro
-\par \pard\plain \f5\lang1033 INSTALL creates a subdirectory for Qualitas program and driver files and copies the files from the installation disk to the designated drive.
+\par \pard\plain \f5\lang1033 INSTALL creates a subdirectory for Open 386MAX program and driver files and copies the files from the installation disk to the designated drive.
 \par 
 \par INSTALL modifies the system startup files if necessary.
 \par 
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>Q_U_Intro
-\par \pard\plain \f5\lang1033 UPDATE copies new versions of Qualitas program and driver files from the update disk to a desig-nated directory containing a registered Qualitas
+\par \pard\plain \f5\lang1033 UPDATE copies new versions of Open 386MAX program and driver files from the update disk to a desig-nated directory containing a registered Open 386MAX
 \par product.
 \par 
 \par UPDATE modifies the system startup files if necessary.

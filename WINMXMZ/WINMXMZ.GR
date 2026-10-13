@@ -9,6 +9,7 @@
 //
 // $Header:   P:/PVCS/MAX/WINMXMZ/WINMXMZ.GRV   1.1   27 Feb 1996 12:29:26   PETERJ  $
 #include "afxres.h"
+#include <statres.h>
 
 /////////////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -66,7 +67,7 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,29,118,50,14
     PUSHBUTTON      "&Beenden",IDCANCEL,99,118,50,14
     PUSHBUTTON      "&Hilfe",IDC_HELP,169,118,50,14
-    CTEXT           "Wilkommen bei Maximize, dem Programm zur automatischen System-Konfiguraton f\374r Qualitas MAX!",
+    CTEXT           "Wilkommen bei Maximize, dem Programm zur automatischen System-Konfiguraton f\374r Open 386MAX!",
                     IDC_STATIC,44,10,161,25
     LTEXT           "Maximize durchsucht die System-Startdateien nach speicher-residenter Software und ermittelt die bestm\366gliche Speicher-Organisation. Klicken Sie auf Hilfe, wenn Sie in Maximize weitere Erl\344uterungen zu den einzelnen Schritten w\374nschen.",
                     IDC_STATIC,16,44,222,57
@@ -132,7 +133,7 @@ BEGIN
     PUSHBUTTON      "&Hilfe",IDC_HELP,235,158,50,14
     LTEXT           "Sucht im System-BIOS nach nutzbarem HiDOS-Speicher",
                     IDC_STATIC,113,38,186,10
-    LTEXT           "Entfernt USE= Eintr\344ge f\374r Bereiche bei F000-FFFF aus der Qualitas MAX Profildatei",
+    LTEXT           "Entfernt USE= Eintr\344ge f\374r Bereiche bei F000-FFFF aus der Open 386MAX Profildatei",
                     IDC_STATIC,113,53,182,17
     LTEXT           "Pr\374ft, ob das VGA BIOS verlagert werden kann",
                     IDC_STATIC,113,93,180,10
@@ -140,7 +141,7 @@ BEGIN
                     IDC_STATIC,113,128,189,20
     GROUPBOX        "ROMsearch",IDC_STATIC,18,23,285,51
     GROUPBOX        "VGASWAP",IDC_STATIC,18,78,285,45
-    LTEXT           "Entfernt VGASWAP aus der Qualitas MAX Profildatei",
+    LTEXT           "Entfernt VGASWAP aus der Open 386MAX Profildatei",
                     IDC_STATIC,113,108,180,10
 END
 
@@ -169,7 +170,7 @@ BEGIN
     PUSHBUTTON      "&Hilfe",IDC_HELP,235,180,50,14
     LTEXT           "Sucht im System-BIOS nach nutzbarem HiDOS-Speicher",
                     IDC_STATIC,115,40,182,10
-    LTEXT           "Entfernt USE= Eintr\344ge f\374r Bereiche bei F000-FFFF aus der Qualitas MAX Profildatei",
+    LTEXT           "Entfernt USE= Eintr\344ge f\374r Bereiche bei F000-FFFF aus der Open 386MAX Profildatei",
                     IDC_STATIC,115,55,182,17
     LTEXT           "Pr\374ft, ob das VGA BIOS verlagert werden kann",
                     IDC_STATIC,115,95,180,10
@@ -177,7 +178,7 @@ BEGIN
                     IDC_STATIC,115,130,189,19
     GROUPBOX        "ROMsearch",IDC_STATIC,17,25,285,49
     GROUPBOX        "VGASWAP",IDC_STATIC,17,80,285,45
-    LTEXT           "Entfernt VGASWAP aus der Qualitas MAX Profildatei",
+    LTEXT           "Entfernt VGASWAP aus der Open 386MAX Profildatei",
                     IDC_STATIC,115,110,181,10
     LTEXT           "Erkennt und maximiert die in DOSSTART.BAT (zus\344tzlich zu den Systemdateien) geladene residente Software.",
                     IDC_STATIC,115,150,189,18
@@ -200,11 +201,11 @@ BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,291,13,18,20
 END
 
-IDD_SPLASH DIALOG DISCARDABLE  0, 0, 227, 157
+IDD_STAT_SPLASH DIALOG DISCARDABLE  0, 0, 227, 157
 STYLE WS_POPUP | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "",IDC_SPLASHBMP,"Button",BS_OWNERDRAW | WS_TABSTOP,0,0,
+    CONTROL         "",IDC_STAT_SPLASHBMP,"Button",BS_OWNERDRAW | WS_TABSTOP,0,0,
                     240,160
 END
 

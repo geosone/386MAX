@@ -31,7 +31,7 @@
 \par ASQ examines the system configu-
 \par ration and can help
 \par you understand how
-\par to maximize productivity with Qualitas products.
+\par to maximize productivity with Open 386MAX products.
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>Q_Cfg_Sum
 \par \pard\plain \f5\lang1033 The computer's work
 \par environment is configured by DOS commands and other
@@ -60,7 +60,7 @@
 \par This option loads SYSTEM.INI into the MAX editor for editing.
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>Q_Edit_Load
 \par \pard\plain \f5\lang1033 The loader con-
-\par figuration file contains options for special handling of certain programs by Qualitas products. This is a technical support tool only.
+\par figuration file contains options for special handling of certain programs by Open 386MAX products. This is a technical support tool only.
 \par 
 \par This option loads 386LOAD.CFG or Move'EM.CFG into the MAX editor for editing.
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>Q_Edit_Othr
@@ -72,7 +72,7 @@
 \par specified file into
 \par the MAX editor for editing.
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>Q_Edit_PRO
-\par \pard\plain \f5\lang1033 The profile contains commands used by Qualitas products during system configuration.
+\par \pard\plain \f5\lang1033 The profile contains commands used by Open 386MAX products during system configuration.
 \par 
 \par This option loads the profile into the MAX editor for editing.
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>Q_Exit
@@ -88,7 +88,7 @@
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>Q_Help
 \par \pard\plain \f5\lang1033 The MAX Help system
 \par provides a context sensitive, indexed,
-\par and topic-linked help system to help you use Qualitas products.
+\par and topic-linked help system to help you use Open 386MAX products.
 \par 
 \par This option loads the Help system at
 \par the named topic.
@@ -114,7 +114,7 @@
 \par \pard\plain \f5\lang1033 MAX includes 386UTIL utilities to examine system configuration relevant to memory management.
 \par 
 \par This option uses the 386UTIL LIST utility to show how
-\par Qualitas products have arranged conventional memory
+\par Open 386MAX products have arranged conventional memory
 \par and allocated extended memory.
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>Q_Info_Res
 \par \pard\plain \f5\lang1033 MAX includes 386UTIL utilities to examine system configuration relevant to memory management.

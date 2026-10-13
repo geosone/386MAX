@@ -1359,6 +1359,7 @@ WINDESC *win )			/*	Subset to show */
 		startPos += pText->size.col;
 	}
 	vWin_updateCursor(pText);
+	return WIN_OK;
 }
 
 /**
@@ -1475,6 +1476,7 @@ WINDESC *win )			/*	Subset to show */
 		startPos += pText->size.col;
 	}
 	vWin_updateCursor(pText);
+	return WIN_OK;
 }
 
 int   locate_cursor(
@@ -1626,6 +1628,7 @@ char *text )			/*	What text to write with default attr */
 #else
 	vWin_show( pText, win );
 #endif
+	return WIN_OK;
 }
 
 int fixup_corner(

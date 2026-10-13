@@ -116,7 +116,7 @@ nschte Thema aus. Benutzen Sie die {\b rechte} oder {\b linke }Pfeil-
 \par }@P H.Default H.U_Editor
 \par                     {\i Einf\'81hrung in das M}{\i en\'81-System} 
 \par 
-\par Die Funktionen dieses Systems werden \'81ber eine Men\'81leiste am oberen Bildschirmrand gesteuert. Die Optionen dieser Leiste rufen Pulldown-Men\'81s auf, die wiederum Qualitas MAX Befehle enthalten.
+\par Die Funktionen dieses Systems werden \'81ber eine Men\'81leiste am oberen Bildschirmrand gesteuert. Die Optionen dieser Leiste rufen Pulldown-Men\'81s auf, die wiederum Open 386MAX Befehle enthalten.
 \par 
 \par F\'81r die Men\'81leiste gelten folgende Funktionstasten:
 \par 
@@ -334,7 +334,7 @@ schen und speichern. Mit dem besonderen Optionen Editor k\rdblquote nnen Sie die
 \par     Schaltfl\'84che ist nur dann aktiv, wenn die Datei seit dem
 \par     letzten Laden oder Speichern ver\'84ndert wurde.
 \par \pard   * {\b Option F8} - Der Option Editor ist ein Dialogfeld, mit dem Sie
-\par     die Qualitas Software Ihrem System anpassen k\rdblquote nnen. 
+\par     die Open 386MAX Software Ihrem System anpassen k\rdblquote nnen. 
 \par     Vgl. {\ul Optionen-Editor anwenden}{\v H.E_Option}.
 \par 
 \par {\b Editor-Bildschirm}
@@ -441,7 +441,7 @@ hren. Die maximale Zeilenzahl einer Datei wird durch den freien Arbeitsspeicher 
 \par }@P H.U_Editor H.E_Spec
 \par                         {\i Optionen-Editor anwenden}
 \par 
-\par Mit dem Optionen-Editor k\rdblquote nnen Sie eine Options-Anweisung in die Profildatei der Qualitas Software aufnehmen. Der Optionen-Editor enth\'84
+\par Mit dem Optionen-Editor k\rdblquote nnen Sie eine Options-Anweisung in die Profildatei der Open 386MAX Software aufnehmen. Der Optionen-Editor enth\'84
 lt eine Liste der Profil-Optionen, eine Beschreibung zu jeder einzelnen Option sowie einen Feld-Editor mit dem Sie den Optionstext individuell f\'81r Ihr System einrichten k\rdblquote nnen.
 \par 
 \par Sie aktivieren und arbeiten mit einer Option, indem Sie diese markieren und mit der TAB-Taste, der ALT-Taste oder der Maus zum Eingabefeld (im unteren Bildschirmbereich) springen. Ersetzen Sie eine Variable ({\b xxx} oder{\b  nnn}
@@ -471,7 +471,7 @@ lt eine Liste der Profil-Optionen, eine Beschreibung zu jeder einzelnen Option s
 \par }@P H.U_Update H.U_Update
 \par                         {\i Produkt-Aktualisierung}
 \par 
-\par Mit der Option "Update" aktualisieren Sie eine bestehende Kopie von Qualitas MAX oder BlueMAX mit einer Update-Diskette. Qualitas stellt diese Update-Diskette bei Bedarf registrierten Anwendern zur Verf\'81
+\par Mit der Option "Update" aktualisieren Sie eine bestehende Kopie von Open 386MAX oder BlueMAX mit einer Update-Diskette. Qualitas stellt diese Update-Diskette bei Bedarf registrierten Anwendern zur Verf\'81
 gung. Diese Option fordert Sie dazu auf, die Update-Diskette in das Diskettenlaufwerk einzulegen. 
 \par 
 \par {\fs28\cf6 >>H.ASQ
@@ -493,7 +493,7 @@ nnen. ASQ vermittelt Ihnen ein besseres Systemverst\'84ndnis und hilft Ihnen bei
 \par Die ASQ Hauptfunktion ist das {\b Memory Management}. Diese Technik ist f\'81r Systeme, die mit einem 80386 und 80486 Mikroprozessor ausgestattet sind, unerl\'84\'e1lich. Denn diese leistungsstarken Rechner ben\rdblquote 
 tigen ein hochwertiges Memory Management zur \'9aberwindung der DOS-Grenze und f\'81r einen reibungslosen Ablauf der heute \'81blichen komplexen Software-Komponenten.
 \par 
-\par ASQ erhalten Sie kostenlos mit jedem Qualitas Produkt.
+\par ASQ erhalten Sie kostenlos mit jedem Open 386MAX Produkt.
 \par 
 \par {\fs28\cf6 >>H.Mem_Sum}{\fs28\cf6 
 \par }@P H.Mem_Sum H.Hdw_Sum
@@ -551,14 +551,14 @@ e Programm/den Treiber zu bestimmen. Sie k\rdblquote nnen {\b w\'84hlen} welches
 \par }@P H.Info_Mem H.Info_Time
 \par                       {\i Speicher-Gesamt\'81bersicht}
 \par 
-\par Die Speicherbelegungs-Tabelle zeigt die Aufteilung des ersten Megabyte im Speicher-Adre\'e1raum durch {\b Qualitas Produkte} sowie die Extended Memory-Belegung.
+\par Die Speicherbelegungs-Tabelle zeigt die Aufteilung des ersten Megabyte im Speicher-Adre\'e1raum durch {\b Open 386MAX Produkte} sowie die Extended Memory-Belegung.
 \par 
 \par Dieser Bildschirm enth\'84lt folgende Elemente:
 \par 
 \par   {\b Information--------------   Beschreibung--------------------}
 \par   neue DOS-Obergrenze         obere Grenze des LoDOS-Speichers
-\par                               nach Erweiterung durch Qualitas MAX
-\par   zus\'84tzlicher LoDOS-Speicher durch Qualitas MAX zugef\'81gter
+\par                               nach Erweiterung durch Open 386MAX
+\par   zus\'84tzlicher LoDOS-Speicher durch Open 386MAX zugef\'81gter
 \par                               konventioneller DOS Speicher
 \par   zus\'84tzlicher HiDOS-Speicher durch Qualtias MAX eingerichteter
 \par                               Speicher oberhalb des konventionellen
@@ -566,7 +566,7 @@ e Programm/den Treiber zu bestimmen. Sie k\rdblquote nnen {\b w\'84hlen} welches
 \par   verf\'81gbares Extended Memory Extended Memory-Betrag oberhalb 1 MB
 \par   freier dynamischer Speicher Speicherbetrag, der als
 \par                               SmartMemory zur Verf\'81gung steht
-\par   Programmspeicher            Betrag des von Qualitas MAX
+\par   Programmspeicher            Betrag des von Open 386MAX
 \par                               belegten Extended Memory
 \par   ROM Abbildungsbereich       Gr\rdblquote \'e1e der mit ROM-Cache beschleunig-
 \par                               ten Bereiche sowie derern Adressen
@@ -582,19 +582,19 @@ e Programm/den Treiber zu bestimmen. Sie k\rdblquote nnen {\b w\'84hlen} welches
 \par                               als EMS-Speicher zugewiesen wurde
 \par   gesamt Extended Memory      urspr\'81nglicher Gesamtbetrag des
 \par                               Extended Memory
-\par   aktueller Status ist ...    Betriebszustand von Qualitas MAX:
+\par   aktueller Status ist ...    Betriebszustand von Open 386MAX:
 \par                               ON, OFF oder AUTO
 \par 
 \par {\fs28\cf6 >>H.Info_EMS
 \par }@P H.Info_Mem H.Info_Time
 \par            {\i            EMS-Speicher-Information}
 \par 
-\par Dieser Bildschirm zeigt die EMS-Speicherzuweisung durch Qualitas MAX/BlueMAX sowie eine \'9abersicht der aktuellen EMS-
+\par Dieser Bildschirm zeigt die EMS-Speicherzuweisung durch Open 386MAX/BlueMAX sowie eine \'9abersicht der aktuellen EMS-
 \par Speicherbelegung. Der Bildschirm enth\'84lt folgende Elemente:
 \par 
 \par   {\b Information   Beschreibung---------------------------------------}
 \par   Handle        eine eindeutige Identifikationszahl, die als Handle
-\par                 bezeichnet und durch Qualitas MAX zugewiesen wird
+\par                 bezeichnet und durch Open 386MAX zugewiesen wird
 \par                 "Freier dynamischer Speicher" meldet den als 
 \par                 SmartMemory verf\'81gbaren Speicherbetrag
 \par   Gr\rdblquote \'e1e         Speicherbetrag, der jeder aktiven Handle

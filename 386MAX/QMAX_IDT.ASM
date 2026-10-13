@@ -722,7 +722,8 @@ LC2_STR  ends
 
 	 pushfd 		; Pass EFL
 	 PUSHD	 cs		; ...  CS
-	 PUSHD	 <offset cs:LOTUS_COM_HARDRET>
+	 db	 66h		; PUSHD with a 16-bit offset (JWasm's PUSHD
+	 push	 offset cs:LOTUS_COM_HARDRET ; would emit the upper word itself)
 	 dw	 0		; 32-bit extension for PUSHD
 
 LC3_STR  struc

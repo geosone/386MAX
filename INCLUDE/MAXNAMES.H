@@ -18,7 +18,7 @@
 #define MAXNAMES_INCLUDED
 
 // Short product name and various lengths of abbreviations
-#define MAX8PRODUCT			"Qualitas Max 8"
+#define MAX8PRODUCT			"Open 386MAX"
 #define	MAX_ABBR_MC			"Max 8"
 #define MAX_ABBR8			"QMAX"
 #define MAX_ABBR4			"QMAX"

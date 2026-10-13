@@ -143,7 +143,7 @@ GLOBAL int config_parse (char bootdrive,
 			BYTE selowner,
 			char _far *output,
 			int keepmem,
-			int (_far *callback) (CONFIGLINE _far *));
+			int (_cdecl _far *callback) (CONFIGLINE _far *));
 
 /* OwnerIDs for active MultiBoot section and for common section */
 GLOBAL BYTE ActiveOwner
@@ -175,6 +175,23 @@ GLOBAL int fnShell (CONFIGLINE _far *cfg);
 
 /* Release memory allocated by menu_parse () */
 void config_free (void);
+
+#if defined(__WATCOMC__) && defined(__cplusplus)
+/* QUILIB is compiled for the Microsoft C convention (OpenWatcom -ecc); the
+   C++ modules (MFC programs) use OpenWatcom's, so these functions are
+   marked __cdecl (after their declarations: in C++ a pragma before them
+   would declare them) */
+#pragma aux (__cdecl) config_free;
+#pragma aux (__cdecl) config_parse;
+#pragma aux (__cdecl) find_ownsect;
+#pragma aux (__cdecl) find_sect;
+#pragma aux (__cdecl) fnShell;
+#pragma aux (__cdecl) is_menusect;
+#pragma aux (__cdecl) mboot_select;
+#pragma aux (__cdecl) menu_parse;
+#pragma aux (__cdecl) set_current;
+#pragma aux (__cdecl) set_mbs_callback;
+#endif
 
 #endif	/* ifndef MBPARSE_INCLUDED */
 

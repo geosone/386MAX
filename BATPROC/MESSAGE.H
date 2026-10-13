@@ -238,7 +238,8 @@
 #ifdef LANG_GR
 
 #define COPYRIGHT "BATPROC " PROGVER "\n" \
-		  "   (C) Copyright 1990-96 Rex Conn & Qualitas, Inc.  Alle Rechte vorbehalten."
+		  "   (C) Copyright 1990-96 Rex Conn & Qualitas, Inc.\n" \
+		  "   Open 386MAX-Mitwirkende 2022-2026, GNU General Public License Version 3."
 #define CANCEL_BATCH_JOB "\nWollen Sie die Stapelverarbeitung abbrechen ? (J/N/A) : "
 #define INSERT_DISK "\nlegen Sie die Diskette ein mit \"%s\"\n"
 #define CMDLINE "CMDLINE="
@@ -248,7 +249,8 @@
 #else
 
 #define COPYRIGHT "BATPROC " PROGVER "\n" \
-		  "   (C) Copyright 1990-96 Rex Conn & Qualitas, Inc.  GNU General Public License version 3."
+		  "   (C) Copyright 1990-96 Rex Conn & Qualitas, Inc.\n" \
+		  "   Open 386MAX contributors 2022-2026, GNU General Public License version 3."
 #define CANCEL_BATCH_JOB "\nCancel batch job ? (Y/N/A) : "
 #define INSERT_DISK "\nInsert disk with \"%s\"\n"
 #define CMDLINE "CMDLINE="

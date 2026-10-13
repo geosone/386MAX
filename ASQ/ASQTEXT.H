@@ -1309,9 +1309,9 @@ GLOBAL char *PRINTTYPETEXT[PRINTTYPENONE]
 ;
 
 #ifdef LANG_GR
-#define PRINTPAGETITLE " von Qualitas"
+#define PRINTPAGETITLE " von Open 386MAX"
 #else
-#define PRINTPAGETITLE " by Qualitas"
+#define PRINTPAGETITLE " by Open 386MAX"
 #endif
 GLOBAL char PrintPageTitle[ sizeof( PRINTPAGETITLE )]
 #ifdef GLINIT

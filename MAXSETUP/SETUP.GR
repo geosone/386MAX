@@ -37,71 +37,27 @@ BEGIN
     PUSHBUTTON      "&Hilfe", IDC_HELP, 135, 97, 45, 14
     ICON            IDC_SETUP, IDC_SETUP, 12, 14, 18, 20
     LTEXT           MAX8PRODUCT, -1, 42, 12, 150, 10, SS_NOPREFIX
-    LTEXT           "Copyright \251 1995-96 Qualitas Inc.", -1, 42, 22, 155, 10, SS_NOPREFIX
+    LTEXT           "Copyright \251 1987-97 Qualitas, Inc.", -1, 42, 22, 155, 10, SS_NOPREFIX
+    LTEXT           "Open 386MAX 2022-2026, GNU GPL v3", -1, 42, 31, 155, 10, SS_NOPREFIX
 
     LTEXT           "Willkommen bei " MAX8PRODUCT ", dem intelligenten Memory Manager f\374r Windows 95, Windows 3.1x und DOS."
     			-1, 10, 40, 180, 30
-    LTEXT           "Setup kopiert Programmdateien auf die Festplatte Ihres Computers und richtet Qualitas MAX f\374r Windows ein.",
+    LTEXT           "Setup kopiert Programmdateien auf die Festplatte Ihres Computers und richtet Open 386MAX f\374r Windows ein.",
     			-1, 10, 70, 180, 20
 END
 
-
-REGISTERDLGBOX DIALOG PRELOAD 76, 56, 205, 120
+LICENSEDLGBOX DIALOG PRELOAD 60, 30, 250, 170
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
-CAPTION "Registrierung"
+CAPTION "Lizenz"
 FONT 8, "Helv"
 BEGIN
-    LTEXT           "Die nachfolgend einzugebenden Informationen personalisieren Ihr Qualitas MAX Exemplar.", 
-                    -1, 36, 6, 156, 32, SS_NOPREFIX
-    RTEXT           "Name:", -1, 5, 36, 50, 8
-    EDITTEXT        IDC_NAME, 60, 34, 130, 12, ES_AUTOHSCROLL
-    RTEXT           "Firma:", -1, 5, 56, 50, 8
-    EDITTEXT        IDC_COMPANY, 60, 54, 130, 12, ES_AUTOHSCROLL
-    RTEXT           "Seriennummer:", -1, 5, 76, 50, 8
-    EDITTEXT        IDC_SERIAL,60,74,80,13,ES_AUTOHSCROLL
-
-    ICON            IDC_SETUP, IDC_SETUP, 10, 8, 18, 20
-    DEFPUSHBUTTON   "&Weiter", IDC_CONTINUE, 25, 100, 45, 14
-    PUSHBUTTON      "&Beenden", IDC_EXIT, 80, 100, 45, 14
-    PUSHBUTTON      "&Hilfe", IDC_HELP, 135, 100, 45, 14
-END
-
-
-CONFIRMDLGBOX DIALOG PRELOAD 76, 56, 205, 120
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
-CAPTION "Registrierung"
-FONT 8, "Helv"
-BEGIN
-    ICON            IDC_SETUP, IDC_SETUP, 10, 8, 18, 20
-    LTEXT           "Bitte stellen Sie sicher, da\337 die eingegebenen Informationen korrekt sind. Bei Fehlern w\344hlen Sie \304ndern f\374r die R\374ckkehr zum vorherigen Dialog. Sind alle Eingaben korrekt, w\344hlen Sie Weiter.",
-                      -1, 36, 8, 156, 40
-    RTEXT           "Name:", -1, 10, 54, 55, 10
-    LTEXT           "",100,70,54,120,12,SS_NOPREFIX | NOT WS_GROUP
-    RTEXT           "Firma:", -1, 10, 66, 55, 10
-    LTEXT           "",101,70,66,120,12,SS_NOPREFIX | NOT WS_GROUP
-    RTEXT           "Seriennummer:", -1, 10, 78, 55, 10
-    LTEXT           "",102,70,78,120,12,SS_NOPREFIX | NOT WS_GROUP
-    DEFPUSHBUTTON   "&Weiter",IDC_CONTINUE,25,100,45,14
-    PUSHBUTTON      "\304&ndern",IDC_BACK, 80,100,45,14
-    PUSHBUTTON      "&Beenden", IDC_EXIT, 135, 100, 45, 14
-END
-
-
-PREBRANDEDDLGBOX DIALOG PRELOAD 76, 56, 200, 90
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
-CAPTION "Registrierung"
-FONT 8, "Helv"
-BEGIN
-    LTEXT           "Dieses Qualitas MAX Exemplar ist registriert f\374r:",
-                      -1, 36, 8, 156, 10
-    RTEXT           "Name:", -1, 10, 24, 55, 10
-    LTEXT           "",100,70,24,120,12,SS_NOPREFIX | NOT WS_GROUP
-    RTEXT           "Firma:", -1, 10, 36, 55, 10
-    LTEXT           "",101,70,36,120,12,SS_NOPREFIX | NOT WS_GROUP
-    RTEXT           "Seriennummer:", -1, 10, 48, 55, 10
-    LTEXT           "",102,70,48,120,12,SS_NOPREFIX | NOT WS_GROUP
-    DEFPUSHBUTTON   "&OK",IDC_CONTINUE,77,70,45,14
-    ICON            IDC_SETUP, IDC_SETUP, 10, 8, 18, 20
+    LTEXT           "Open 386MAX ist freie Software: Sie d\374rfen sie auf beliebig vielen Computern nutzen, kopieren, ver\344ndern und weitergeben, nach den Bedingungen der GNU General Public License Version 3.  Ohne jede Gew\344hrleistung.",
+    			-1, 10, 6, 230, 27
+    EDITTEXT        IDC_TEXT, 10, 36, 230, 106, ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "&Weiter", IDC_CONTINUE, 15, 150, 45, 14
+    PUSHBUTTON      "&Zur\374ck", IDC_BACK, 72, 150, 45, 14
+    PUSHBUTTON      "&Beenden", IDC_EXIT, 129, 150, 45, 14
+    PUSHBUTTON      "&Hilfe", IDC_HELP, 186, 150, 45, 14
 END
 
 
@@ -111,7 +67,7 @@ CAPTION "Registrierung"
 FONT 8, "Helv"
 BEGIN
     ICON            IDC_SETUP, IDC_SETUP, 10, 8, 18, 20
-    LTEXT           "Dieses Qualitas MAX Exemplar 8 ist registriert f\374r:",
+    LTEXT           "Dieses Open 386MAX Exemplar 8 ist registriert f\374r:",
                       -1, 36, 8, 156, 40
     RTEXT           "Name:", -1, 10, 54, 55, 10
     LTEXT           "",100,70,54,160,12,SS_NOPREFIX | NOT WS_GROUP
@@ -129,7 +85,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 CAPTION "MultiConfig"
 FONT 8, "Helv"
 BEGIN
-    LTEXT           "W\344hlen Sie den MultiConfig-Block, in dem Sie Qualitas MAX installieren m\366chten.", 
+    LTEXT           "W\344hlen Sie den MultiConfig-Block, in dem Sie Open 386MAX installieren m\366chten.", 
                       -1, 40, 6, 148, 24, SS_NOPREFIX
     COMBOBOX        IDC_MULTI, 8, 34, 182, 50, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
@@ -150,7 +106,7 @@ BEGIN
     EDITTEXT        IDC_PATH, 14, 17, 222, 12, ES_UPPERCASE | ES_AUTOHSCROLL | 
                       ES_OEMCONVERT
     LTEXT           "", 666, 14, 19, 222, 10
-    GROUPBOX        "Qualitas MAX Dateien",1,7,63,239,60,WS_GROUP
+    GROUPBOX        "Open 386MAX Dateien",1,7,63,239,60,WS_GROUP
     CTEXT           "W\344hlen Sie die gew\374nschten Optionen mit Aktivieren der Kontrollk\344stchen.",
                       668,7,45,239,17
     CONTROL         "&Programm-Dateien",IDC_PROGRAMS,"Button",BS_AUTOCHECKBOX | WS_GROUP | 
@@ -259,7 +215,7 @@ BEGIN
     DEFPUSHBUTTON   "&Maximize", IDC_CONTINUE, 25, 72, 45, 14
     PUSHBUTTON      "&Beenden", IDC_EXIT, 80, 72, 45, 14
     PUSHBUTTON      "&Hilfe", IDC_HELP, 135, 72, 45, 14
-    LTEXT   "Sie haben Qualitas MAX erfolgreich installiert. F\374r optimale Leistung sollten Sie die Diskette aus Laufwerk A: entnehmen und Maximize starten. Ohne Maximize m\374ssen Sie den Computer neu starten, soda\337 MAX aktiv wird. M\366chten Sie Maximize jetzt starten?",
+    LTEXT   "Sie haben Open 386MAX erfolgreich installiert. F\374r optimale Leistung sollten Sie die Diskette aus Laufwerk A: entnehmen und Maximize starten. Ohne Maximize m\374ssen Sie den Computer neu starten, soda\337 MAX aktiv wird. M\366chten Sie Maximize jetzt starten?",
                       201, 40, 13, 150, 55
     ICON            IDC_SETUP, IDC_SETUP, 10, 8, 18, 20
 END
@@ -273,7 +229,7 @@ BEGIN
     DEFPUSHBUTTON   "&Neu starten", IDC_CONTINUE, 25, 62, 45, 14
     PUSHBUTTON      "&Beenden", IDC_EXIT, 80, 62, 45, 14
     PUSHBUTTON      "&Hilfe", IDC_HELP, 135, 62, 45, 14
-    LTEXT           "Sie haben Qualitas MAX erfolgreich installiert. Im Laufwerk A: darf sich keine Diskette befinden, wenn das System f\374r MAX neu startet. Rufen Sie danach Windows auf und starten Sie MAXIMIZE. M\366chten Sie den Computer jetzt neu starten?",
+    LTEXT           "Sie haben Open 386MAX erfolgreich installiert. Im Laufwerk A: darf sich keine Diskette befinden, wenn das System f\374r MAX neu startet. Rufen Sie danach Windows auf und starten Sie MAXIMIZE. M\366chten Sie den Computer jetzt neu starten?",
                       201, 40, 6, 150, 55
     ICON            IDC_SETUP, IDC_SETUP, 10, 8, 18, 20
 END
@@ -298,7 +254,7 @@ CAPTION "Setup abgeschlossen"
 FONT 8, "Helv"
 BEGIN
     DEFPUSHBUTTON   "&Beenden", IDC_EXIT, 75, 62, 50, 14
-    LTEXT           "Sie haben die Qualitas MAX Dateien kopiert, aber das Programm ist nicht aktiv. Sie m\374ssen System- und .ADD-Dateien umbenennen bzw. kopieren und dann den Computer neu starten, soda\337 Qualitas MAX aktiv wird.", 
+    LTEXT           "Sie haben die Open 386MAX Dateien kopiert, aber das Programm ist nicht aktiv. Sie m\374ssen System- und .ADD-Dateien umbenennen bzw. kopieren und dann den Computer neu starten, soda\337 Open 386MAX aktiv wird.", 
                       201, 40, 6, 150, 55
     ICON            IDC_SETUP, IDC_SETUP, 10, 8, 18, 20
 END
@@ -322,9 +278,9 @@ CAPTION "Setup-Fehler"
 FONT 8, "Helv"
 BEGIN
     DEFPUSHBUTTON   "&OK", IDC_CONTINUE, 78, 76, 45, 14
-    LTEXT           "Qualitas MAX Setup konnte eine oder mehrere Dateien nicht installieren oder Systemdateien nicht ver\344ndern.", 
+    LTEXT           "Open 386MAX Setup konnte eine oder mehrere Dateien nicht installieren oder Systemdateien nicht ver\344ndern.", 
                       -1, 18, 39, 176, 25, SS_NOPREFIX
-    LTEXT           "Qualitas MAX Setup ist fehlgeschlagen!", -1, 45, 16, 130, 13, SS_NOPREFIX
+    LTEXT           "Open 386MAX Setup ist fehlgeschlagen!", -1, 45, 16, 130, 13, SS_NOPREFIX
     ICON            IDC_SETUP, IDC_SETUP, 14, 10, 18, 20
 END
 
@@ -353,35 +309,6 @@ BEGIN
     EDITTEXT        IDC_PATH,8,36,184,12,ES_UPPERCASE | ES_AUTOHSCROLL | 
                     ES_OEMCONVERT
 END
-
-UPDATEDLGBOX DIALOG PRELOAD 49, 38, 200, 100
-STYLE DS_MODALFRAME | WS_POPUP | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
-CAPTION "Update"
-FONT 8, "Helv"
-BEGIN
-    LTEXT           "Dieses Produkt ist ein Upgrade f\374r eine vorhandene Version eines Qualitas Memory Management Produkts. Bitte geben Sie das Verzeichnis Ihrer vorhandenen Installation des Qualitas MAX, 386MAX oder BlueMAX ein.", 100, 40, 8, 150, 50, SS_NOPREFIX
-    EDITTEXT        IDC_PATH, 8, 60, 184, 12, ES_UPPERCASE | ES_AUTOHSCROLL | 
-                      ES_OEMCONVERT
-    DEFPUSHBUTTON   "&Weiter",IDC_CONTINUE,15,80,50,14
-    PUSHBUTTON      "&Beenden",IDC_EXIT,75,80,50,14
-    PUSHBUTTON      "&Hilfe",IDC_HELP,135,80,50,14
-    ICON            IDC_SETUP, IDC_SETUP, 14, 10, 18, 20
-END
-
-
-UPDATEERRORDLGBOX DIALOG PRELOAD 49, 38, 200, 85
-STYLE DS_MODALFRAME | WS_POPUP | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
-CAPTION "Update"
-FONT 8, "Helv"
-BEGIN
-    DEFPUSHBUTTON   "&Weiter",IDC_CONTINUE,15,65,50,14
-    PUSHBUTTON      "&Beenden",IDC_EXIT,75,65,50,14
-    PUSHBUTTON      "&Zur\374ck",IDC_BACK,135,65,50,14
-    LTEXT           "Setup findet keinen Nachweis f\374r eine Lizenz eines vorherigen Qualitas Memory Management Produkts. Setup kann daher nicht garantieren, da\337 alle Funktionen der Upgrade-Version zufriedenstellend arbeiten. M\366chten Sie den Vorgang fortsetzen?",
-			100, 40, 8, 150, 50, SS_NOPREFIX
-    ICON            IDC_SETUP, IDC_SETUP, 14, 10, 18, 20
-END
-
 
 MODELESSDLGBOX DIALOG PRELOAD 20, 20, 180, 35
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE

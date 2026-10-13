@@ -21,7 +21,7 @@
 	 include LOAD_OEM.ALL
 
 @OEM_SYS	 equ @OEMSYS_RET
-@OEM_PTEXT 	 equ <'Qualitas MAX'>   ; Product Text Title
+@OEM_PTEXT 	 equ <'Open 386MAX'>    ; Product Text Title
 @OEM_BASE	 equ <'386MAX'>         ; File name for base device
 @OEM_IOCTL	 equ <'386MAX'>         ; IOCTL name for @OEM_BASE
 @OEM_LOAD	 equ <'386LOAD'>        ; File name for 386LOAD

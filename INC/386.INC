@@ -9,6 +9,13 @@
 
 	 include DTE.INC
 
+; JWasm (Masm 6 syntax level) rejects 486+ instructions under .386p; use
+; the byte macros below with it too
+@CPUMAC = 0
+ifdef __JWASM__
+@CPUMAC = 1
+endif				; IFDEF __JWASM__
+
 ; DR6 bits
 
 if (@Cpu and 1000b)		; If 80386 instructions
@@ -462,7 +469,7 @@ FINT	 macro	 NN
 
 
 
-if @Version LT 600
+if (@Version LT 600) or @CPUMAC
 .xcref INVD
 INVD	 macro
 
@@ -472,7 +479,7 @@ INVD	 macro
 endif				; IF @Version LT 600
 
 
-if @Version LT 600
+if (@Version LT 600) or @CPUMAC
 .xcref WBINVD
 WBINVD	 macro
 
@@ -482,7 +489,7 @@ WBINVD	 macro
 endif				; IF @Version LT 600
 
 
-if @Version LT 600
+if (@Version LT 600) or @CPUMAC
 .xcref CPUID
 CPUID	 macro
 
@@ -500,7 +507,7 @@ RDTSC	 macro
 	 endm			; RDTSC
 
 
-if @Version LT 600
+if (@Version LT 600) or @CPUMAC
 .xcref RDMSR
 RDMSR	 macro
 
@@ -510,7 +517,7 @@ RDMSR	 macro
 endif				; IF @Version LT 600
 
 
-if @Version LT 600
+if (@Version LT 600) or @CPUMAC
 .xcref WRMSR
 WRMSR	 macro
 

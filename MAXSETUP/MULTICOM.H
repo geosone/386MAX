@@ -76,7 +76,7 @@ typedef struct tagFileDelta {
 } FILEDELTA;
 
 
-#define MAX_PRODNAME	"Qualitas MAX"  // Product name
+#define MAX_PRODNAME	"Open 386MAX"  // Product name
 #define MAX_PRODFILE	"386MAX"        // Product file name w/o extension
 #define MAX_FILENAME	"386MAX.SYS"    // Filename to install in CONFIG.SYS
 #define MAX_OLDNAME	"BlueMAX.SYS"   // Filename to install in CONFIG.SYS

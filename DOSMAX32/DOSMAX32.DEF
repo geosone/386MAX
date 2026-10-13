@@ -8,4 +8,3 @@ EXPORTS
     DllCanUnloadNow		@2		    ;DLL unloading
     DllGetClassObject		@3		    ;Component object model
 
-

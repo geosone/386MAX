@@ -60,6 +60,7 @@ JCODE	 segment use16 dword public 'jcode' ; Start JCODE segment
 if @OEM_SOFT
 	 extrn	 CLR_BITMAP:far
 	 extrn	 SET_BITMAP:far
+	 extrn	 QPI_CHECK:far
 endif				; IF @OEM_SOFT
 
 JCODE	 ends			; End JCODE segment
@@ -147,6 +148,9 @@ endif				; IF @OEM_DMA
 
 	 public  LAST64
 LAST64	 db	 00h		; Last command sent to I/O port 64h
+
+	 public  QPI_NPORT
+QPI_NPORT dw	 0		; # I/O ports trapped via QPI (see QMAX_QPI)
 
 if @OEM_DMA
 	 public  DMA_MAP,DMA_REMAP
@@ -2625,6 +2629,11 @@ BX	 =	 undefined
 
 |
 
+	 cmp	 QPI_NPORT,0	; Any I/O ports trapped via QPI?
+	 jne	 near ptr CHECK_INP_QPI ; Jump if so
+
+	 public  CHECK_INP_NOQPI
+CHECK_INP_NOQPI:
 	 cmp	 dx,@CHECKER_LEN ; Izit out of range?
 	 jae	 near ptr CHECK_XINP ; Jump if so
 
@@ -2638,6 +2647,13 @@ BX	 =	 undefined
 ; DX  = Actual port value
 
 	 jmp	 PGROUP:[ebx+edi].ELO ; Take appropriate action
+
+CHECK_INP_QPI:
+	 mov	 bl,0		; Mark as input
+	 FIXICALL JGROUP:QPI_CHECK,DTE_CSJG ; See if the QPI callback handles it
+	 jnc	 short CHECK_INP_NOQPI ; Jump if not
+
+	 ret			; Return to caller with CF=1
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
@@ -2660,6 +2676,11 @@ CF	 =	 1 if OUT already done
 
 |
 
+	 cmp	 QPI_NPORT,0	; Any I/O ports trapped via QPI?
+	 jne	 near ptr CHECK_OUT_QPI ; Jump if so
+
+	 public  CHECK_OUT_NOQPI
+CHECK_OUT_NOQPI:
 	 cmp	 dx,@CHECKER_LEN ; Izit out of range?
 	 jae	 near ptr CHECK_XOUT ; Jump if so
 
@@ -2674,9 +2695,34 @@ CF	 =	 1 if OUT already done
 
 	 jmp	 PGROUP:[ebx+edi].ELO ; Take appropriate action
 
+CHECK_OUT_QPI:
+	 mov	 bl,@IOTRAP_OUT ; Mark as output
+	 FIXICALL JGROUP:QPI_CHECK,DTE_CSJG ; See if the QPI callback handles it
+	 jnc	 short CHECK_OUT_NOQPI ; Jump if not
+
+	 ret			; Return to caller with CF=1
+
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 CHECK_OUT endp			; End CHECK_OUT procedure
+	 FPPROC  FCHECK_INP_NOQPI -- Far Call To CHECK_INP_NOQPI
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:PGROUP
+
+	 call	 CHECK_INP_NOQPI ; Check on I/O port inputs (QMAX_QPI)
+
+	 ret			; Return to caller with CF significant
+
+FCHECK_INP_NOQPI endp		; End FCHECK_INP_NOQPI procedure
+	 FPPROC  FCHECK_OUT_NOQPI -- Far Call To CHECK_OUT_NOQPI
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:PGROUP
+
+	 call	 CHECK_OUT_NOQPI ; Check on I/O port outputs (QMAX_QPI)
+
+	 ret			; Return to caller with CF significant
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+FCHECK_OUT_NOQPI endp		; End FCHECK_OUT_NOQPI procedure
 	 NPPROCE GP_OUTIB -- Emulate OUT nn,AL
 	 assume  ds:nothing,es:AGROUP,fs:nothing,gs:nothing,ss:PGROUP
 COMMENT|

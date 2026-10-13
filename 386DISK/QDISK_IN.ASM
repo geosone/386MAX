@@ -238,11 +238,11 @@ ifdef LANG_GR
 else
 	 db	 ' -- 386 Virtual Disk Drive',CR,LF
 endif				; IFDEF LANG_GR
-	 db	 '   (C) Copyright 1984-96 Qualitas, Inc.'
+	 db	 '   (C) Copyright 1984-96 Qualitas, Inc.',CR,LF
 ifdef LANG_GR
-	 db	 '  Alle Rechte vorbehalten.',CR,LF,EOS
+	 db	 '   Open 386MAX-Mitwirkende 2022-2026, GNU General Public License Version 3.',CR,LF,EOS
 else
-	 db	 '  GNU General Public License version 3.',CR,LF,EOS
+	 db	 '   Open 386MAX contributors 2022-2026, GNU General Public License version 3.',CR,LF,EOS
 endif				; IFDEF LANG_GR
 
 	 public  MSG_NOT386,MSG_NOTDOS3,MSG_NOTPRES,MSG_INSUF

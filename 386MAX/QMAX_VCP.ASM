@@ -69,6 +69,9 @@ if @OEM_DPMI
 	 extrn	 SET_HWSP:far
 endif				; IF @OEM_DPMI
 	 extrn	 CHECK_LOTUS:far
+if @VCP_OLD
+	 extrn	 QPI_API:far
+endif				; IF @VCP_OLD
 
 JCODE	 ends			; End JCODE segment
 
@@ -444,6 +447,15 @@ INTFE_HIMEM_CS label near
 ;;;;;;;;
 ;;;;;;;; int	 01h		; Call out the SWAT team
 @@:
+	 cmp	 ah,03h 	; Izit QPI Get Version?
+	 je	 short @F	; Jump if so
+
+	 cmp	 ah,1Ah 	; Izit QPI I/O port trapping?
+	 jne	 short INTFE_XQPI ; Jump if not
+@@:
+	 FIXIJMP JGROUP:QPI_API,DTE_CSJG ; QEMM Programming Interface (QMAX_QPI)
+
+INTFE_XQPI:
 	 cmp	 ah,0Ch 	; Check for # free pages code
 	 je	 near ptr VCPI03 ; Jump if it's a match
 

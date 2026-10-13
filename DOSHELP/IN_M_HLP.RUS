@@ -44,11 +44,11 @@ Outdent13;}{\s18\li288 \f11 \sbasedon0\snext18 Indent2;}}{\info{\title install m
 \par 
 \par 
 \par \pard\plain \s16\keepn \f11\fs28\cf6 >>M.DOSHelp
-\par \pard\plain \f11 #PROGNAME# has detected DOS 5.x on this system and can add help text for installed Qualitas products to the DOS help file.
+\par \pard\plain \f11 #PROGNAME# has detected DOS 5.x on this system and can add help text for installed Open 386MAX products to the DOS help file.
 \par 
 \par {\b Would you like #PROGNAME# to add help text to the DOS help file?
 \par }\pard\plain \s16\keepn \f11\fs28\cf6 >>M.DOSPath
-\par \pard\plain \f11 #PROGNAME# needs to know the location of your DOS directory so that it can add help text for Qualitas products.
+\par \pard\plain \f11 #PROGNAME# needs to know the location of your DOS directory so that it can add help text for Open 386MAX products.
 \par 
 \par {\b Specify the drive and path of the DOS subdirectory:
 \par }
@@ -82,7 +82,7 @@ ptimal #QCACHE# performance.
 \par 
 \par {\b Do you want #QCACHE# installed?
 \par }\pard\plain \s16\keepn \f11\fs28\cf6 >>M.NoInstall
-\par \pard\plain \f11 #PROGNAME# has not detected hardware in this machine that will support a Qualitas product and cannot continue.  One of these is required:
+\par \pard\plain \f11 #PROGNAME# has not detected hardware in this machine that will support a Open 386MAX product and cannot continue.  One of these is required:
 \par 
 \par   {\b\i *} an 80386 processor; or
 \par   {\b\i *} a Chips & Technologies chipset; or
@@ -100,10 +100,10 @@ ptimal #QCACHE# performance.
 \par 
 \par {\b Do you want to replace SMARTDRV with #QCACHE#?}
 \par \pard\plain \s16\keepn \f11\fs28\cf6 >>M.NoWinSupp
-\par \pard\plain \f11 You have run the DOS version of Setup for Qualitas MAX.  If you continue with this program, no Windows features will be installed.  If you would like to install Windows features, you should run the Windows version of this setup program.
+\par \pard\plain \f11 You have run the DOS version of Setup for Open 386MAX.  If you continue with this program, no Windows features will be installed.  If you would like to install Windows features, you should run the Windows version of this setup program.
 
 \par 
-\par {\b Would you like to run the Windows version of Setup for Qualitas MAX?}
+\par {\b Would you like to run the Windows version of Setup for Open 386MAX?}
 \par \pard\plain \s16\keepn \f11\fs28\cf6 >>M.NoWin
 \par \pard\plain \f11 #PROGNAME# has not detected Windows files by searching in your system's PATH.
 \par 

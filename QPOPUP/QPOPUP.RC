@@ -200,15 +200,15 @@ BEGIN
   IDS_ERR_REGISTER_CLASS,	"Fensterklasse konnte nicht registriert werden!"
   IDS_ERR_INSTANCE,		"Programm darf zu einer Zeit nur einmal aktiv sein!"
 
-  IDS_386MAX_WARN,		"Qualitas MAX Warnung"
-  IDS_386MAX_VXDWARN,	"DOSMAX ist nicht verfügbar, weil der Qualitas MAX Windows virtuelle Gerätetreiber (386MAX.VXD) nicht geladen ist."
+  IDS_386MAX_WARN,		"Open 386MAX Warnung"
+  IDS_386MAX_VXDWARN,	"DOSMAX ist nicht verfügbar, weil der Open 386MAX Windows virtuelle Gerätetreiber (386MAX.VXD) nicht geladen ist."
 #else
   IDS_ERR_CREATE_WINDOW,	"Window creation failed!"
   IDS_ERR_REGISTER_CLASS,	"Error registering window class!"
   IDS_ERR_INSTANCE,		"Only one instance allowed!"
 
-  IDS_386MAX_WARN,		"Qualitas MAX Warning"
-  IDS_386MAX_VXDWARN,	"DOSMAX is not available because the Qualitas MAX Windows virtual device (386MAX.VXD) is not loaded."
+  IDS_386MAX_WARN,		"Open 386MAX Warning"
+  IDS_386MAX_VXDWARN,	"DOSMAX is not available because the Open 386MAX Windows virtual device (386MAX.VXD) is not loaded."
 #endif				// IFDEF LANG_GR
 END
 

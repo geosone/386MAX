@@ -89,18 +89,18 @@ GLOBAL char *LogoAddress[10]
  = {
 	"(C) Copyright 1987-",
 	"97 Qualitas, Inc.",
-#ifdef LANG_GR
-	"Alle Rechte ",
-	"vorbehalten.",
-#else
-	"GNU General Public License version 3",
-#endif
 	"",
-	"Qualitas, Inc.",
-	"8601 Georgia Ave.",
-	"Suite 908",
-	"Silver Spring, MD 20910",
-/*	"(301) 578-8400",       */
+#ifdef LANG_GR
+	"Open 386MAX-",
+	"Mitwirkende",
+	"2022-2026",
+#else
+	"Open 386MAX",
+	"contributors",
+	"2022-2026",
+#endif
+	"GNU General Public",
+	"License version 3",
 	NULL
 }
 #endif
@@ -1280,17 +1280,17 @@ GLOBAL char *AltLogoText[ALTLOGOLINES]
 #ifdef GLINIT
 #ifdef LANG_GR
  = {
+	"Open 386MAX",
 	"Memory Management",
 	"Systeme",
-	"von",
-	"Qualitas"
+	"GNU GPL v3"
 }
 #else
  = {
+	"Open 386MAX",
 	"Advanced",
 	"Memory Solutions",
-	"from",
-	"Qualitas"
+	"GNU GPL v3"
 }
 #endif
 #endif

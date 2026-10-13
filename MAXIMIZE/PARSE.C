@@ -108,7 +108,7 @@ void newpro (DSPTEXT *dt)		/* Save profile name in DT->PROFILEN */
 	sprintf (buff, MsgCreatProf, PRODNAME);
 	do_intmsg (buff);
 
-	sprintf (buff, "pro=%s%s.PRO", LoaderDir, PRODNAME);
+	sprintf (buff, "pro=%s%s.PRO", LoaderDir, PROFNAME);
 	p = 1 + strchr (buff, '=');         /* Skip over leading PRO= */
 	while (cnt < PROLIM)
 		if (_access (p, 0) < 0)		/* If not found, */
@@ -117,7 +117,7 @@ void newpro (DSPTEXT *dt)		/* Save profile name in DT->PROFILEN */
 			break;
 		} /* End IF */
 		else
-			sprintf (p, "%s%s.P%02d", LoaderDir, PRODNAME, ++cnt);
+			sprintf (p, "%s%s.P%02d", LoaderDir, PROFNAME, ++cnt);
 
 	if (cnt == PROLIM)			/* If we're at our limit, */
 		do_error(MsgProLim, TRUE);	/* ...display error message and abort */
@@ -125,10 +125,10 @@ void newpro (DSPTEXT *dt)		/* Save profile name in DT->PROFILEN */
 	ActiveFiles [PROFILE] = str_mem (p); /* Save form we can use NOW */
 
 	if (cnt) {				/* Create 386max.p## */
-		sprintf (p, "%s%s.P%02d", LoaderTrue, PRODNAME, cnt);
+		sprintf (p, "%s%s.P%02d", LoaderTrue, PROFNAME, cnt);
 	}
 	else {					/* Create 386max.pro */
-		sprintf (p, "%s%s.PRO", LoaderTrue, PRODNAME);
+		sprintf (p, "%s%s.PRO", LoaderTrue, PROFNAME);
 	}
 
 	dt->profilen = str_mem (p);	/* Save original form */

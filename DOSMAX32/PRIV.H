@@ -16,5 +16,9 @@
 #include <shlobj.h>
 #include <winuser.h>
 
+#ifdef __WATCOMC__	// OpenWatcom's shtypes.h: LPCITEMIDLIST without const
+#define LPCITEMIDLIST PCIDLIST_ABSOLUTE
+#endif
+
 #define ResultFromShort(i)  ResultFromScode(MAKE_SCODE(SEVERITY_SUCCESS, 0, (USHORT)(i)))
 

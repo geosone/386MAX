@@ -138,12 +138,8 @@ void do_logo(int doit)
 	char serial[100];
 
 	if (!decrypt_serialno(serial,sizeof(serial))) {
-		/* Ack! */
-		errorMessage(559);
-#ifndef CVDBG
-		abortprep(0);
-		exit(255);
-#endif
+		/* Not branded by SETUP: no serial number needed (GPL) */
+		strcpy(serial, "\001GNU GPL v3");
 	}
 
 

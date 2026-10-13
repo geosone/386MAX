@@ -47,6 +47,16 @@ Modifications by:  None.
 PGROUP	 group	 CODE,ECODE,EDATA,NCODE,NDATA
 XGROUP	 group	 XCODE,XDATA
 YGROUP	 group	 YDATA
+JGROUP	 group	 JDATA
+
+
+JDATA	 segment use16 dword public 'jcode' ; Start JDATA segment
+	 assume  ds:JGROUP
+
+	 extrn	 SHDFREE_MAP:byte
+	 extrn	 E820RSV_MAP:byte
+
+JDATA	 ends			; End JDATA segment
 
 
 CODE	 segment use16 byte public 'prog' ; Start CODE segment
@@ -144,9 +154,24 @@ if @OEM_SYS eq @OEMSYS_RET
 	 extrn	 PSMSEG:word
 endif				; IF @OEM_SYS eq @OEMSYS_RET
 
+E820_STR struc			; INT 15h/E820h memory map entry
+
+E820_BASE dq	 ?		; Base address
+E820_LEN dq	 ?		; Length in bytes
+E820_TYPE dd	 ?		; Type (1 = available)
+
+E820_STR ends
+
 	 public  LCLMEM,LCLMEM_LEN
-LCLMEM	 db	 128 dup (?)	; Save area for memory check
+LCLMEM	 E820_STR <>	; Save area for memory check (also E820h buffer)
+	 db	 (128-size E820_STR) dup (?)
 LCLMEM_LEN equ	 $-LCLMEM	; Length of ...
+
+	 public  SHDMAP,SHDMAP_STAT
+SHDMAP	 dw	 0		; Bit n = 1 if C0000+n*16KB is free shadow DRAM
+	 public  SHDRD
+SHDRD	 dw	 0		; Bit n = 1 if C0000+n*16KB is read from DRAM
+SHDMAP_STAT db	 0		; 0 = not yet checked, 1 = checked
 
 	 public  INCSIZE
 INCSIZE  dw	 0		; Auto INCLUDE size
@@ -2129,6 +2154,601 @@ endif				; IF @OEM_EMS
 
 FILL_MAP endp			; End FILL_MAP procedure
 if (@OEM_EMS or @OEM_HIFILL) and @OEM_SYS ne @OEMSYS_ILIM
+@RAM_START equ	 16*(0B000h/512) ; Start of RAM search in 512-byte blocks
+
+	 public  E820_GET
+	 NPPROC  E820_GET -- Get Next INT 15h/E820h Memory Map Entry
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Get the next entry of the BIOS memory map (INT 15h, AX=E820h) into
+LCLMEM (E820_STR).
+
+On entry:
+
+EBX	 =	 continuation value (0 for the first entry)
+
+On exit:
+
+CF	 =	 0 if an entry was returned in LCLMEM
+	 =	 1 if not (function not supported or end of list)
+EBX	 =	 next continuation value (0 if this is the last entry)
+
+|
+
+	 REGSAVE <eax,ecx,edx,di,es> ; Save registers
+
+	 push	 seg PGROUP	; Address our data
+	 pop	 es		; ...
+	 assume  es:PGROUP	; Tell the assembler about it
+	 lea	 di,LCLMEM	; ES:DI ==> buffer
+
+	 xor	 eax,eax	; Insurance against buggy BIOSes
+	 mov	 dword ptr es:[di].E820_BASE,eax ; ...
+	 mov	 dword ptr es:[di].E820_LEN,eax ; ...
+	 mov	 es:[di].E820_TYPE,eax ; ...
+
+	 mov	 eax,0E820h	; Function code
+	 mov	 ecx,size E820_STR ; Size of buffer
+	 mov	 edx,534D4150h	; 'SMAP' signature
+	 int	 15h		; Request BIOS service
+	 jc	 short E820_GET_EXIT ; Jump if not supported (note CF=1)
+
+	 cmp	 eax,534D4150h	; Signature returned?
+	 jne	 short E820_GET_ERR ; Jump if not
+
+	 cmp	 ecx,size E820_STR ; Full entry?
+	 jae	 short E820_GET_EXIT ; Jump if so (note CF=0)
+E820_GET_ERR:
+	 stc			; Mark as no entry
+E820_GET_EXIT:
+	 REGREST <es,di,edx,ecx,eax> ; Restore
+	 assume  es:nothing	; Tell the assembler about it
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+E820_GET endp			; End E820_GET procedure
+	 NPPROC  E820_RSV -- Mark E820h Reserved Regions In MEM_MAP
+	 assume  ds:PGROUP,es:PGROUP,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Mark the regions in C0000-FFFFF which the BIOS memory map reports as
+not available (reserved, ACPI, ...) as other system memory unless they
+are already known.  On newer systems the BIOS (CSM) keeps option ROM
+data and tables there.  An entry covering all of C0000-EFFFF carries no
+information and is ignored.  INCLUDE= still overrides.
+
+|
+
+	 pushad 		; Save all EGP registers
+
+	 xor	 ebx,ebx	; First entry
+E820_RSV_NEXT:
+	 call	 E820_GET	; Return entry in LCLMEM, EBX = next
+	 jc	 near ptr E820_RSV_EXIT ; Jump if no more
+
+	 cmp	 LCLMEM.E820_TYPE,1 ; Available memory?
+	 je	 near ptr E820_RSV_LOOP ; Jump if so
+
+	 cmp	 dword ptr LCLMEM.E820_BASE[4],0 ; Above 4GB?
+	 jne	 near ptr E820_RSV_LOOP ; Jump if so
+
+	 mov	 esi,dword ptr LCLMEM.E820_BASE ; ESI = start
+	 cmp	 esi,100000h	; Above the first megabyte?
+	 jae	 near ptr E820_RSV_LOOP ; Jump if so
+
+	 mov	 edi,100000h	; Assume it ends at or above 1MB
+	 cmp	 dword ptr LCLMEM.E820_LEN[4],0 ; Huge?
+	 jne	 short @F	; Jump if so
+
+	 mov	 eax,dword ptr LCLMEM.E820_LEN ; Get length
+	 add	 eax,esi	; Plus start to get end
+	 jc	 short @F	; Jump if overflow
+
+	 cmp	 eax,edi	; Use the smaller
+	 jae	 short @F	; Jump if it's at or above 1MB
+
+	 mov	 edi,eax	; EDI = end
+@@:
+	 cmp	 esi,0C0000h	; Does it cover all of C0000-EFFFF?
+	 ja	 short @F	; Jump if not
+	 cmp	 edi,0F0000h	; ...
+	 jae	 near ptr E820_RSV_LOOP ; Jump if so (no information)
+@@:
+	 cmp	 esi,@RAM_START*512 ; Below the scanned region?
+	 jae	 short @F	; Jump if not
+
+	 mov	 esi,@RAM_START*512 ; Start there
+@@:
+	 add	 edi,512-1	; Round up to 512-byte block
+	 shr	 esi,9		; Convert from bytes to 512-byte blocks
+	 shr	 edi,9		; ...
+E820_RSV_BLK:
+	 cmp	 esi,edi	; Any more blocks?
+	 jae	 near ptr E820_RSV_LOOP ; Jump if not
+
+	 cmp	 MEM_MAP[si],@XLAT_UNK ; Izit unknown?
+	 jne	 short @F	; Jump if not
+
+	 mov	 MEM_MAP[si],@XLAT_OTH ; Mark as other system memory
+@@:
+	 push	 es		; Save for a moment
+	 mov	 ax,seg JGROUP	; Get segment of E820RSV_MAP
+	 mov	 es,ax		; Address it
+	 assume  es:JGROUP	; Tell the assembler about it
+	 mov	 ax,si		; Copy 512-byte block #
+	 shr	 ax,12-9	; Convert to 4KB block #
+	 sub	 ax,0A000h shr (12-4) ; Origin A000
+	 bts	 E820RSV_MAP.ELO,ax ; Mark as reserved for 386MAX's RAMSCAN
+	 pop	 es		; Restore
+	 assume  es:PGROUP	; Tell the assembler about it
+
+	 inc	 esi		; Next block
+	 jmp	 E820_RSV_BLK	; Go around again
+
+E820_RSV_LOOP:
+	 and	 ebx,ebx	; Was that the last entry?
+	 jnz	 near ptr E820_RSV_NEXT ; Jump if not
+E820_RSV_EXIT:
+	 popad			; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+E820_RSV endp			; End E820_RSV procedure
+	 NPPROC  PCI_RDCFG -- Read PCI Configuration Dword Of Host Bridge
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Read a dword from the configuration space of the host bridge
+(bus 0, device 0, function 0) via configuration mechanism #1.
+
+On entry:
+
+AL	 =	 register # (multiple of 4)
+
+On exit:
+
+EAX	 =	 register value
+
+|
+
+	 push	 dx		; Save register
+
+	 and	 eax,0FCh	; Isolate the register #
+	 or	 eax,80000000h	; Enable configuration cycle
+	 mov	 dx,0CF8h	; Configuration address port
+	 out	 dx,eax		; Select the register
+	 mov	 dl,0FCh	; Configuration data port (0CFCh)
+	 in	 eax,dx		; Read it
+
+	 pop	 dx		; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+PCI_RDCFG endp			; End PCI_RDCFG procedure
+	 NPPROC  GET_SHDMAP -- Determine Shadow DRAM In C0000-EFFFF
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Fill SHDRD with the 16KB blocks of C0000-FFFFF which the chipset maps
+to (shadow) DRAM for reads (no ISA or PCI device can respond there),
+and SHDMAP with those blocks of C0000-EFFFF which are read from DRAM
+but write-protected:  a BIOS write-protects the shadow RAM it doesn't
+use, while its own data (e.g. SeaBIOS' and CSM's runtime data and
+stacks) must stay writable.  The write protection itself may be ignored
+(QEMU/KVM), so CHECK_RAM may find such blocks writable.
+
+Intel host bridges:  PAM registers (one nibble per 16KB, bit 0 = read,
+bit 1 = write enable, the low nibble of PAM1 is C0000-C3FFF)
+  at 59h:  430FX/HX/VX/TX, 440FX/LX/BX/GX/ZX, 810
+  at 90h:  845 to 4 Series (G45, Q35)
+  at 80h:  2nd generation Core (Sandy Bridge) and later
+AMD K8 and later:  fixed range MTRRs 268h-26Dh (one byte per 4KB,
+  bit 4 = RdMem, bit 3 = WrMem, visible if SYSCFG.MtrrFixDramModEn).
+
+MiSTer ao486 core:  all of C0000-EFFFF.
+Unknown chipsets leave SHDMAP zero (old behavior).
+
+|
+
+	 pushad 		; Save all EGP registers
+
+	 mov	 SHDMAP_STAT,1	; Mark as checked
+	 mov	 SHDMAP,0	; Assume none
+	 mov	 SHDRD,0	; ...
+
+; The MiSTer ao486 core has RAM in all of C0000-EFFFF (see umbmist,
+; github.com/p2mate/umbmist).  It identifies itself via CPUID.
+
+	 pushfd 		; Test for CPUID via the ID flag
+	 pop	 eax		; ...
+	 mov	 ecx,eax	; Save original
+	 xor	 eax,200000h	; Toggle ID flag (bit 21)
+	 push	 eax		; ...
+	 popfd			; ...
+	 pushfd 		; ...
+	 pop	 eax		; ...
+	 push	 ecx		; Restore original flags
+	 popfd			; ...
+	 cmp	 eax,ecx	; Did it change?
+	 je	 short GET_SHDMAP_XMISTER ; Jump if not (no CPUID)
+
+	 xor	 eax,eax	; Function 0:  vendor
+	 CPUID			; Return EBX:EDX:ECX = vendor
+	 cmp	 ebx,5453694Dh	; "MiSTer AO486"?
+	 jne	 short GET_SHDMAP_XMISTER ; Jump if not
+	 cmp	 edx,41207265h	; ...
+	 jne	 short GET_SHDMAP_XMISTER ; Jump if not
+	 cmp	 ecx,3638344Fh	; ...
+	 jne	 short GET_SHDMAP_XMISTER ; Jump if not
+
+	 mov	 SHDMAP,0FFFh	; All of C0000-EFFFF is RAM
+	 mov	 SHDRD,0FFFh	; ...
+
+	 jmp	 GET_SHDMAP_EXIT ; Join common exit code
+
+GET_SHDMAP_XMISTER:
+	 test	 SYS_FLAG,@SYS_PCIBIOS ; PCI BIOS present?
+	 jz	 near ptr GET_SHDMAP_EXIT ; Jump if not
+
+	 pushf			; Save interrupt flag
+	 cli			; No interrupts during config cycles
+
+	 mov	 al,00h 	; Vendor and device ID
+	 call	 PCI_RDCFG	; Return with EAX = register
+
+	 cmp	 ax,8086h	; Izit Intel?
+	 je	 short GET_SHDMAP_INTEL ; Jump if so
+
+	 cmp	 ax,1022h	; Izit AMD?
+	 je	 near ptr GET_SHDMAP_AMD ; Jump if so
+
+	 jmp	 GET_SHDMAP_DONE ; Unknown host bridge
+
+GET_SHDMAP_INTEL:
+	 shr	 eax,16 	; AX = device ID
+	 lea	 si,PAM59_TAB	; CS:SI ==> device IDs with PAM at 59h
+	 mov	 cx,PAM59_CNT	; # entries
+@@:
+	 cmp	 ax,cs:[si]	; Izit this one?
+	 je	 short GET_SHDMAP_59 ; Jump if so
+
+	 add	 si,2		; Skip to next entry
+	 loop	 @B		; Jump if more entries to check
+
+	 cmp	 ax,1A30h	; 845?
+	 je	 short GET_SHDMAP_90 ; Jump if so
+
+	 cmp	 ax,2550h	; 845E to 4 Series (Q35, G45)?
+	 jb	 short @F	; Jump if not
+	 cmp	 ax,2EFFh	; ...
+	 jbe	 short GET_SHDMAP_90 ; Jump if so
+@@:
+	 mov	 bx,ax		; Copy device ID
+	 lea	 si,PAM80_TAB	; CS:SI ==> high bytes of device IDs (PAM at 80h)
+	 mov	 cx,PAM80_CNT	; # entries
+@@:
+	 cmp	 bh,cs:[si]	; Izit this family?
+	 je	 short GET_SHDMAP_80 ; Jump if so
+
+	 inc	 si		; Skip to next entry
+	 loop	 @B		; Jump if more entries to check
+
+	 jmp	 GET_SHDMAP_DONE ; Unknown Intel host bridge
+
+GET_SHDMAP_59:
+	 mov	 bl,59h 	; PAM0 register
+	 jmp	 short GET_SHDMAP_PAM ; Join common code
+
+GET_SHDMAP_90:
+	 mov	 bl,90h 	; PAM0 register
+	 jmp	 short GET_SHDMAP_PAM ; Join common code
+
+GET_SHDMAP_80:
+	 mov	 bl,80h 	; PAM0 register
+
+; BL = PCI register of PAM0; PAM1 (C0000-C7FFF) to PAM6 (E8000-EFFFF)
+; follow as six consecutive bytes.
+
+GET_SHDMAP_PAM:
+	 movzx	 bx,bl		; Zero to use as word
+	 xor	 di,di		; Initialize read  enable map
+	 xor	 bp,bp		; ...	     write ...
+	 xor	 dx,dx		; Bit # in maps (16KB blocks from C0000)
+	 mov	 cx,7		; PAM0 to PAM6
+GET_SHDMAP_PAMNEXT:
+	 mov	 al,bl		; Copy register #
+	 call	 PCI_RDCFG	; Return with EAX = dword
+	 push	 cx		; Save for a moment
+	 mov	 cl,bl		; Copy register #
+	 and	 cl,3		; Byte # within dword
+	 shl	 cl,3		; Times 8 to get bit shift
+	 shr	 eax,cl 	; AL = PAM byte
+	 pop	 cx		; Restore
+
+	 cmp	 cx,7		; Izit PAM0 (F0000-FFFFF in the high nibble)?
+	 jne	 short GET_SHDMAP_PAM1 ; Jump if not
+
+	 test	 al,10h 	; Read enable?
+	 jz	 short @F	; Jump if not
+
+	 or	 di,0F000h	; Mark F0000-FFFFF
+@@:
+	 test	 al,20h 	; Write enable?
+	 jz	 short GET_SHDMAP_PAMLOOP ; Jump if not
+
+	 or	 bp,0F000h	; Mark F0000-FFFFF
+
+	 jmp	 short GET_SHDMAP_PAMLOOP ; Join common code
+
+GET_SHDMAP_PAM1:
+	 mov	 ah,al		; Copy for high nibble
+	 test	 al,1		; Low nibble's read enable?
+	 jz	 short @F	; Jump if not
+
+	 bts	 di,dx		; Mark as read from DRAM
+@@:
+	 test	 al,2		; Low nibble's write enable?
+	 jz	 short @F	; Jump if not
+
+	 bts	 bp,dx		; Mark as written to DRAM
+@@:
+	 inc	 dx		; Next 16KB block
+	 test	 ah,10h 	; High nibble's read enable?
+	 jz	 short @F	; Jump if not
+
+	 bts	 di,dx		; Mark as read from DRAM
+@@:
+	 test	 ah,20h 	; High nibble's write enable?
+	 jz	 short @F	; Jump if not
+
+	 bts	 bp,dx		; Mark as written to DRAM
+@@:
+	 inc	 dx		; Next 16KB block
+GET_SHDMAP_PAMLOOP:
+	 inc	 bx		; Next PAM register
+	 loop	 GET_SHDMAP_PAMNEXT ; Jump if more PAM registers
+
+	 jmp	 GET_SHDMAP_SAVE ; Join common code
+
+; AMD:	the fixed range MTRRs are valid only on family 0Fh and later
+
+GET_SHDMAP_AMD:
+	 pushfd 		; Test for CPUID via the ID flag
+	 pop	 eax		; ...
+	 mov	 ecx,eax	; Save original
+	 xor	 eax,200000h	; Toggle ID flag (bit 21)
+	 push	 eax		; ...
+	 popfd			; ...
+	 pushfd 		; ...
+	 pop	 eax		; ...
+	 push	 ecx		; Restore original flags
+	 popfd			; ...
+	 cmp	 eax,ecx	; Did it change?
+	 je	 near ptr GET_SHDMAP_DONE ; Jump if not (no CPUID)
+
+	 xor	 eax,eax	; Function 0:  vendor
+	 CPUID			; Return EBX:EDX:ECX = vendor
+	 cmp	 ebx,'htuA'	; "AuthenticAMD"?
+	 jne	 near ptr GET_SHDMAP_DONE ; Jump if not
+	 cmp	 ecx,'DMAc'	; ...
+	 jne	 near ptr GET_SHDMAP_DONE ; Jump if not
+
+	 mov	 eax,1		; Function 1:  family
+	 CPUID			; Return EAX = signature
+	 shr	 eax,8		; Family to low nibble
+	 and	 al,0Fh 	; Isolate family
+	 cmp	 al,0Fh 	; K8 or later?
+	 jne	 near ptr GET_SHDMAP_DONE ; Jump if not
+
+	 mov	 ecx,0C0010010h ; SYSCFG
+	 RDMSR			; Read into EDX:EAX
+	 bt	 eax,18 	; MtrrFixDramEn?
+	 jnc	 near ptr GET_SHDMAP_DONE ; Jump if not (RdMem/WrMem unused)
+
+	 push	 edx		; Save SYSCFG
+	 push	 eax		; ...
+	 bts	 eax,19 	; Make RdMem/WrMem visible (MtrrFixDramModEn)
+	 WRMSR			; ...
+
+	 xor	 di,di		; Initialize read  enable map
+	 xor	 bp,bp		; ...	     write ...
+	 xor	 bx,bx		; Bit # in maps (16KB blocks from C0000)
+	 mov	 ecx,268h	; C0000-C7FFF
+GET_SHDMAP_MTRR:
+	 RDMSR			; EDX:EAX = 8 bytes for 8 * 4KB
+	 mov	 si,2		; Two 16KB blocks
+GET_SHDMAP_MTRR0:
+	 push	 eax		; Save for a moment
+	 and	 eax,10101010h	; Isolate RdMem of the four 4KB pages
+	 cmp	 eax,10101010h	; All set?
+	 pop	 eax		; Restore
+	 jne	 short @F	; Jump if not
+
+	 bts	 di,bx		; Mark as read from DRAM
+@@:
+	 test	 eax,08080808h	; Any WrMem?
+	 jz	 short @F	; Jump if not
+
+	 bts	 bp,bx		; Mark as written to DRAM
+@@:
+	 inc	 bx		; Next 16KB block
+	 mov	 eax,edx	; Next four 4KB pages
+	 dec	 si		; One fewer block
+	 jnz	 short GET_SHDMAP_MTRR0 ; Jump if more
+
+	 inc	 ecx		; Next MTRR
+	 cmp	 ecx,26Fh	; Through F8000-FFFFF?
+	 jbe	 short GET_SHDMAP_MTRR ; Jump if more
+
+	 mov	 ecx,0C0010010h ; SYSCFG
+	 pop	 eax		; Restore original value
+	 pop	 edx		; ...
+	 WRMSR			; ...
+GET_SHDMAP_SAVE:
+	 mov	 SHDRD,di	; Save read enable map
+
+; Free shadow DRAM is read but not written from/to DRAM in C0000-EFFFF:
+; a BIOS write-protects what it doesn't use, its own data stays writable
+
+	 not	 bp		; Not write enabled
+	 and	 di,bp		; ...
+	 and	 di,0FFFh	; Only C0000-EFFFF
+	 mov	 SHDMAP,di	; Save for later use
+GET_SHDMAP_DONE:
+	 popf			; Restore interrupt flag
+GET_SHDMAP_EXIT:
+	 popad			; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+PAM59_TAB dw	 122Dh,1250h,7030h,7100h ; 430FX/HX/VX/TX
+	 dw	 1237h,7180h,7190h,7192h ; 440FX/LX/BX/BX (AGP disabled)
+	 dw	 71A0h,71A2h,84C4h,84CAh ; 440GX/GX, 450KX/GX
+	 dw	 7120h,7122h,7124h,7194h ; 810/810-DC100/810E, 440MX
+PAM59_CNT equ	 ($-PAM59_TAB)/2 ; # entries
+
+PAM80_TAB db	 01h,0Ah,0Ch,0Dh,15h,16h,19h,1Fh ; SNB to SKL
+	 db	 3Eh,59h,8Ah,9Ah,9Bh,4Ch,46h,0A7h ; KBL to RPL
+	 db	 7Dh		; MTL/ARL
+PAM80_CNT equ	 $-PAM80_TAB	; # entries
+
+GET_SHDMAP endp 		; End GET_SHDMAP procedure
+	 NPPROC  FILL_SHDFREE -- Fill In SHDFREE_MAP
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Mark the 4KB blocks of C0000-EFFFF which are free shadow DRAM (see
+GET_SHDMAP) with uniform contents in SHDFREE_MAP so that 386MAX's
+RAMSCAN function (used by MAXIMIZE and 386UTIL) doesn't report them
+as adapter RAM.
+
+|
+
+	 pusha			; Save all GP registers
+	 REGSAVE <ds,es>	; Save segment registers
+
+	 mov	 bx,0C000h	; First segment
+FILL_SHDFREE_NEXT:
+	 mov	 ax,bx		; Copy segment
+	 sub	 ax,0C000h	; Less start
+	 shr	 ax,14-4	; Convert from paras to 16KB
+	 bt	 SHDMAP,ax	; Izit free shadow DRAM?
+	 jnc	 short FILL_SHDFREE_LOOP ; Jump if not
+
+	 mov	 es,bx		; Address the block
+	 assume  es:nothing	; Tell the assembler about it
+	 xor	 di,di		; ES:DI ==> block
+	 mov	 al,es:[di]	; Get first byte
+
+	 cmp	 al,00h 	; Izit zero?
+	 je	 short @F	; Jump if so
+
+	 cmp	 al,0FFh	; Izit all bits set?
+	 jne	 short FILL_SHDFREE_LOOP ; Jump if not
+@@:
+	 mov	 cx,4*1024	; Block size
+    repe scas	 es:[di].LO	; Compare with AL
+	 jne	 short FILL_SHDFREE_LOOP ; Jump if not uniform
+
+	 mov	 ax,seg JGROUP	; Get segment of SHDFREE_MAP
+	 mov	 es,ax		; Address it
+	 assume  es:JGROUP	; Tell the assembler about it
+	 mov	 ax,bx		; Copy segment
+	 sub	 ax,0A000h	; Origin A000
+	 shr	 ax,12-4	; Convert from paras to 4KB
+	 bts	 SHDFREE_MAP.ELO,ax ; Mark as free shadow DRAM
+	 assume  es:nothing	; Tell the assembler about it
+FILL_SHDFREE_LOOP:
+	 add	 bx,(4*1024)/16 ; Next 4KB block
+	 cmp	 bx,0F000h	; At the end?
+	 jb	 short FILL_SHDFREE_NEXT ; Jump if not
+
+	 REGREST <es,ds>	; Restore
+	 assume  ds:nothing,es:nothing ; Tell the assembler about it
+	 popa			; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+FILL_SHDFREE endp		; End FILL_SHDFREE procedure
+	 NPPROC  CHECK_SHDRAM -- Check For Free Shadow DRAM
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+See if the 512-byte block at BX:0 (in which CHECK_RAM found RAM) is
+unused shadow DRAM:  the chipset maps reads to DRAM (see GET_SHDMAP) and
+its contents are uniform (all 00h or all FFh).  The latter keeps
+blocks a BIOS (e.g. CSM option ROM data) left in use.
+
+On entry:
+
+BX	 =	 segment to check
+
+On exit:
+
+CF	 =	 0 if free shadow DRAM
+	 =	 1 otherwise
+
+|
+
+	 REGSAVE <ax,cx,di,es> ; Save registers
+
+	 cmp	 SHDMAP_STAT,0	; Already checked?
+	 jne	 short @F	; Jump if so
+
+	 call	 GET_SHDMAP	; Fill SHDMAP
+@@:
+	 cmp	 bx,0C000h	; Izit below C0000?
+	 jb	 short CHECK_SHDRAM_NO ; Jump if so
+
+	 cmp	 bx,0F000h	; Izit at or above F0000?
+	 jae	 short CHECK_SHDRAM_NO ; Jump if so
+
+	 mov	 cx,bx		; Copy segment
+	 sub	 cx,0C000h	; Less start
+	 shr	 cx,14-4	; Convert from paras to 16KB
+	 bt	 SHDMAP,cx	; Izit shadow DRAM?
+	 jnc	 short CHECK_SHDRAM_NO ; Jump if not
+
+	 mov	 es,bx		; Address the block
+	 assume  es:nothing	; Tell the assembler about it
+	 xor	 di,di		; ES:DI ==> block
+	 mov	 al,es:[di]	; Get first byte
+
+	 cmp	 al,00h 	; Izit zero?
+	 je	 short @F	; Jump if so
+
+	 cmp	 al,0FFh	; Izit all bits set?
+	 jne	 short CHECK_SHDRAM_NO ; Jump if not
+@@:
+	 mov	 cx,512 	; Block size
+    repe scas	 es:[di].LO	; Compare with AL
+	 jne	 short CHECK_SHDRAM_NO ; Jump if not uniform
+
+	 clc			; Mark as free shadow DRAM
+
+	 jmp	 short CHECK_SHDRAM_EXIT ; Join common exit code
+
+CHECK_SHDRAM_NO:
+	 stc			; Mark as not free shadow DRAM
+CHECK_SHDRAM_EXIT:
+	 REGREST <es,di,cx,ax>	; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+CHECK_SHDRAM endp		; End CHECK_SHDRAM procedure
 	 NPPROC  RAMSCAN -- Search For RAM In High Memory
 	 assume  ds:PGROUP,es:PGROUP,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
@@ -2150,9 +2770,12 @@ search for RAM in high memory and fill in MEM_MAP accordingly.
 	 jnz	 near ptr RAMSCAN_EXIT ; Not this time, so don't check RAM
 @@:
 
+; Mark regions reserved in the BIOS memory map
+
+	 call	 E820_RSV	; Mark E820h reserved regions as other memory
+
 ; Search for RAM present in pages not already mapped
 
-@RAM_START equ	 16*(0B000h/512) ; Start of RAM search in 512-byte blocks
 
 	 call	 SAVE_CACHERM	; Save and disable the state of the
 				; cache controller for Compaq and HP 386 systems
@@ -2176,8 +2799,12 @@ RAMSCAN_NEXT:
 	 shl	 bx,9-4 	; Convert from 512 to paras
 
 	 call	 CHECK_RAM	; Check for RAM in 512-byte block at BX:0
+	 jnc	 short RAMSCAN_XRAM ; Jump if no RAM present
+
+	 call	 CHECK_SHDRAM	; Izit free shadow DRAM?
 	 mov	 al,@XLAT_OTH	; Assume valid other system RAM
-	 jc	 short RAMSCAN_FND ; Jump if RAM present
+	 jc	 short RAMSCAN_FND ; Jump if not
+RAMSCAN_XRAM:
 
 	 mov	 al,@XLAT_OVR	; It's not RAM
 RAMSCAN_FND:
@@ -2272,7 +2899,18 @@ if (@OEM_EMS or @OEM_HIFILL) and @OEM_SYS ne @OEMSYS_ILIM
 
 	 CPD	 'Calling RAMSCAN,  CS:IP=%CS:%IP  DS=%DS  ES=%ES'
 
+	 call	 GET_SHDMAP	; Determine shadow DRAM from the chipset
+	 call	 FILL_SHDFREE	; Mark free shadow DRAM for RAMSCAN function
 	 call	 RAMSCAN	; Fill in RAM values
+ifdef @CPD_SERIAL
+	 push	 eax
+	 push	 ebx
+	 movzx	 eax,SHDMAP
+	 movzx	 ebx,SHDMAP_STAT
+	 CPD	 'SHDMAP=%EAX STAT=%EBX'
+	 pop	 ebx
+	 pop	 eax
+endif
 endif				; IF (OEM_EMS or @OEM_HIFILL) and @OEM_SYS ne @OEMSYS_ILIM
 
 ; Calculate the OVRSIZE value

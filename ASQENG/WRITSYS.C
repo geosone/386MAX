@@ -269,7 +269,7 @@ int sysinfo_write(char *name)
 		SysInfo->nCDs, SysInfo->nFirstCD );
 
 	fprintf(RwFile,"%s\n",RwKeyword[K_END]);
-	fclose(RwFile);
+	return fclose(RwFile);
 }
 
 /*

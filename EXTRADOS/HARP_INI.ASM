@@ -64,13 +64,13 @@ MSG_COPY db	 @HNAME,' -- Version '
 	 db	 VERS_H,'.',VERS_T,VERS_U
 ifdef LANG_GR
 	 db	 ' -- Ein DOS Memory Reorganizer',CR,LF
-	 db	 '   (C) Copyright 1993-96 Qualitas, Inc.'
-	 db	 '  Alle Rechte vorbehalten.',CR,LF
+	 db	 '   (C) Copyright 1993-96 Qualitas, Inc.',CR,LF
+	 db	 '   Open 386MAX-Mitwirkende 2022-2026, GNU General Public License Version 3.',CR,LF
 	 db	 EOS
 else
 	 db	 ' -- A DOS Memory Reorganizer',CR,LF
-	 db	 '   (C) Copyright 1993-96 Qualitas, Inc.'
-	 db	 '  GNU General Public License version 3.',CR,LF
+	 db	 '   (C) Copyright 1993-96 Qualitas, Inc.',CR,LF
+	 db	 '   Open 386MAX contributors 2022-2026, GNU General Public License version 3.',CR,LF
 if @MAX6
 	 db	 '   Special version for Bank of America.',CR,LF
 endif					; IF @MAX6
@@ -343,7 +343,7 @@ MSG_386LOAD db	  BEL,'様> Dieses Programm kann nicht im HiDOS laufen.',CR,LF
 	    db	 CR,LF,EOS
 
 	 public  MSG_XMAX
-MSG_XMAX    db	  BEL,'様> Dieses Programm erfordert Qualitas MAX/BlueMAX ab Version 8.0.',CR,LF
+MSG_XMAX    db	  BEL,'様> Dieses Programm erfordert Open 386MAX/BlueMAX ab Version 8.0.',CR,LF
 	    db	 CR,LF,EOS
 
 else
@@ -362,7 +362,7 @@ MSG_386LOAD db	 BEL,'様> This program can not be run from High DOS memory.',CR,L
 	    db	 CR,LF,EOS
 
 	 public  MSG_XMAX
-MSG_XMAX    db	 BEL,'様> This program requires Qualitas MAX/BlueMAX version 8.0 (or above).',CR,LF
+MSG_XMAX    db	 BEL,'様> This program requires Open 386MAX/BlueMAX version 8.0 (or above).',CR,LF
 	    db	 CR,LF,EOS
 
 endif

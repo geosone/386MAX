@@ -1,4 +1,4 @@
-VERSION  equ	 803
+VERSION  equ	 850
 VERSLTR  equ	 <>
 
 ;' $Header:   P:/PVCS/MAX/386MAX/VERSRET.ASV   1.5   06 Nov 1996 15:42:26   BOB  $

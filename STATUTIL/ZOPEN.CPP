@@ -37,7 +37,7 @@
 #include <zopen.h>
 
 // Rename callback interface
-extern "C" CALLBACK EXPORT16
+extern "C" int CALLBACK EXPORT16
 CBRename( DZRENAME FAR *lpDZR, CZopen FAR *lpData ) {
 	// For small model version, we can cast lpData to NEAR
 #ifndef _WIN32

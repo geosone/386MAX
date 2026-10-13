@@ -658,5 +658,6 @@ int	 len)	       /* actual length of characters (not expanded TABS) */
 #else
 	vWin_show( pText, win );
 #endif
+	return WIN_OK;
 }
 

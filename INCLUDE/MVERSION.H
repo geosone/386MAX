@@ -1,6 +1,6 @@
 //' $Header:   P:/PVCS/MAX/INCLUDE/MVERSION.H_V   1.73   23 May 1997 13:36:00   BOB  $
 //
-// MVERSION.H - Version definitions for Max 8
+// MVERSION.H - Version definitions for Max 8 (Open 386MAX 8.50)
 // Included by component resource scripts.
 //
 // ------------------------------------------------------
@@ -25,8 +25,8 @@
 
 #define VER_MAJOR					8	// 1.xx.xxx.xxx
 #define VER_MAJOR_STR				"8"
-#define VER_MINOR					3	// x.0.xxx.xxx
-#define VER_MINOR_STR				"03"
+#define VER_MINOR					50	// x.0.xxx.xxx
+#define VER_MINOR_STR				"50"
 #define VER_BETA					4 // x.xx.001.xxx
 #define VER_BETA_STR				"004"
 // VER_MODULE and VER_MODULE_STR are defined in the component's resource script
@@ -46,15 +46,12 @@
 #define VER_PRODUCTVERSION_STR		VERSION
 
 #define VER_PRODUCTNAME_STR		MAX8PRODUCT
-#define VER_LEGALCOPYRIGHT_YEARS	"1995-97"
+#define VER_LEGALCOPYRIGHT_YEARS	"1987-97"
 #define VER_COMPANYNAME_STR		"Qualitas, Inc."
 #define VER_COPYRIGHT1_STR			"Copyright \251 " VER_LEGALCOPYRIGHT_YEARS " " VER_COMPANYNAME_STR
 
-#ifdef LANG_GR
-#define VER_COPYRIGHT2_STR			"Alle Rechte vorbehalten."
-#else
-#define VER_COPYRIGHT2_STR			"GNU General Public License version 3."
-#endif
+// Open 386MAX (short enough for the About boxes)
+#define VER_COPYRIGHT2_STR			"Open 386MAX 2022-2026, GNU GPL v3"
 
 #define VER_LEGALCOPYRIGHT_STR		VER_COPYRIGHT1_STR " " VER_COPYRIGHT2_STR
 // Define a two-line version of the copyright for when we're low on space.

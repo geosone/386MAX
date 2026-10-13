@@ -103,7 +103,7 @@ Pfeiltaste, um das Thema hervorzuheben und dr\'81cken Sie dann die {\b Eingabeta
 \par                        {\ul Befehlszeilen-Optionen}{\v H.T_Command}
 \par                         {\ul Snapshot-Information}{\v H.T_Snapshot}
 \par       - Diese Themen bieten Hinweise zur {\b Systemverbesserung} -
-\par                     {\ul Qualitas Produkt-Information}{\v H.Products}
+\par                     {\ul Open 386MAX Produkt-Information}{\v H.Products}
 \par                      {\ul Feinabstimmung des Systems}{\v H.Tuning}
 \par       - Diese Themen erl\'84utern die einzelnen {\b Speicherkonzeptionen} -
 \par                  {\ul Einf\'81hrung in die Speicher-Lernhilfe}{\v H.T_Mem_Lsn_01}
@@ -128,7 +128,7 @@ Pfeiltaste, um das Thema hervorzuheben und dr\'81cken Sie dann die {\b Eingabeta
 \par                         {\ul Maximize PROfildatei}{\v H.T_Cfg_PRO}
 \par                           {\ul ExtraDOS PROfil}{\v H.T_Cfg_EPro}
 \par                           {\ul SYSTEM.INI Datei}{\v H.T_Cfg_SYSINI}
-\par                          {\ul Qualitas Produkte}{\v H.T_Cfg_Qualit}
+\par                          {\ul Open 386MAX Produkte}{\v H.T_Cfg_Qualit}
 \par                               {\ul Windows}{\v H.T_Cfg_Window}
 \par                             {\ul CMOS-Detail}{\v H.T_Cfg_CMO}
 \par    - Diese Themen erl\'84utern die Konzeptionen zur {\b Ausstattung} -
@@ -186,14 +186,14 @@ heren Produktivit\'84t Ihres Systems f\'81hren kann.
 \par 
 \par {\b Vertrieb}
 \par 
-\par Das ASQ-Programm ist ein wesentlicher Bestandteil der Qualitas Produkte. ASQ unterliegt dem Qualitas Incorporated Copyright und ist keine sogenannte "Public Domain" Software (d.h. keine frei kopierbare Software). Im Gegensatz zu fr\'81
+\par Das ASQ-Programm ist ein wesentlicher Bestandteil der Open 386MAX Produkte. ASQ unterliegt dem Qualitas Incorporated Copyright und ist keine sogenannte "Public Domain" Software (d.h. keine frei kopierbare Software). Im Gegensatz zu fr\'81
 heren ASQ-Ausgaben ist diese Version {\b keine} Shareware und darf deshalb nicht von anderen Anwendern genutzt werden.
 \par 
 \par   (C) Copyright 1987-96 Qualitas, Inc.  Alle Rechte vorbehalten.
 \par 
 \par {\b Warenzeichen}
 \par 
-\par Qualitas, Qualitas MAX, BlueMAX, MOVE'EM, ROMsearch, QCache, SmartMemory und VGAswap sind Warenzeichen von Qualitas, Inc.
+\par Qualitas, Open 386MAX, BlueMAX, MOVE'EM, ROMsearch, QCache, SmartMemory und VGAswap sind Warenzeichen von Qualitas, Inc.
 \par 
 \par Alle anderen Firmen- und Produktnamen sind eingetragene Warenzeichen bzw. Warenzeichen der entsprechenden Hersteller.
 \par 
@@ -557,7 +557,7 @@ nglich geschrieben wurde. Da 8088/86 Chips nur auf ein Megabyte zugreifen konnte
 \par 
 \par {\b Grenzen, die zu \'81berwinden sind}:
 \par 
-\par Die 80386 Chips (sowie neuere CPUs) bieten spezielle Funktionen, mit deren Hilfe die DOS-Grenze und der Real Mode \'81berwunden wird. Memory Management-Programme wie Qualitas MAX und BlueMAX nutzen diese Eigenschaften f\'81
+\par Die 80386 Chips (sowie neuere CPUs) bieten spezielle Funktionen, mit deren Hilfe die DOS-Grenze und der Real Mode \'81berwunden wird. Memory Management-Programme wie Open 386MAX und BlueMAX nutzen diese Eigenschaften f\'81
 r den Zugriff auf Speicherbereiche, die DOS-Programmen normalerweise nicht zur Verf\'81gung stehen. Diese Memory Manager nutzen auch Software-Standards wie {\b EMS} und {\b XMS}, um Bereiche oberhalb 1 MB anzusprechen. Au\'e1erdem bieten sie Unterst\'81
 tzung f\'81r Anwendungsprogramme, die zwischen Real Mode und Protected Mode {\b umschalten}.
 \par 
@@ -605,7 +605,7 @@ ndere ROM-Bereiche stehen erst zur Verf\'81gung, wenn der Boot-Vorgang des Syste
 llbereiche. Auf PS/2 Systemen mit einem 128 KB BIOS kann das Qualitas BlueMAX-Programm bis zu {\b 80 KB} als HiDOS-Speicher zur\'81ckgewinnen.
 \par 
 \par Neben der Memory Management Software mu\'e1 auch der Anwender mu\'e1 dazu beitragen, die Speicherl\rdblquote cher ausfindig zu machen. Dieser Vorgang kann zahlreiche Tests erfordern, besonders f\'81
-r differenzierte Systeme. Qualitas Produkte wie ASQ unterst\'81tzen Sie jedoch bei Ihrer Aufgabe und automatisieren viele dieser Vorg\'84nge.
+r differenzierte Systeme. Open 386MAX Produkte wie ASQ unterst\'81tzen Sie jedoch bei Ihrer Aufgabe und automatisieren viele dieser Vorg\'84nge.
 \par 
 \par {\b Speicherl\rdblquote cher umsetzen}
 \par 
@@ -630,7 +630,7 @@ uf HiDOS-Speicherbereiche zuzugreifen.
 \par 
 \par Ein bekanntes Problem sind Programme, die nicht im HiDOS-Speicher gestartet werden k\rdblquote nnen oder einer bestimmten Lade-Reihenfolge unterliegen. Dieses Problem wird von Fall zu Fal
 l anders gehandhabt. Einige Anwendungsprogramme setzen zudem Speicher voraus, der f\'81r einen bestimmten Industrie-Standard konfiguriert wurde. Es existieren eine ganze Menge dieser Standards und ein guter Memory Managers sollte m\rdblquote 
-glichst viele Varianten unterst\'81tzen. Qualitas MAX unterst\'81tzt EMS, XMS, VCPI, DPMI und VDS, um sowohl heutigen als auch zuk\'81nftigen Anspr\'81chen gerecht zu werden. 
+glichst viele Varianten unterst\'81tzen. Open 386MAX unterst\'81tzt EMS, XMS, VCPI, DPMI und VDS, um sowohl heutigen als auch zuk\'81nftigen Anspr\'81chen gerecht zu werden. 
 \par 
 \par Letztendlich stellt die Hardware gewisse Anspr\'81che. Der Speicher auf \'84lteren Systemen mu\'e1 m\rdblquote glicherweise physisch als Expanded- oder Extended Memory konfiguriert sein. Rechner neueren Datums verf\'81gen \'81
 ber Memory Management Software, die diese Aufgabe \'81bernimmt.
@@ -791,11 +791,11 @@ nderungen im Verlauf ihrer Installation automatisch vor. Nachdem die AUTOEXEC.BA
 \par }@P H.T_Cfg_Lsn_01 H.T_Cfg_CMO
 \par                           {\i Maximize PROfildatei
 \par }
-\par Bei der Installation eines Qualitas Produktes wird automatisch eine {\b Profildatei }angelegt. Die Datei, die entweder {\b 386MAX.PRO}, {\b BLUEMAX.PRO} oder {\b MOVE'EM.PRO} hei\'e1t, enth\'84
-lt Befehle, die das entsrechende Qualitas Produkt steuern. Die Profildatei kann grunds\'84tzlich mit jedem Texteditor ver\'84ndert werden; die MAX Oberfl\'84che verf\'81gt \'81ber einen speziellen Editor, der die Arbeit mit den Profildateien erleichtert.
+\par Bei der Installation eines Open 386MAX Produktes wird automatisch eine {\b Profildatei }angelegt. Die Datei, die entweder {\b 386MAX.PRO}, {\b BLUEMAX.PRO} oder {\b MOVE'EM.PRO} hei\'e1t, enth\'84
+lt Befehle, die das entsrechende Open 386MAX Produkt steuern. Die Profildatei kann grunds\'84tzlich mit jedem Texteditor ver\'84ndert werden; die MAX Oberfl\'84che verf\'81gt \'81ber einen speziellen Editor, der die Arbeit mit den Profildateien erleichtert.
 
 \par 
-\par Die Qualitas MAX Dokumentation enth\'84lt eine Beschreibung der Befehle f\'81r die Profildatei.
+\par Die Open 386MAX Dokumentation enth\'84lt eine Beschreibung der Befehle f\'81r die Profildatei.
 \par 
 \par \pard\plain \s15 \f11\fs28\cf6 >>H.T_Cfg_EPro
 \par \pard\plain \f11 @P H.T_Cfg_Lsn_01 H.T_Cfg_CMO
@@ -814,14 +814,14 @@ und STACKS. Teilsegmente werden mit einem DEVICE= Eintrag in CONFIG.SYS geladen.
 \par }
 \par Die Datei SYSTEM.INI wird angezeigt, wenn Windows in der Pfad-Anweisung zu finden ist. SYSTEM.INI enth\'84lt Informationen, die Windows w\'84hrend der Startphase ben\rdblquote tigt, z.B. besondere Hardware-Treiber.
 \par 
-\par SETUP f\'81gt den Eintr\'84gen in SYSTEM.INI die Optionen SystemROMBreakPoint=FALSE und VCPIWarning=FALSE hinzu. Damit wird die Kompatibilit\'84t zwischen Qualitas Produkten und Windows sichergestellt. Die Eintr\'84
-ge sind belanglos, wenn Qualitas Produkte im System nicht aktiv sind.
+\par SETUP f\'81gt den Eintr\'84gen in SYSTEM.INI die Optionen SystemROMBreakPoint=FALSE und VCPIWarning=FALSE hinzu. Damit wird die Kompatibilit\'84t zwischen Open 386MAX Produkten und Windows sichergestellt. Die Eintr\'84
+ge sind belanglos, wenn Open 386MAX Produkte im System nicht aktiv sind.
 \par 
 \par \pard\plain \s15 \f11\fs28\cf6 >>H.T_Cfg_Qualit
 \par \pard\plain \f11 @P H.T_Cfg_Lsn_01 H.T_Cfg_CMO
-\par                           {\i Qualitas Produkte
+\par                           {\i Open 386MAX Produkte
 \par }
-\par Dieser Bildschirm bietet Informationen \'81ber Versionsnummer, Dateiname, Datum/Uhrzeit und Dateigr\rdblquote \'e1e der Qualitas Produkte.
+\par Dieser Bildschirm bietet Informationen \'81ber Versionsnummer, Dateiname, Datum/Uhrzeit und Dateigr\rdblquote \'e1e der Open 386MAX Produkte.
 \par 
 \par Die Namen der residenten Programme werden mit folgenden weiteren Informationen gelistet:
 \par 
@@ -955,7 +955,7 @@ ndigen Cursor-Bedienung und Programmsteuerung. Die Maus-Anwendung gewinnt zunehm
 \par 
 \par Das System speichert seine Daten in {\b RAM}-Chips (Random Access Memory = Direktzugriffsspeicher) auf der Systemplatine oder einer Adapter-
 \par karte. Dieser physische RAM-Speicher kann als eine Vielzahl von unterschiedlichen logischen {\ul Speichertypen}{\v H.T_Mem_Lsn_01} eingerichtet sein. 80386/486 Rechner k\rdblquote 
-nnen diesen Speichertypen RAM-Speicher zuweisen. Qualitas MAX und BlueMAX unterst\'81tzen diese F\'84higkeit.
+nnen diesen Speichertypen RAM-Speicher zuweisen. Open 386MAX und BlueMAX unterst\'81tzen diese F\'84higkeit.
 \par 
 \par {\fs28\cf6 >>H.T_Hdw_Sum_B
 \par }@P H.T_Hdw_Lsn_01 H.T_Hdw_BIOS
@@ -1121,7 +1121,7 @@ hren jedoch dieselben grundlegenden Aufgaben aus.
 \par {\ul Bildschirm-Speicher}{\v H.T_Hdw_Vid}        Bildschirm
 \par {\ul BIOS}{\v H.T_Hdw_BIOS}                       BIOS-Detail
 \par {\ul BLUEMAX.PRO Datei}{\v H.T_Cfg_PRO}          Maximize PROfildatei
-\par {\ul BlueMAX Produkt}{\v H.Products}            Qualitas Produkt-Information
+\par {\ul BlueMAX Produkt}{\v H.Products}            Open 386MAX Produkt-Information
 \par {\ul BREAK Befehl}{\v H.T_Cfg_CFG}               Datei CONFIG.SYS
 \par {\ul BUFFERS Befehl}{\v H.T_Cfg_CFG}             Datei CONFIG.SYS
 \par {\ul BUFFERS Einstellung}{\v H.Tuning}        Feinabstimmung des Systems
@@ -1173,9 +1173,9 @@ hren jedoch dieselben grundlegenden Aufgaben aus.
 \par {\ul PATH Befehl}{\v H.T_Cfg_AUT}                Datei AUTOEXEC.BAT
 \par {\ul POST}{\v H.T_Mem_Holes}                       Speicherl\rdblquote cher
 \par {\ul PROMPT Befehl}{\v H.T_Cfg_AUT}              Datei AUTOEXEC.BAT
-\par {\ul Qualitas Information}{\v\ul H.T_Cfg_Qualit}       Qualitas Produkte{\ul 
-\par Qualitas MAX Produkt}{\v H.Products}       Qualitas Produkt-Information
-\par {\ul Qualitas Produkte}{\v H.Products}          Qualitas Produkt-Information
+\par {\ul Qualitas Information}{\v\ul H.T_Cfg_Qualit}       Open 386MAX Produkte{\ul 
+\par Open 386MAX Produkt}{\v H.Products}       Open 386MAX Produkt-Information
+\par {\ul Open 386MAX Produkte}{\v H.Products}          Open 386MAX Produkt-Information
 \par {\ul Qualitas Warenzeichen}{\v H.T_Register}      Registrierung und Vertrieb
 \par {\ul RAM-Speicher}{\v H.T_Mem_RAM}               RAM-Speicher
 \par {\ul Real Mode}{\v H.T_Mem_Lsn_03}                  Memory Management Konzeption

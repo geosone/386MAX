@@ -51,6 +51,7 @@ NOVER_HTU = 1
 	 include QMAX_EMM.INC
 	 include QMAX_I31.INC
 	 include QMAX_OEM.INC
+	 include QMAX_VCP.INC
 .list
 
 @ZEROLEN_BASE equ -1		; Pseudo-base of zero length handles
@@ -122,6 +123,9 @@ if @OEM_WIN3
 	 extrn	 RESINT2F_WIN3_BEGINIT_TAIL:near
 endif				; IF @OEM_WIN3
 	 extrn	 VM_VSAPI:near
+if @OEM_VCPI and @VCP_OLD
+	 extrn	 OLDVCPI:near
+endif				; IF @OEM_VCPI and @VCP_OLD
 
 HICODE	 ends			; End HICODE segment
 
@@ -664,6 +668,27 @@ endif				; IF @OEM_WIN3
 	 iretd			; Return to caller with AX = 0
 
 INT2F_INTRETVM1:
+if @OEM_VCPI and @VCP_OLD
+	 cmp	 ax,1684h	; Izit Get Device API Entry Point request?
+	 jne	 short INT2F_XQPI ; Jump if not
+
+	 cmp	 bx,4354h	; Izit QPIEMU's device ID?
+	 jne	 short INT2F_XQPI ; Jump if not
+
+; QEMM Programming Interface (QPI) entry point the way Jemm's QPIEMU
+; provides it, as used by SBEMU:  AX=1684h, BX=4354h returns AL=0 and
+; ES:DI ==> entry point, the same one as INT 67h AH=3Fh returns (see
+; INTFE in QMAX_VCP and QMAX_QPI)
+
+	 mov	 ax,HIMEM_CS	; Get segment of high DOS memory
+	 mov	 [esp+(size NRM_STR)+2*4],ax ; Return in caller's ES
+	 mov	 di,offset PGROUP:OLDVCPI ; Return offset in DI
+	 mov	 ax,1600h	; Indicate success (AL=0)
+
+	 iretd			; Return to caller
+
+INT2F_XQPI:
+endif				; IF @OEM_VCPI and @VCP_OLD
 	 cmp	 ax,@IOTRAP_API ; Izit I/O trapping?
 	 jne	 near ptr INT2F_INTRETVM2 ; Jump if not
 

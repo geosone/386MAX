@@ -39,13 +39,13 @@
 \par {\b ASQ Recommends}
 \par 
 \par ASQ has detected an #PROC___# in this computer system.  If the system is not currently using a memory manager, ASQ recommends that you install the {\b #RECPROD#}
- program from Qualitas.  #RECPROD# will extract the maximum performance from this computer's configuration.  #RECPROD# and other Qualitas products are described below.
+ program from Qualitas.  #RECPROD# will extract the maximum performance from this computer's configuration.  #RECPROD# and other Open 386MAX products are described below.
 \par 
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>H.L_Abt_386
 \par \pard\plain \f5\lang1033 @P H.Products H.Tuning
-\par {\b Qualitas MAX}
+\par {\b Open 386MAX}
 \par 
-\par Qualitas MAX is a memory management program for {\b 80386 and 80486} computers that:
+\par Open 386MAX is a memory management program for {\b 80386 and 80486} computers that:
 \par 
 \par   * Moves pop-up utilities, network drivers and other memory
 \par     resident programs out of conventional memory into previously
@@ -87,7 +87,7 @@
 \par \pard\plain \f5\lang1033 @P H.Products H.Tuning
 \par {\b 80286 Support}
 \par 
-\par Both Qualitas MAX and BlueMAX include support for {\b 80286} computers that use the NEAT CHIPSet, or any PC computer with an EMS 4.0 hardware memory board.  80286 support:
+\par Both Open 386MAX and BlueMAX include support for {\b 80286} computers that use the NEAT CHIPSet, or any PC computer with an EMS 4.0 hardware memory board.  80286 support:
 \par 
 \par   * Backfills low DOS to 640 KB from expanded memory.
 \par   * Expands low DOS to 704 KB or 736 KB on systems with monochrome

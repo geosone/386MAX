@@ -255,7 +255,7 @@ tton itself.
 \par \pard     active if no changes have been made since the file was loaded or
 \par     last saved.
 \par   * {\b Option F8} - The Option Editor is a dialog box that helps you
-\par     build option statements for Qualitas product PROfile files.  See
+\par     build option statements for Open 386MAX product PROfile files.  See
 \par     the topic {\ul Using the Option Editor}{\v H.E_Option}.
 \par 
 \par {\b Editor Screen}
@@ -345,7 +345,7 @@ nd number is the total number of lines in the file, and the third number is the 
 \par \pard\plain \f5\lang1033 @P H.U_Editor H.E_Spec
 \par                        {\i Using the Option Editor}
 \par 
-\par The Option Editor is a dialog box that helps you interactively build option statements for Qualitas product {\b PROfile}
+\par The Option Editor is a dialog box that helps you interactively build option statements for Open 386MAX product {\b PROfile}
  files.  The Option Editor provides a list of PROfile options, a description of the use of each option, and a field editor to modify the option text to your system's needs.
 \par 
 \par With the Option Editor dialog box showing, place the menu highlight on an option on the Options list, then move to the field editor (with the Tab key, Alt key, or mouse click) and replace any placeholders ({\b xxx} or {\b nnn}) in 
@@ -376,7 +376,7 @@ the command syntax with the information for your configuration.  Pressing Enter 
 \par \pard\plain \f5\lang1033 @P H.U_Update H.U_Update
 \par                         {\i Updating the Product}
 \par 
-\par Use this option to update a Qualitas MAX or BlueMAX installation from a product update disk provided by Qualitas to registered users.  This option will request you to insert the update disk in a floppy disk drive.
+\par Use this option to update a Open 386MAX or BlueMAX installation from a product update disk provided by Qualitas to registered users.  This option will request you to insert the update disk in a floppy disk drive.
 \par 
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>H.ASQ
 \par \pard\plain \f5\lang1033 @P H.ASQ H.ASQ
@@ -392,8 +392,8 @@ the command syntax with the information for your configuration.  Pressing Enter 
 \par ASQ shows how your computer's memory resources are currently being used, and introduces the concepts of {\b memory management}
 .  Memory management is necessary in today's powerful personal computers to work around the limitations imposed by DOS and to provide complex application programs with the memory they need.
 \par 
-\par How you set up and configure your computer's memory with Qualitas products has a {\b dramatic}
- impact on its effectiveness.  ASQ will help you understand your system better and provides learning tools to explain memory management concepts in detail.  ASQ is included with Qualitas products at no charge.
+\par How you set up and configure your computer's memory with Open 386MAX products has a {\b dramatic}
+ impact on its effectiveness.  ASQ will help you understand your system better and provides learning tools to explain memory management concepts in detail.  ASQ is included with Open 386MAX products at no charge.
 \par 
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>H.Mem_Sum
 \par \pard\plain \f5\lang1033 @P H.Mem_Sum H.Hdw_Sum
@@ -454,10 +454,10 @@ th the DOS SET command.
 \par 
 \par   {\b Prompt-------------------  What is Displayed----------------------}
 \par   New top of DOS memory      The upper limit of low DOS memory after
-\par                              Qualitas MAX/BlueMAX backfilling.
-\par   Added low DOS memory       The amount of memory Qualitas MAX/BlueMAX
+\par                              Open 386MAX/BlueMAX backfilling.
+\par   Added low DOS memory       The amount of memory Open 386MAX/BlueMAX
 \par                              backfilled.
-\par   Added high DOS memory      The amount of memory Qualitas MAX/BlueMAX
+\par   Added high DOS memory      The amount of memory Open 386MAX/BlueMAX
 \par                              added above conventional memory.
 \par   Available extended memory  The amount of memory above 1 MB not
 \par                              converted from extended memory to
@@ -465,7 +465,7 @@ th the DOS SET command.
 \par   Available shared memory    The amount of memory available as
 \par                              SmartMemory.
 \par   Program storage            The amount of extended memory used for
-\par                              Qualitas MAX/BlueMAX program storage.
+\par                              Open 386MAX/BlueMAX program storage.
 \par   ROM mapping region         The size of the ROM mapping region and
 \par                              the addresses of ROMs cached with fast
 \par                              memory.
@@ -478,18 +478,18 @@ th the DOS SET command.
 \par   Remaining extended memory  The amount of extended memory not
 \par                              converted to EMS.
 \par   Total extended memory      The original amount of extended memory.
-\par   The current state is ...   The state of Qualitas MAX/BlueMAX, either ON,
+\par   The current state is ...   The state of Open 386MAX/BlueMAX, either ON,
 \par                              OFF, or AUTO.
 \par 
 \par \pard\plain \s3 \f5\fs28\cf6\lang1033 >>H.Info_EMS
 \par \pard\plain \f5\lang1033 @P H.Info_Mem H.Info_Time
 \par                          {\i EMS Memory Display}
 \par 
-\par This display shows how Qualitas MAX/BlueMAX has allocated EMS memory and how it is currently used.  The items on the display include:
+\par This display shows how Open 386MAX/BlueMAX has allocated EMS memory and how it is currently used.  The items on the display include:
 \par 
 \par   {\b Prompt------  What is Displayed-----------------------------------}
 \par   Handle        The unique identification number, called a handle,
-\par                 assigned by Qualitas MAX/BlueMAX.
+\par                 assigned by Open 386MAX/BlueMAX.
 \par                 The Avail shared handle indicates the amount of
 \par                 memory available as SmartMemory.
 \par   Memory        Lists the amount of memory allocated to each active

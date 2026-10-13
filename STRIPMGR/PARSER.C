@@ -185,6 +185,7 @@ int main(int argc, char **argv)
 	char *arg, *program_name, *current_path, drive_name[4];
 	int i, n, fd;
 	int starsect;
+	int is4dos = 0;	// (OpenWatcom: no jumps from _asm to C labels)
 	void (_cdecl _interrupt _far *old_24_vector)();
 
 	// We used to reduce _amblksiz to 64 at this point.  That's too
@@ -204,17 +205,20 @@ _asm {
 	int 2Fh
 	cmp ax,44EEh	// Izit NDOS?
 	jne no_4dos 	// Jump if not
+found_4dos:
+	mov	is4dos,1
+no_4dos:
 }
 
 	// If we needed any NDOS-specific stuff, this would be the
 	// place to do it (NDOS.INI, NSTART.BAT, etc.)
-found_4dos:
+	if (is4dos) {
 	flag_4dos = 1;
 
 	// if we're running 4DOS, activate the 4DOS-specific commands
 	init_4dos_cmds();
+	}
 
-no_4dos:
 	cfgdos.compound = '^';          // command separator (default ^)
 	cfgdos.escapechar = '';        // escape character (default ^X)
 

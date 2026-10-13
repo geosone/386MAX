@@ -51,7 +51,7 @@
 @OEM_SYS	 equ @OEMSYS_RET
 @OEM_FILE	 equ <'386MAX'>         ; File name
 @OEM_IOCTL	 equ <'386MAX'>         ; IOCTL name
-@OEM_TEXT	 equ <'Qualitas MAX'>   ; File text
+@OEM_TEXT	 equ <'Open 386MAX'>    ; File text
 @OEM_U2TEXT	 equ <'386UTIL'>        ; Name of UTIL2
 
 

@@ -423,7 +423,7 @@ long LclFileVersion(PSTR pszFileName)
 	if (!GetFileVersionInfo(pszFileName, dwVerHandle, dwVerSize, lpVer))
 		return NULL;
 
-	if (!VerQueryValue(lpVer, "\\", &lpBuf, &lpcb))
+	if (!VerQueryValue(lpVer, "\\", (void FAR * FAR *) &lpBuf, &lpcb))
 		return NULL;
 
 	ret = ((VS_FIXEDFILEINFO FAR *) lpBuf)->dwFileVersionLS;
@@ -468,14 +468,14 @@ void LclFileVersionStr(PSTR pszFileName, PSTR szFileVer)
 		goto FREE;
 
 	// Get the translation string
-	if (!VerQueryValue(lpVer, "\\VarFileInfo\\Translation", &lpBuf, &lpcb))
+	if (!VerQueryValue(lpVer, "\\VarFileInfo\\Translation", (void FAR * FAR *) &lpBuf, &lpcb))
 		goto FREE;
 
 	// Extract the translation value (with the swapped words)
 	dwTrans = *(DWORD FAR *)lpBuf;
 	wsprintf (szTemp, "\\StringFileInfo\\%08lX\\FileVersion",
 						HIWORD(dwTrans), LOWORD(dwTrans));
-	if (!VerQueryValue(lpVer, szTemp, &lpBuf, &lpcb))
+	if (!VerQueryValue(lpVer, szTemp, (void FAR * FAR *) &lpBuf, &lpcb))
 		goto FREE;
 
 	// Copy to local storage as we're about to free the memory

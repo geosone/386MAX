@@ -55,7 +55,11 @@ extern "C" {
 #endif
 
 /* Sleep the process for a fixed number of milliseconds */
+#if !(defined(__WATCOMC__) && defined(__cplusplus))
+/* (OpenWatcom C++: dos.h has sleep(unsigned seconds); an extern "C"
+   function can't be overloaded) */
 void sleep(long msecs);
+#endif
 
 /* Handle print errors */
 int prerror (int err);
@@ -179,6 +183,57 @@ void truename (char *path);		/* Convert path to canonical form */
 int truename_cmp (char *path1,		/* Convert copies of path1 and path2 */
 	char *path2);			/* to canonical form & return stricmp */
 void truedir (char *dir);		/* Convert '\' terminated dir name */
+
+#if defined(__WATCOMC__) && defined(__cplusplus)
+/* QUILIB is compiled for the Microsoft C convention (OpenWatcom -ecc); the
+   C++ modules (MFC programs) use OpenWatcom's, so these functions are
+   marked __cdecl (after their declarations: in C++ a pragma before them
+   would declare them) */
+#pragma aux (__cdecl) abortprep;
+#pragma aux (__cdecl) arg_argument;
+#pragma aux (__cdecl) arg_concat;
+#pragma aux (__cdecl) arg_getopt;
+#pragma aux (__cdecl) arg_token;
+#pragma aux (__cdecl) bcd_num;
+#pragma aux (__cdecl) chkabort;
+#pragma aux (__cdecl) copy;
+#pragma aux (__cdecl) datestr;
+#pragma aux (__cdecl) decrypt_serialno;
+#pragma aux (__cdecl) disable23;
+#pragma aux (__cdecl) disable29;
+#pragma aux (__cdecl) display_criterr;
+#pragma aux (__cdecl) done2324;
+#pragma aux (__cdecl) enable23;
+#pragma aux (__cdecl) enable29;
+#pragma aux (__cdecl) get_bootdrive;
+#pragma aux (__cdecl) get_exename;
+#pragma aux (__cdecl) get_exepath;
+#pragma aux (__cdecl) insert_help;
+#pragma aux (__cdecl) inst2324;
+#pragma aux (__cdecl) keyboard_id;
+#pragma aux (__cdecl) launder_string;
+#pragma aux (__cdecl) nomem_bailout;
+#pragma aux (__cdecl) ntrim;
+#pragma aux (__cdecl) orcopy;
+#pragma aux (__cdecl) pos_test;
+#pragma aux (__cdecl) prerror;
+#pragma aux (__cdecl) qmaxpres;
+#pragma aux (__cdecl) qmovpres;
+#pragma aux (__cdecl) set24_resp;
+#pragma aux (__cdecl) set_exename;
+#pragma aux (__cdecl) timedatefmt;
+#pragma aux (__cdecl) timestr;
+#pragma aux (__cdecl) trim;
+#pragma aux (__cdecl) trnbln;
+#pragma aux (__cdecl) truedir;
+#pragma aux (__cdecl) truename;
+#pragma aux (__cdecl) truename_cmp;
+#pragma aux (__cdecl) truename_fn;
+#pragma aux (__cdecl) win_version;
+#pragma aux (__cdecl) wordcpy;
+#pragma aux (__cdecl) wordrcpy;
+#pragma aux (__cdecl) wordset;
+#endif
 
 #endif /*COMMFUNC_INCLUDED*/
 

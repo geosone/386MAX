@@ -206,14 +206,14 @@ CURSOR set_cursor(		/* Set cursor shape */
 		VioSetCurType(&info,0);
 	}
 #else	/* DOS_VERSION */
-	if (!CursorStack[CursorSp].hid) _asm {
+	if (!CursorStack[CursorSp].hid) { _asm {
 		mov ah,3
 		mov bh,0
 		int 0x10
 		mov ah,1
 		mov cx,shape
 		int 0x10
-	}
+	} }
 #endif /* OS2_VERSION */
 	oldshape = CursorStack[CursorSp].shape;
 	CursorStack[CursorSp].shape = shape;

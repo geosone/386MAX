@@ -440,15 +440,12 @@ BOOL __export CALLBACK Config(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 
 BOOL __export CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	char szBuffer[256], szName[64], szCompany[64], szSerial[32];
+	char szBuffer[256];
 
 	switch (message) {
 	case WM_INITDIALOG:
-		// get name & company from QMAX.INI
-		GetPrivateProfileString( "Registration", "Name", "", szName, sizeof(szName), szIniName );
-		GetPrivateProfileString( "Registration", "Company", "", szCompany, sizeof(szCompany), szIniName );
-		GetPrivateProfileString( "Registration", "S/N", "", szSerial, sizeof(szSerial), szIniName );
-		wsprintf( szBuffer, "%s\r\n%s\r\nS/N  %s", (char _far *)szName, (char _far *)szCompany, (char _far *)szSerial );
+		// Open 386MAX (GPL): no registration, show the license
+		lstrcpy( szBuffer, "GNU General Public License version 3" );
 		SetDlgItemText( hDlg, ABOUTDLGBOX, szBuffer );
 		return TRUE;
 

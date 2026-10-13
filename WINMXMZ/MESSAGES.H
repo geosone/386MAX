@@ -56,8 +56,8 @@
 #define	DLGMSG_NOLOW3	"LoDOS-Speicher."
 
 // Error messages
-#define	ERRMSG_NOMAX	"Sie müssen zuerst Qualitas MAX installieren."
-#define	ERRMSG_MAX_MCFG	"Sie müssen zuerst Qualitas MAX in diesem MultiConfig-Block installieren."
+#define	ERRMSG_NOMAX	"Sie müssen zuerst Open 386MAX installieren."
+#define	ERRMSG_MAX_MCFG	"Sie müssen zuerst Open 386MAX in diesem MultiConfig-Block installieren."
 #define	ERRMSG_CANTEXIT	"Kann Windows nicht beenden. Bitte schlie฿en\n" \
 			"Sie alle DOS-Fenster und versuchen Sie es erneut."
 #define	ERRMSG_CANTPREMAXIM "Kann Windows nicht beenden, um die vorherige Konfiguration\n" \
@@ -72,7 +72,7 @@
 static char *MsgAutotemp =
 	  "@echo off\n"
 	  "echo off\n"
-	  "echo ออออออออออออออ Qualitas MAX Maximize ออออออออออออออออ\n"
+	  "echo ออออออออออออออ Open 386MAX Maximize ออออออออออออออออ\n"
 	  "echo Ein evtl. vorhandenes Menuprogramm beenden Sie bitte\n"
 	  "echo sobald es geladen ist, damit MAXIMIZE fortfahren kann.\n"
 	  "echo อออออออออออออออออออออออออออออออออออออออออออออออออออออ\n"
@@ -93,8 +93,8 @@ static char *MsgAutotemp =
 #define	DLGMSG_NOLOW3	"DOS memory."
 
 // Error messages
-#define	ERRMSG_NOMAX	"You must first install Qualitas MAX"
-#define	ERRMSG_MAX_MCFG	"You must first install Qualitas MAX into this MultiConfig section"
+#define	ERRMSG_NOMAX	"You must first install Open 386MAX"
+#define	ERRMSG_MAX_MCFG	"You must first install Open 386MAX into this MultiConfig section"
 #define	ERRMSG_CANTEXIT	"Unable to exit Windows.  Please close\n" \
 						"any DOS sessions and try again."
 #define	ERRMSG_CANTPREMAXIM "Unable to exit Windows to restore and reboot\n" \
@@ -109,7 +109,7 @@ static char *MsgAutotemp =
 static char *MsgAutotemp =
 	  "@echo off\n"
 	  "echo off\n"
-	  "echo ออออออออออออออ Qualitas MAX Maximize ออออออออออออออออ\n"
+	  "echo ออออออออออออออ Open 386MAX Maximize ออออออออออออออออ\n"
 	  "echo Please exit any menu or shell programs as soon as\n"
 	  "echo they appear so that we may proceed with MAXIMIZE.\n"
 	  "echo อออออออออออออออออออออออออออออออออออออออออออออออออออออ\n"

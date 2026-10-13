@@ -31,12 +31,12 @@ QMTSetup Message Text, Medium Messages
 \par 
 \par \pard\plain \s2\keepn \f3\fs28\cf6\lang1033 >>M.DOSHelp
 \par \pard\plain \ri-36 \f3\lang1033 #PROGNAME# hat auf diesem System DOS 5.x gefunden.
-\par Die DOS Hilfe-Information kann f\'81r Qualitas Produkte erweitert werden.
+\par Die DOS Hilfe-Information kann f\'81r Open 386MAX Produkte erweitert werden.
 \par \pard 
 \par {\b Soll #PROGNAME# zus\'84tzlichen Hilfe-Text in die
 \par }{\b DOS-Hilfedatei schreiben?
 \par }\pard\plain \s2\keepn \f3\fs28\cf6\lang1033 >>M.DOSPath
-\par \pard\plain \f3\lang1033 #PROGNAME# mu\'e1 die Position des DOS-Verzeichnisses kennen, so da\'e1 es den Hilfe-Text f\'81r Qualitas Produkte einf\'81gen kann.
+\par \pard\plain \f3\lang1033 #PROGNAME# mu\'e1 die Position des DOS-Verzeichnisses kennen, so da\'e1 es den Hilfe-Text f\'81r Open 386MAX Produkte einf\'81gen kann.
 \par 
 \par {\b Geben Sie Laufwerk/Pfad des DOS-Verzeichnisses an.
 \par }

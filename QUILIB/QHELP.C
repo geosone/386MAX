@@ -1341,6 +1341,7 @@ long setHelp(				/*	Do all the decompression for a specific help */
 
 	}
 
+	return aNc;
 }
 
 /**

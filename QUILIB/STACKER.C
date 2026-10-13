@@ -87,6 +87,7 @@ unsigned int sstor_ioctl (unsigned int dnum, char mode)
 // errors" call...
 {
 	unsigned int retval;
+	unsigned int failed;	// CF (OpenWatcom: no struct fields in _asm)
 
 	// Ensure we don't trigger our Int 24 handler
 	set24_resp (RESP_FAIL);
@@ -99,17 +100,15 @@ unsigned int sstor_ioctl (unsigned int dnum, char mode)
 		mov	cx,18		// CX = number of bytes to write
 		lea	dx,_sstor_ioctl // DS:DX ==> input structure
 		int	0x21		// CF/AX contain status
-		jnc	sstor_ioctl_OK	// Jump if no error
-
-		or	ax,0x8000	// Set error flag
-		jmp	sstor_ioctl_exit // Join common exit
-
-sstor_ioctl_OK:
-		mov	ax,_sstor_ioctl.hassig // Get status returned by SSTOR
-
-sstor_ioctl_exit:
-		mov	retval,ax	// Status to return
+		mov	retval,ax	// Error code if CF
+		sbb	ax,ax		// AX = -1 if CF
+		mov	failed,ax
 	}
+
+	if (failed)
+		retval |= 0x8000;	// Set error flag
+	else
+		retval = _sstor_ioctl.hassig; // Status returned by SSTOR
 
 	// Resume normal Int 24 handling
 	set24_resp (0);
@@ -187,6 +186,7 @@ int stacked_drive (int driveno)
 // something OTHER THAN ff.
 {
  int i;
+ int failed;		// CF (OpenWatcom: no jumps from _asm to C labels)
 
 	if (!stackinfo && !stacker_present ()) {
 		return (sstor_drive ((char) driveno));
@@ -209,8 +209,11 @@ int stacked_drive (int driveno)
 			mov	bx,driveno	// Get drive number
 			inc	bx		// Make it 1-based
 			int	0x21		// Make IOCTL call
-			jc	not_stacked	// Jump if invalid unit
+			sbb	ax,ax		// AX = -1 if invalid unit
+			mov	failed,ax
 		}
+
+		if (failed) goto not_stacked;	// Invalid unit
 
 		if (stackinfo->unit_offs != 0xff) return (1);
 

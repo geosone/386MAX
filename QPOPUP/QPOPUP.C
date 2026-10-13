@@ -461,10 +461,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	mov	bx,LoadHi_Device_ID	; 386MAX.VXD (0x001C)
 	int	0x2F			; Windows services
 ;;;;;;; assume	es:nothing		; Tell the assembler
-    }
 
-GOT_API_ENTRY_POINT:
-    _asm {
+GOT_API_ENTRY_POINT:			; (OpenWatcom: label in the same _asm block)
 	mov	word ptr VxD+0,di	; Save FAR PTR to VxD PM API
 	mov	word ptr VxD+2,es	; ...
 
@@ -615,8 +613,8 @@ BAD_SEL_MSG:
 		jnz short BAD_LSL
 
 		mov wLimit,bx
+BAD_LSL:			// (OpenWatcom: label in the same _asm block)
 	    }
-BAD_LSL:
 	    if (!wLimit) goto BAD_SEL_MSG;
 
 // Split cases based on requsted function

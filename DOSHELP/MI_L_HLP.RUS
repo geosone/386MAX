@@ -32,13 +32,14 @@ Indent2;}{\s19 \f11\fs16\cf2 \sbasedon0\snext19 Comment;}}{\info{\title install 
 \par 
 \par     Press Alt-V to {\b V}iew changes and on-line documentation
 \par \pard\plain \s16 \f11\fs28\cf6 >>L.Copyright
-\par \pard\plain \f11 {\b Please remember that this software may be installed and in use on only one machine at a time.}
+\par \pard\plain \f11 {\b Open 386MAX is free software: you may use, copy and distribute it under the terms of the GNU General Public License version 3.}
 \par 
-\par Please do not make copies of any Qualitas documentation or program disks other than for purposes of backup.  If you wish to use this product on more than one machine, you must purchase a copy for each machine.
+\par You may install it on as many machines as you like, give copies to others and change it.  If you distribute it or your changes, the GPL requires that you pass on the same rights and the source code.
 \par 
-\par Other restrictions apply, as specified in the license agreement in the front of your {\b User Guide.
-\par }
-\par      (C) Copyright 1987-96 Qualitas, Inc.  GNU General Public License version 3.
+\par This program comes WITH NO WARRANTY, to the extent permitted by law.  The full license text is in the file {\b LICENSE.TXT} in the program directory.
+\par 
+\par      (C) Copyright 1987-97 Qualitas, Inc.
+\par      Open 386MAX contributors 2022-2026, GNU General Public License version 3.
 \par \pard\plain \s16 \f11\fs28\cf6 >>L.NoFreeDisk
 \par \pard\plain \f11 There is not enough available disk space on drive #ARG3# to store the #FLENME# programs.
 \par 

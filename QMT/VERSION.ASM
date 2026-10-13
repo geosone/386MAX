@@ -1,4 +1,4 @@
-VERSION equ	804
+VERSION equ	850
 
 ;' $Header:   P:/PVCS/MAX/QMT/VERSION.ASV   1.0   05 Jun 1998 14:03:28   BOB  $
 

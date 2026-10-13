@@ -115,6 +115,9 @@ int main(int argc, char **argv)
 	extern void init_4dos_cmds(void);
 	int i, fd;
 	char *ptr;
+#ifdef COMPAT_4DOS
+	int is4dos;
+#endif
 
 	// We used to reduce _amblksiz to 64 at this point.  That's too
 	// small a value and causes excessive heap fragmentation in
@@ -131,6 +134,8 @@ int main(int argc, char **argv)
 #ifdef COMPAT_4DOS
 
 	// test to see if 4DOS is loaded
+	// (OpenWatcom: no jumps from _asm to C labels)
+	is4dos = 0;
 _asm {
 	mov	ax,0D44Dh
 	mov	bx,0
@@ -143,17 +148,20 @@ _asm {
 	int	2Fh
 	cmp	ax,44EEh	// Izit NDOS?
 	jne	no_4dos 	// Jump if not
+found_4dos:
+	mov	is4dos,1
+no_4dos:
 }
 
 	// If we needed any NDOS-specific stuff, this would be the
 	// place to do it (NDOS.INI, NSTART.BAT, etc.)
-found_4dos:
+	if (is4dos) {
 	flag_4dos = 1;
 
 	// if we're running 4DOS, activate the 4DOS-specific commands
 	init_4dos_cmds();
+	}
 
-no_4dos:
 	alias_size = 1024;
 
 	cfgdos.compound = '^';          // command separator (default ^)

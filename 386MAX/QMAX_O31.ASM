@@ -78,6 +78,9 @@ CODE	 segment use16 byte public 'prog' ; Start CODE segment
 	 extrn	 LCL_FLAG:word
 	 include QMAX_LCL.INC
 
+	 extrn	 MSC_FLAG:word
+	 include QMAX_MSC.INC
+
 CODE	 ends			; End CODE segment
 
 HICODE	 segment use16 dword public 'prog' ; Start HICODE segment
@@ -519,6 +522,12 @@ CF	 =	 0 if we have a match and should fail the 1687 call
 
 	 pushad 		; Save all EGP registers
 	 REGSAVE <es,fs>	; Save selectors
+
+; Programs flagged U7 in 386LOAD.CFG (e.g. HDPMI, which installs only if
+; no other DPMI host is present) don't see our DPMI services.
+
+	 test	 MSC_FLAG,@MSC_NODPMI ; Lie about availability of DPMI services?
+	 jnz	 near ptr IMM2_USEVCPI_EXIT ; Jump if so (note CF=0)
 
 	 test	 DPM_FLAG,mask $DPM_DPMIXCOPY ; Should we disregard copyright notices?
 	 jnz	 near ptr IMM2_USEVCPI_NOMATCH ; Jump if so

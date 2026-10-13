@@ -130,12 +130,12 @@
 \par \pard \widctlpar          zwischen 0 und 255 ist
 \par \pard \widctlpar {\b Vorgabe:} Wie AMRS=0
 \par \pard \widctlpar 
-\par \pard \widctlpar Mit dieser Option stellt Qualitas MAX jedem in einem Multitasking-Umfeld ablaufenden Anwendungsprogramm ein EMS Alternate Map Register Set (AMRS) zur VerfÅgung. Die Alternative wÑre ein einziger öbersichtsplan fÅ
-r alle Anwendungsprogramme. Es ist jedoch fÅr Qualitas MAX um einiges effizienter, zwischen mehreren öbersichtsplÑnen umzuschalten als einen einzigen öbersichtsplan stÑ
+\par \pard \widctlpar Mit dieser Option stellt Open 386MAX jedem in einem Multitasking-Umfeld ablaufenden Anwendungsprogramm ein EMS Alternate Map Register Set (AMRS) zur VerfÅgung. Die Alternative wÑre ein einziger öbersichtsplan fÅ
+r alle Anwendungsprogramme. Es ist jedoch fÅr Open 386MAX um einiges effizienter, zwischen mehreren öbersichtsplÑnen umzuschalten als einen einzigen öbersichtsplan stÑ
 ndig zu aktualisieren. Mit dieser Option kann die Systemleistung in einem Multitasking-Umfeld gesteigert werden.
 \par \pard \widctlpar 
 \par 
-\par \pard \widctlpar {\b Beispiel:} Sie mîchten maximal fÅnf aktive Desqview-Fenster haben. FÅgen Sie in die Qualitas MAX Profildatei folgende Zeile ein:
+\par \pard \widctlpar {\b Beispiel:} Sie mîchten maximal fÅnf aktive Desqview-Fenster haben. FÅgen Sie in die Open 386MAX Profildatei folgende Zeile ein:
 \par \pard \widctlpar 
 \par  AMRS=5
 \par 
@@ -148,8 +148,8 @@ ndig zu aktualisieren. Mit dieser Option kann die Systemleistung in einem Multit
 \par  {\b Syntax:} AUTO oder ON oder OFF 
 \par {\b Vorgabe:} ON
 \par \pard \widctlpar 
-\par \pard \widctlpar Qualitas MAX verfÅgt Åber zwei Funktionsgruppen. Diese werden Åber die Optionen AUTO, ON und OFF gewÑ
-hlt. Diese Optionen sind besonders hilfreich, wenn Sie ein Protected Mode-Programm starten wollen, das mit Qualitas MAX im Konflikt steht.
+\par \pard \widctlpar Open 386MAX verfÅgt Åber zwei Funktionsgruppen. Diese werden Åber die Optionen AUTO, ON und OFF gewÑ
+hlt. Diese Optionen sind besonders hilfreich, wenn Sie ein Protected Mode-Programm starten wollen, das mit Open 386MAX im Konflikt steht.
 \par \pard \widctlpar 
 \par  * Zu den Funktionen der Gruppe A gehîren:
 \par    - EMS- und XMS-UnterstÅtzung
@@ -161,14 +161,14 @@ hlt. Diese Optionen sind besonders hilfreich, wenn Sie ein Protected Mode-Progra
 \par      Adapters).
 \par 
 \par \pard \widctlpar Vorgabe ist, da·
- Qualitas MAX mit den Funktionen der Gruppe A als auch der Gruppe B beginnt; beide Funktionsgruppen sind aktiv. Die Option AUTO schaltet die Funktionen der Gruppe B aus. Steht ein Protected Mode-Programm mit Qualitas MAX im Konflikt, dann 
+ Open 386MAX mit den Funktionen der Gruppe A als auch der Gruppe B beginnt; beide Funktionsgruppen sind aktiv. Die Option AUTO schaltet die Funktionen der Gruppe B aus. Steht ein Protected Mode-Programm mit Open 386MAX im Konflikt, dann 
 sollten Sie mit der Option AUTO die Funktionen der Gruppe B ausschalten. Bei aktiver Option AUTO schalten die Parameter ON und OFF die Funktionen der Gruppe A ein bzw. aus.
 \par \pard \widctlpar 
 \par \pard \widctlpar Die Option OFF schaltet die Funktionen der Gruppe A und B aus. Ist eine der Funktionen dieser Gruppe gerade in Betrieb, dan funktioniert die Option OFF nicht. Mit der Option ON kî
 nnen die Funktionen der Gruppe A erneut aktiviert werden.
 \par \pard \widctlpar 
 \par 
-\par \pard \widctlpar {\b Beispiel: }Sie mîchten ein Protected Mode-Programm starten, das nicht nach dem VCPI-Standard (Virtual Control Program Interface) arbeitet. Mit dem folgenden Befehl deaktivieren Sie Qualitas MAX vor dem Programmstart:
+\par \pard \widctlpar {\b Beispiel: }Sie mîchten ein Protected Mode-Programm starten, das nicht nach dem VCPI-Standard (Virtual Control Program Interface) arbeitet. Mit dem folgenden Befehl deaktivieren Sie Open 386MAX vor dem Programmstart:
 \par \pard \widctlpar 
 \par  386MAX OFF
 \par  (Programmname)
@@ -219,7 +219,7 @@ verzeichnis wie BlueMAX.
 \par \pard \widctlpar 
 \par \pard \widctlpar Diese Option erweitert den LoDOS-Speicher fÅr CGA-Systeme auf 736 KB.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel: }Um den oberen Bereich des LoDOS-Speichers auf 736 KB aufzufÅllen, fÅgen Sie in die Qualitas MAX Profildatei die Option CGA ein.
+\par \pard \widctlpar {\b Beispiel: }Um den oberen Bereich des LoDOS-Speichers auf 736 KB aufzufÅllen, fÅgen Sie in die Open 386MAX Profildatei die Option CGA ein.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} VIDMEM=
 \par \pard \widctlpar 
@@ -235,7 +235,7 @@ verzeichnis wie BlueMAX.
 \par 
 \par \pard \sl240\slmult0\widctlpar Diese Option legt den Wert der DMA-Puffergrî·e fest. Die Voreinstellung dieser Puffergrî·e ist 64, wenn die Festplatte DMA-Transfers nutzt. Andernfalls liegt der Wert bei 16 KB.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel: }Wenn Qualitas MAX feststellt, da· der verfÅgbare Pufferbereich zu klein ist, erhalten Sie die Meldung: "DMA-Transfergrenze Åberschritten". Nehmen Sie in die Qualitas MAX Profildatei die Option DMA=32 auf.
+\par \pard \widctlpar {\b Beispiel: }Wenn Open 386MAX feststellt, da· der verfÅgbare Pufferbereich zu klein ist, erhalten Sie die Meldung: "DMA-Transfergrenze Åberschritten". Nehmen Sie in die Open 386MAX Profildatei die Option DMA=32 auf.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} NOSCSI
 \par \pard \widctlpar 
@@ -247,10 +247,10 @@ verzeichnis wie BlueMAX.
 \par \pard \widctlpar  {\b Syntax:} DOS4
 \par {\b Vorgabe:} Keine besondere DOS 4.0 UnterstÅtzung
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX mu· mîglicherweise auf diese Option zurÅckgreifen, um fehlerhaftes Verhalten frÅ
+\par \pard \sl240\slmult0\widctlpar Open 386MAX mu· mîglicherweise auf diese Option zurÅckgreifen, um fehlerhaftes Verhalten frÅ
 her MS DOS 4.0 Versionen zu korrigieren. Diese Situation kann auftreten, wenn Sie DOS-Puffer ("BUFFERS=") im Expanded Memory eingerichtet haben.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Wenn in Ihrer CONFIG.SYS Datei die Zeile "BUFFERS=20/x" enthalten ist und Sie eine frÅhe Version von MS DOS 4.0 einsetzen, dann nehmen Sie in die Qualitas MAX Profildatei folgende Optionen auf:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Wenn in Ihrer CONFIG.SYS Datei die Zeile "BUFFERS=20/x" enthalten ist und Sie eine frÅhe Version von MS DOS 4.0 einsetzen, dann nehmen Sie in die Open 386MAX Profildatei folgende Optionen auf:
 \par \pard \widctlpar 
 \par  INCLUDE=32
 \par  DOS4
@@ -265,9 +265,9 @@ her MS DOS 4.0 Versionen zu korrigieren. Diese Situation kann auftreten, wenn Si
 \par \pard \widctlpar  {\b Syntax:} EGA
 \par {\b Vorgabe: }Automatische Erkennung
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX erkennt automatisch EGA-Hardware. Verwenden Sie diese Option auf Systemen, die Qualitas MAX nicht als EGA erkennt, die aber den Adre·bereich A000H-C000H belegen.
+\par \pard \sl240\slmult0\widctlpar Open 386MAX erkennt automatisch EGA-Hardware. Verwenden Sie diese Option auf Systemen, die Open 386MAX nicht als EGA erkennt, die aber den Adre·bereich A000H-C000H belegen.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Bei fehlerhafter Bildschirmausgabe auf einem nicht-standard EGA-System fÅgen Sie in die Qualitas MAX Profildatei die Option EGA ein.
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Bei fehlerhafter Bildschirmausgabe auf einem nicht-standard EGA-System fÅgen Sie in die Open 386MAX Profildatei die Option EGA ein.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} VIDMEM=
 \par \pard \widctlpar 
@@ -290,10 +290,10 @@ her MS DOS 4.0 Versionen zu korrigieren. Diese Situation kann auftreten, wenn Si
 \par \pard \widctlpar          in Kilobyte angibt
 \par \pard \widctlpar {\b Vorgabe:} s.u.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar StandardmÑ·ig weist Qualitas MAX Speicher - je nach Bedarf - Åber SmartMemory zu. SmartMemory macht eine Vorab-Konfiguration bestimmter Speicherbereiche als EMS oder Extended Memory ÅberflÅ
+\par \pard \sl240\slmult0\widctlpar StandardmÑ·ig weist Open 386MAX Speicher - je nach Bedarf - Åber SmartMemory zu. SmartMemory macht eine Vorab-Konfiguration bestimmter Speicherbereiche als EMS oder Extended Memory ÅberflÅ
 ssig. Die Option EMS deaktiviert SmartMemory und reserviert die verbliebenen nicht genutzten Speicherbereiche als Extended Memory und XMS.
 \par \pard \sl240\slmult0\widctlpar 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX weist EMS-Speicher als Vielfaches von 16 KB zu. Ist der fÅr die EMS Option angegebene Wert kein Vielfaches von 16, dann rundet Qualitas MAX auf die nÑchsten 16 KB ab.
+\par \pard \sl240\slmult0\widctlpar Open 386MAX weist EMS-Speicher als Vielfaches von 16 KB zu. Ist der fÅr die EMS Option angegebene Wert kein Vielfaches von 16, dann rundet Open 386MAX auf die nÑchsten 16 KB ab.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Sie kînnen die Optionen EMS= und EXT nicht gleichzeitig anwenden.
 \par \pard \sl240\slmult0\widctlpar 
@@ -301,7 +301,7 @@ ssig. Die Option EMS deaktiviert SmartMemory und reserviert die verbliebenen nic
 r den EMS-Seiten-Rahmen reserviert ist.
 \par \pard \sl240\slmult0\widctlpar 
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie setzen keine EMS-fÑhigen Anwendungsprogramme ein und wollen den maximalen HiDOS-Speicher erhalten. FÅgen Sie in die Qualitas MAX Profildatei folgende Zeile ein:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie setzen keine EMS-fÑhigen Anwendungsprogramme ein und wollen den maximalen HiDOS-Speicher erhalten. FÅgen Sie in die Open 386MAX Profildatei folgende Zeile ein:
 \par \pard \widctlpar 
 \par  EMS=0
 \par 
@@ -322,7 +322,7 @@ ngig vom Bildschirmadapter kann dieser Bereich auf B000H oder B800H (monochrome 
 \par \pard \sl240\slmult0\widctlpar Um Mehrfach-Bereiche auszuschlie·en ist die Option EXCLUDE= fÅr jeden Bereich zu setzen.
 \par \pard \widctlpar 
 \par 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Wenn ein EMS-fÑhiges Anwendungsprogramm EMS nicht ordnungsgemÑ· nutzt, dann fÅgen Sie in die Qualitas MAX Profildatei folgende Zeile ein:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Wenn ein EMS-fÑhiges Anwendungsprogramm EMS nicht ordnungsgemÑ· nutzt, dann fÅgen Sie in die Open 386MAX Profildatei folgende Zeile ein:
 \par \pard \widctlpar 
 \par  EXCLUDE=1000-A000
 \par 
@@ -337,7 +337,7 @@ ngig vom Bildschirmadapter kann dieser Bereich auf B000H oder B800H (monochrome 
 \par \pard \widctlpar          in Kilobyte angibt
 \par \pard \widctlpar {\b Vorgabe:} s.u.
 \par \pard \sl240\slmult0\widctlpar 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX weist - je nach Bedarf - Speicherplatz durch SmartMemory zu. SmartMemory macht eine Vorab-
+\par \pard \sl240\slmult0\widctlpar Open 386MAX weist - je nach Bedarf - Speicherplatz durch SmartMemory zu. SmartMemory macht eine Vorab-
 \par \pard \sl240\slmult0\widctlpar Konfiguration bestimmter Speicherbereiche als Extended oder Expanded Memory ÅberflÅssig. Die Option EXT= gibt den maximalen Extended Memory
 \par \pard \sl240\slmult0\widctlpar Bereich an, der Åber BIOS-Funktionsaufrufe zugewiesen werden kann.
 \par \pard \sl240\slmult0\widctlpar 
@@ -347,7 +347,7 @@ ngig vom Bildschirmadapter kann dieser Bereich auf B000H oder B800H (monochrome 
 r EXT= bestimmen, dann addieren Sie zu dem von der Software angeforderten Betrag 64 KB.
 \par \pard \widctlpar 
 \par 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel:} Um 1 MB Extended Memory bzw. XMS fÅr einen Platten-Cache zu reservieren, mÅssen Sie den Wert fÅr Extended Memory auf 1088 (1024+64) setzen. FÅgen Sie dazu in die Qualitas MAX Profildatei folgende
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel:} Um 1 MB Extended Memory bzw. XMS fÅr einen Platten-Cache zu reservieren, mÅssen Sie den Wert fÅr Extended Memory auf 1088 (1024+64) setzen. FÅgen Sie dazu in die Open 386MAX Profildatei folgende
  Zeile ein:
 \par \pard \widctlpar 
 \par  EXT=1088
@@ -358,14 +358,14 @@ r EXT= bestimmen, dann addieren Sie zu dem von der Software angeforderten Betrag
 \par \pard\plain \s15\widctlpar \f11\fs28\cf6 >>EXTSIZE
 \par \pard\plain \widctlpar \f11                 {\i EXTSIZE= (Erweiterte Option)}
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b   Zweck:} Begrenzt den Betrag des fÅr Qualitas MAX
+\par \pard \widctlpar {\b   Zweck:} Begrenzt den Betrag des fÅr Open 386MAX
 \par \pard \widctlpar          sichbaren Speichers
 \par \pard \widctlpar {\b  Syntax:} EXTSIZE=nnnn wobei nnnn ein Dezimal-
 \par \pard \widctlpar          wert in Kilobyte ist.
 \par \pard \widctlpar {\b Vorgabe:} s. u.
 \par \pard \widctlpar 
-\par \pard \widctlpar StandardmÑ·ig verwendet Qualitas MAX das gesamte Extended Memory im System zur Abbildung als HiDOS, XMS-Speicher usw. Einige Systeme haben fehlerhaften Speicher am oberen Ende des Extended Memory. Diese Option Ñ
-ndert den Betrag des von Qualitas MAX benutzten Extended Memory.
+\par \pard \widctlpar StandardmÑ·ig verwendet Open 386MAX das gesamte Extended Memory im System zur Abbildung als HiDOS, XMS-Speicher usw. Einige Systeme haben fehlerhaften Speicher am oberen Ende des Extended Memory. Diese Option Ñ
+ndert den Betrag des von Open 386MAX benutzten Extended Memory.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Beispiel:} In einem 20 MB System sind die oberen 4 MB fehlerhaft. Verwenden Sie EXTSIZE=15360 zur Begrenzung des Extended Memory auf 15 MB.
 \par \pard \widctlpar 
@@ -399,7 +399,7 @@ ndert den Betrag des von Qualitas MAX benutzten Extended Memory.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Diese Option steuert das Gatter A20. Diese Option ist zu setzen, wenn ein Programm versucht, den Status der A20 Adressleitung zu Ñndern. Dies kommt hÑufig bei systemspezifischen Dienstprogrammen vor.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }SETSYS.COM ist ein Dienstprogramm fÅr Ihr System. Wenn Ihr System durch dessen Einsatz hÑngenbleibt, fÅgen Sie in die Qualitas MAX Profildatei die Option FORCEA20 ein.
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }SETSYS.COM ist ein Dienstprogramm fÅr Ihr System. Wenn Ihr System durch dessen Einsatz hÑngenbleibt, fÅgen Sie in die Open 386MAX Profildatei die Option FORCEA20 ein.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\fs28\cf6 >>FRAME
 \par }\pard \widctlpar                        {\i FRAME=}
@@ -413,11 +413,11 @@ ndert den Betrag des von Qualitas MAX benutzten Extended Memory.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Diese Option definiert die Basis-Adresse fÅr den EMS-Seiten-Rahmen. Der Seiten-Rahmen umfa·t einen HiDOS Adressbereich von 64 KB, der fÅr den Zugriff auf EMS-Speicher reserviert ist.
 \par \pard \sl240\slmult0\widctlpar 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX installiert automatisch den EMS-Seiten-Rahmen im hîchsten verfÅgbaren 64 KB Adressbereich des HiDOS-Speichers. Dieser liegt meist direkt unterhalb des System BIOS ROM und beginnt somit bei Adresse E0
-00H. Wenn Qualitas MAX keinen zusammenhÑngenden 64 KB Bereich im HiDOS finden kann, richtet er den EMS-Seiten-Rahmen im LoDOS-Speicher ein. Im allgemeinen ist es am sichersten, Qualitas MAX selbst den Bereich fÅ
+\par \pard \sl240\slmult0\widctlpar Open 386MAX installiert automatisch den EMS-Seiten-Rahmen im hîchsten verfÅgbaren 64 KB Adressbereich des HiDOS-Speichers. Dieser liegt meist direkt unterhalb des System BIOS ROM und beginnt somit bei Adresse E0
+00H. Wenn Open 386MAX keinen zusammenhÑngenden 64 KB Bereich im HiDOS finden kann, richtet er den EMS-Seiten-Rahmen im LoDOS-Speicher ein. Im allgemeinen ist es am sichersten, Open 386MAX selbst den Bereich fÅ
 r den EMS-Seiten-Rahmen festlegen zu lassen.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie lassen ein EMS-fÑhiges Anwendungsprogramm ablaufen, das einen EMS-Seiten-Rahmen mit der Anfangsadresse D000 erfordert. FÅgen Sie folgende Option in die Qualitas MAX Profildatei ein:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie lassen ein EMS-fÑhiges Anwendungsprogramm ablaufen, das einen EMS-Seiten-Rahmen mit der Anfangsadresse D000 erfordert. FÅgen Sie folgende Option in die Open 386MAX Profildatei ein:
 \par \pard \widctlpar 
 \par  FRAME=D000
 \par 
@@ -447,10 +447,10 @@ r den EMS-Seiten-Rahmen festlegen zu lassen.
 \par          Region angibt
 \par \pard \widctlpar {\b Vorgabe:} Von Maximize ermittelt
 \par \pard \widctlpar 
-\par \pard \widctlpar Qualitas MAX unterstÅ
-tzt eine DPMI Host Private Data Area (HPDA), eine eXtended BIOS Data Area (XBDA) und MAX Stacks (alle als Qualitas MAX Teilsegmente bezeichnet). Maximize ermittelt die optimale HiDOS-Region zum Laden jedes dieser Teilsegmente.
+\par \pard \widctlpar Open 386MAX unterstÅ
+tzt eine DPMI Host Private Data Area (HPDA), eine eXtended BIOS Data Area (XBDA) und MAX Stacks (alle als Open 386MAX Teilsegmente bezeichnet). Maximize ermittelt die optimale HiDOS-Region zum Laden jedes dieser Teilsegmente.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel:} Zum Laden einer HPDA in Programm-Region 1 fÅgen Sie die folgende Option in die Qualitas MAX Profildatei ein:
+\par \pard \widctlpar {\b Beispiel:} Zum Laden einer HPDA in Programm-Region 1 fÅgen Sie die folgende Option in die Open 386MAX Profildatei ein:
 \par \pard \widctlpar 
 \par  HPDAREG=1
 \par 
@@ -478,11 +478,11 @@ tzt eine DPMI Host Private Data Area (HPDA), eine eXtended BIOS Data Area (XBDA)
 
 \par \pard \sl240\slmult0\widctlpar 
 \par \pard \widctlpar {\b Beispiel: }FÅr zwei weitere auslagerungsfÑhige EMS-
-\par \pard \widctlpar eiten fÅgen Sie in die Qualitas MAX Profildatei folgende Option ein:
+\par \pard \widctlpar eiten fÅgen Sie in die Open 386MAX Profildatei folgende Option ein:
 \par \pard \widctlpar 
 \par  INCLUDE=32
 \par 
-\par \pard \sl240\slmult0\widctlpar wobei Qualitas MAX die Anordnung der beiden 16 KB EMS-Seiten bestimmt,
+\par \pard \sl240\slmult0\widctlpar wobei Open 386MAX die Anordnung der beiden 16 KB EMS-Seiten bestimmt,
 \par \pard \sl240\slmult0\widctlpar 
 \par oder
 \par \pard \widctlpar 
@@ -490,7 +490,7 @@ tzt eine DPMI Host Private Data Area (HPDA), eine eXtended BIOS Data Area (XBDA)
 \par 
 \par \pard \sl240\slmult0\widctlpar Hier wÑre der Bereich des Monochromadapters (EGA oder VGA-Systeme) mit eingeschlossen.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Beide Formen der INCLUDE= Option kînnen gleichzeitig verwendet werden, zum Beispiel:INCLUDE=B000-B800,64. Diese Option teilt Qualitas MAX mit, da· der Bereich des monochromen Bildschirmadapters fÅr das "Swa
+\par \pard \sl240\slmult0\widctlpar Beide Formen der INCLUDE= Option kînnen gleichzeitig verwendet werden, zum Beispiel:INCLUDE=B000-B800,64. Diese Option teilt Open 386MAX mit, da· der Bereich des monochromen Bildschirmadapters fÅr das "Swa
 pping" zu nutzen ist und da· ein zusÑtzlicher 64 KB Speicherbereich als auslagerungsfÑhiger EMS-Bereich definiert werden soll.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar {\b Hinweis:} Wenn Sie die Option INCLUDE= setzen um zusÑtzliche EMS-Seiten zu gewinnen, so reduziert sich der fÅr Treiber und residente Programme verfÅgbare HiDOS-Speicherbereich.
@@ -509,7 +509,7 @@ pping" zu nutzen ist und da· ein zusÑtzlicher 64 KB Speicherbereich als auslager
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Diese Option vergrî·ert den gesamten LoDOS-Speicher fÅr monochrome Systeme auf 704 KB.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Um die Obergrenze des LoDOS-Speichers fÅr monochrome Systeme auf 704 KB zu erweitern, fÅgen Sie in die Qualitas MAX Profildatei die Option MONO ein.
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Um die Obergrenze des LoDOS-Speichers fÅr monochrome Systeme auf 704 KB zu erweitern, fÅgen Sie in die Open 386MAX Profildatei die Option MONO ein.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} VIDMEM=
 \par \pard \widctlpar 
@@ -521,10 +521,10 @@ pping" zu nutzen ist und da· ein zusÑtzlicher 64 KB Speicherbereich als auslager
 \par \pard \widctlpar  {\b Syntax:} NOCOMPROM
 \par {\b Vorgabe:} s.u.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar StandardmÑ·ig versucht Qualitas MAX das System BIOS ROM zu komprimieren, um so mehr HiDOS-Speicher zu gewinnen. Diese Methode hat sich fÅr nahezu alle COMPAQ Systeme und einige anderen Rechner bewÑ
+\par \pard \sl240\slmult0\widctlpar StandardmÑ·ig versucht Open 386MAX das System BIOS ROM zu komprimieren, um so mehr HiDOS-Speicher zu gewinnen. Diese Methode hat sich fÅr nahezu alle COMPAQ Systeme und einige anderen Rechner bewÑ
 hrt. NOCOMPROM kann bis zu 32 KB mehr HiDOS-Speicher gewinnen. In einigen FÑllen kann die Komprimierung jedoch zu Fehlern fÅhren.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel: }Bei nicht einwandfreiem Diskettenzugriff und System BIOS-Komprimierung durch Qualitas MAX fÅgen Sie in die Qualitas MAX Profildatei folgende Option ein:
+\par \pard \widctlpar {\b Beispiel: }Bei nicht einwandfreiem Diskettenzugriff und System BIOS-Komprimierung durch Open 386MAX fÅgen Sie in die Open 386MAX Profildatei folgende Option ein:
 \par \pard \widctlpar 
 \par  NOCOMPROM
 \par 
@@ -538,11 +538,11 @@ hrt. NOCOMPROM kann bis zu 32 KB mehr HiDOS-Speicher gewinnen. In einigen FÑllen
 \par  {\b Syntax:} NODPMI
 \par {\b Vorgage:} DPMI-UnterstÅtzung aktiv
 \par \pard \widctlpar 
-\par \pard \widctlpar Qualitas MAX unterstÅtzt DOS Protected Mode Interface (DPMI) Spezifikation fÅr die Version 1.0. Die Option schaltet diese UnterstÅtzung ab.
+\par \pard \widctlpar Open 386MAX unterstÅtzt DOS Protected Mode Interface (DPMI) Spezifikation fÅr die Version 1.0. Die Option schaltet diese UnterstÅtzung ab.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel:} Ein Anwendungsprogramm verhÑlt sich fehlerhaft, wenn im System die DPMI 1.0 UnterstÅtzung aktiv ist; fÅgen Sie in die Qualitas MAX Profildatei die Option NODPMI ein.
+\par \pard \widctlpar {\b Beispiel:} Ein Anwendungsprogramm verhÑlt sich fehlerhaft, wenn im System die DPMI 1.0 UnterstÅtzung aktiv ist; fÅgen Sie in die Open 386MAX Profildatei die Option NODPMI ein.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Vergleichen Sie:} Das MEMLIMIT Programm im Lieferumfang von Qualitas MAX
+\par \pard \widctlpar {\b Vergleichen Sie:} Das MEMLIMIT Programm im Lieferumfang von Open 386MAX
 \par \pard\plain \s15\widctlpar \f11\fs28\cf6 >>NOFLEX
 \par \pard\plain \widctlpar \f11 {\i                 NOFLEX (Erweiterte Option)}
 \par \pard \widctlpar 
@@ -556,14 +556,14 @@ erbedarf wÑhrend der Initialisierungsphase geladen werden kînnen. Einige TSRs ge
 llen ragt das TSR nach der Initialisierung in den EMS-Seitenrahmen hinein und es kommt zu einem Fehler wÑhrend des Boot-Vorgangs. NOFLEX weist 386LOAD an, die FLEXFRAME Funktion nicht zu benutzen.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Beispiel:} (Wirklich nur ein konstruiertes Beispiel!) NET.EXE scheint mit 30 KB resident zu sein, belegt aber tatsÑchlich 50 KB im HiDOS Speicher. Es wird ein Fehler gemeldet, da· der residente Teil des Programmes den verfÅ
-gbaren Speicherplatz Åberschreitet. FÅgen Sie in die Qualitas MAX Profildatei die Option NOFLEX ein.
+gbaren Speicherplatz Åberschreitet. FÅgen Sie in die Open 386MAX Profildatei die Option NOFLEX ein.
 \par \pard \widctlpar  
 \par \pard \widctlpar {\b Vergleichen Sie:} FLEXFRAME
 \par \pard \widctlpar 
 \par \pard \widctlpar {\fs28\cf6 >>NOFRAME
 \par }\pard \widctlpar                         {\i NOFRAME}
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b   Zweck:} Installiert Qualitas MAX mit EMS-
+\par \pard \widctlpar {\b   Zweck:} Installiert Open 386MAX mit EMS-
 \par \pard \widctlpar          UnterstÅtzung, aber ohne EMS-
 \par          Seiten-Rahmen
 \par \pard \widctlpar  {\b Syntax:} NOFRAME
@@ -573,7 +573,7 @@ gbaren Speicherplatz Åberschreitet. FÅgen Sie in die Qualitas MAX Profildatei di
 den EMS-Seiten-Rahmen reserviert sind. Setzen Sie die Option NOFRAME bei Programmen, die auf EMS-Speicher ohne einen EMS-Seiten-Rahmen zugreifen kînnen. Zu diesen Anwendungsprogrammen gehîren u.a. Lotus 1-2-3 Version 3.0 und andere VCPI-gestÅ
 tzte Software.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie lassen Lotus 1-2-3 Version 3.0 zusammen mit nicht EMS-fÑhigen Anwendungen ablaufen. Um den maximalen HiDOS-Speicher zu erzielen, fÅgen Sie in die Qualitas MAX Profildatei folgende Option ein:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie lassen Lotus 1-2-3 Version 3.0 zusammen mit nicht EMS-fÑhigen Anwendungen ablaufen. Um den maximalen HiDOS-Speicher zu erzielen, fÅgen Sie in die Open 386MAX Profildatei folgende Option ein:
 \par \pard \widctlpar 
 \par  NOFRAME
 \par  
@@ -582,20 +582,20 @@ tzte Software.
 \par \pard \widctlpar {\fs28\cf6 >>NOHIGH
 \par }\pard \widctlpar                        {\i NOHIGH}
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b   Zweck:} Hindert Qualitas MAX daran,
+\par \pard \widctlpar {\b   Zweck:} Hindert Open 386MAX daran,
 \par \pard \widctlpar          HiDOS-Speicher einzurichten
 \par \pard \widctlpar  {\b Syntax:} NOHIGH
 \par {\b Vorgabe:} Legt HiDOS-Speicherbereiche an
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Die NOHIGH Option veranla·
-t Qualitas MAX, keine Speicherbereiche im HiDOS-Speicher abzubilden. Diese Option wird bei der Fehlersuche, insbesondere bei Konflikten mit Hardware-Adaptern, verwendet. Da die Hardware-Adapter auf Regionen im HiDOS-Speicher zugreifen kî
+t Open 386MAX, keine Speicherbereiche im HiDOS-Speicher abzubilden. Diese Option wird bei der Fehlersuche, insbesondere bei Konflikten mit Hardware-Adaptern, verwendet. Da die Hardware-Adapter auf Regionen im HiDOS-Speicher zugreifen kî
 nnen, kann NOHIGH bei der Lîsung von Problemen, die durch die Umplazierung von HiDOS-Speicher bedingt sind, helfen.
 \par \pard \sl240\slmult0\widctlpar Sind keine Programme im HiDOS-Speicher geladen, so wird durch die Option NOHIGH zusÑtzlicher Speicher fÅr SmartMemory verfÅgbar.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie haben einen Netzwerkadapter installiert. WÑhrend der Initialisierung treten Schwierigkeiten auf, die Adapterkarte wird vom Netzwerkprogramm nicht erkannt. FÅ
-gen Sie in der Qualitas MAX Profildatei die Option NOHIGH ein. Qualitas MAX wird an der Abbildung des HiDOS-Speichers gehindert und so ein Ansatz zur Problemlîsung gefunden.
+gen Sie in der Open 386MAX Profildatei die Option NOHIGH ein. Open 386MAX wird an der Abbildung des HiDOS-Speichers gehindert und so ein Ansatz zur Problemlîsung gefunden.
 \par \pard \sl240\slmult0\widctlpar 
-\par \pard \sl240\slmult0\widctlpar Ist das Problem mit dieser Einstellung gelîst, dann hat Qualitas MAX mit hoher Wahrscheinlichkeit HiDOS-
+\par \pard \sl240\slmult0\widctlpar Ist das Problem mit dieser Einstellung gelîst, dann hat Open 386MAX mit hoher Wahrscheinlichkeit HiDOS-
 \par \pard \sl240\slmult0\widctlpar speicher auf den Adressen des Adapters abgebildet. FÅr die Bestimmung dieser Adressen lesen Sie bitte in der Dokumentation zur Hardware nach.
 \par \pard \sl240\slmult0\widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} NOLOW, RAM=
@@ -608,16 +608,16 @@ gen Sie in der Qualitas MAX Profildatei die Option NOHIGH ein. Qualitas MAX wird
 \par \pard \widctlpar  {\b Syntax:} NOLOADHI
 \par {\b Vorgabe:} LÑdt xxx.SYS in den HiDOS-Speicher
 \par \pard \widctlpar 
-\par \pard \widctlpar Diese Option zwingt den Qualitas MAX Treiber (386MAX.SYS, BlueMAX.SYS oder MOVE'EM.MGR, hier als xxx.SYS bezeichnet), sich in den LoDOS-Speicher zu laden.
+\par \pard \widctlpar Diese Option zwingt den Open 386MAX Treiber (386MAX.SYS, BlueMAX.SYS oder MOVE'EM.MGR, hier als xxx.SYS bezeichnet), sich in den LoDOS-Speicher zu laden.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar StandardmÑ·ig lÑdt sich Qualitas MAX in den HiDOS-Speicher und nutzt dabei 1 KB LoDOS-Speicher sowie 3,5 KB HiDOS-Speicher. Wird die Option NOLOADHI gesetzt, fÑ
+\par \pard \sl240\slmult0\widctlpar StandardmÑ·ig lÑdt sich Open 386MAX in den HiDOS-Speicher und nutzt dabei 1 KB LoDOS-Speicher sowie 3,5 KB HiDOS-Speicher. Wird die Option NOLOADHI gesetzt, fÑ
 llt der Anteil des 386MAX.SYS, der normalerweise den HiDOS-Speicher nutzt, auf den LoDOS-Speicher. Der Rest verbleibt im Extended Memory.
 \par \pard \sl240\slmult0\widctlpar 
-\par \pard \sl240\slmult0\widctlpar Beachten Sie bitte, da· sich diese Option nur auf den 3,5 KB gro·en DOS-Bereich von Qualitas MAX auswirkt. Es Ñndert nichts an der eigentlichen Anordnung von Qualitas MAX im Extended Memory.
+\par \pard \sl240\slmult0\widctlpar Beachten Sie bitte, da· sich diese Option nur auf den 3,5 KB gro·en DOS-Bereich von Open 386MAX auswirkt. Es Ñndert nichts an der eigentlichen Anordnung von Open 386MAX im Extended Memory.
 \par \pard \widctlpar {\b 
 \par 
-\par }\pard \sl240\slmult0\widctlpar {\b Beispiel: }Wird Qualitas MAX in den LoDOS-Speicher geladen, steht mehr HiDOS-Speicher fÅr das Laden eines grî·eren speicherresidenten Programmes zur VerfÅgung. FÅ
-gen Sie in die Qualitas MAX Profildatei folgende Option ein:
+\par }\pard \sl240\slmult0\widctlpar {\b Beispiel: }Wird Open 386MAX in den LoDOS-Speicher geladen, steht mehr HiDOS-Speicher fÅr das Laden eines grî·eren speicherresidenten Programmes zur VerfÅgung. FÅ
+gen Sie in die Open 386MAX Profildatei folgende Option ein:
 \par \pard \widctlpar 
 \par  NOLOADHI
 \par 
@@ -626,18 +626,18 @@ gen Sie in die Qualitas MAX Profildatei folgende Option ein:
 \par \pard \widctlpar {\fs28\cf6 >>NOLOW
 \par }\pard \widctlpar                          {\i NOLOW}
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b   Zweck:} Hindert Qualitas MAX daran, zusÑtzlichen
+\par \pard \widctlpar {\b   Zweck:} Hindert Open 386MAX daran, zusÑtzlichen
 \par \pard \widctlpar          LoDOS-Speicher einzurichten
 \par \pard \widctlpar  {\b Syntax:} NOLOW
 \par {\b Vorgabe:} Legt LoDOS-Speicher an
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Diese Option veranla·t Qualitas MAX, keinen zusÑ
-tzlichen LoDOS-Speicher einzurichten. Qualitas MAX versucht auf Systemen mit 512 KB Basisspeicher eine Erweiterung am Ende des konventionellen Speichers auf 640 KB sowie auf 704 KB bzw. 736 KB (monochrome Sy
-steme bzw. CGA-Systeme) vorzunehmen. NOLOW unterdrÅckt diese Voreinstellung. Mit aktiver Option NOLOW auf Monochrom- und CGA-Systemen stellt Qualitas MAX im Bereich von 640 KB bis zum Anfang des Bildschirm-Adapters HiDOS-Speicher zur VerfÅgung.
+\par \pard \sl240\slmult0\widctlpar Diese Option veranla·t Open 386MAX, keinen zusÑ
+tzlichen LoDOS-Speicher einzurichten. Open 386MAX versucht auf Systemen mit 512 KB Basisspeicher eine Erweiterung am Ende des konventionellen Speichers auf 640 KB sowie auf 704 KB bzw. 736 KB (monochrome Sy
+steme bzw. CGA-Systeme) vorzunehmen. NOLOW unterdrÅckt diese Voreinstellung. Mit aktiver Option NOLOW auf Monochrom- und CGA-Systemen stellt Open 386MAX im Bereich von 640 KB bis zum Anfang des Bildschirm-Adapters HiDOS-Speicher zur VerfÅgung.
 
 \par \pard \sl240\slmult0\widctlpar 
 \par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Wenn mit 512 KB Systemen Bildschirm-
-\par \pard \sl240\slmult0\widctlpar stîrungen auftreten, versuchen Sie diese zu beheben, indem Sie in die Qualitas MAX Profildatei folgende Option einfÅgen:
+\par \pard \sl240\slmult0\widctlpar stîrungen auftreten, versuchen Sie diese zu beheben, indem Sie in die Open 386MAX Profildatei folgende Option einfÅgen:
 \par \pard \widctlpar 
 \par  NOLOW
 \par 
@@ -650,15 +650,15 @@ steme bzw. CGA-Systeme) vorzunehmen. NOLOW unterdrÅckt diese Voreinstellung. Mit
 \par \pard \widctlpar  {\b Syntax:} NOROM
 \par {\b Vorgabe:} "ROM Caching" aktiv.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Diese Option teilt Qualitas MAX mit, keine langsamen ROM-Routinen in schnelles RAM zu kopieren. Die Option "NOROM" dient hauptsÑchlich der Fehlersuche.
+\par \pard \sl240\slmult0\widctlpar Diese Option teilt Open 386MAX mit, keine langsamen ROM-Routinen in schnelles RAM zu kopieren. Die Option "NOROM" dient hauptsÑchlich der Fehlersuche.
 \par \pard \sl240\slmult0\widctlpar 
 \par \pard \sl240\slmult0\widctlpar Das System
- BIOS ROM und Hardware-Adapter ROM laufen schneller ab, nachdem Sie durch Qualitas MAX in "schnelles" RAM (Random Access Memory = Direkt-Zugriffspeicher) kopiert wurden. Einige ROM-Routinen reagieren sehr empfindlich auf VerÑ
+ BIOS ROM und Hardware-Adapter ROM laufen schneller ab, nachdem Sie durch Open 386MAX in "schnelles" RAM (Random Access Memory = Direkt-Zugriffspeicher) kopiert wurden. Einige ROM-Routinen reagieren sehr empfindlich auf VerÑ
 nderungen der Geschwindigkeit und funktionieren bei hîherer Geschwindigkeit nicht.
 \par \pard \widctlpar 
 \par 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie haben keinen ordnungsgemÑ·en Zugriff auf das Diskettenlaufwerk; Qualitas MAX hat einen ROM "Cache" fÅr das System BIOS ROM installiert. Versuchen Sie das Problem zu lîsen, indem Sie in die
- Qualitas MAX Profildatei folgende Option einfÅgen:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie haben keinen ordnungsgemÑ·en Zugriff auf das Diskettenlaufwerk; Open 386MAX hat einen ROM "Cache" fÅr das System BIOS ROM installiert. Versuchen Sie das Problem zu lîsen, indem Sie in die
+ Open 386MAX Profildatei folgende Option einfÅgen:
 \par \pard \widctlpar 
 \par  NOROM
 \par 
@@ -676,7 +676,7 @@ nderungen der Geschwindigkeit und funktionieren bei hîherer Geschwindigkeit nich
 \par \pard \widctlpar Einige Systeme mit sogenammtem "Memory-mapped I/O" haben Probleme, wenn HiDOS Speicher mit 386UTIL/R abgetastet wird. NOSCAN weist 386UTIL an, diese Bereiche unberÅhrt zu lassen.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Beispiel:} Ihr System hat eine Netzwerk-Karte, die den Adre·bereich von CC00-D000 benutzt. Bei jedem Ablauf des 386UTIL/R (entweder aus der DOS-Ebene oder wÑhrend Maximize) fÅhrt das System einen Neustart durch. FÅ
-gen Sie in die Qualitas MAX Profildatei die folgende Option ein:
+gen Sie in die Open 386MAX Profildatei die folgende Option ein:
 \par \pard \widctlpar 
 \par  NOSCAN=CC00-D000
 \par   
@@ -685,18 +685,18 @@ gen Sie in die Qualitas MAX Profildatei die folgende Option ein:
 \par \pard \widctlpar {\fs28\cf6 >>NOSCSI
 \par }\pard \widctlpar               {\i NOSCSI} (Erweiterte Option)
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b   Zweck:} Qualitas MAX sucht nicht nach einer SCSI Bus
+\par \pard \widctlpar {\b   Zweck:} Open 386MAX sucht nicht nach einer SCSI Bus
 \par \pard \widctlpar          Master-Steuerung.
 \par \pard \widctlpar  {\b Syntax:} NOSCSI
 \par {\b Vorgabe:} Sucht nach SCSI Bus Master-Steuerung
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Mit dieser Option prÅft Qualitas MAX nicht, ob im System eine SCSI Bus Master-Steuerung installiert ist (SCSI = Small Computer System Interface).
+\par \pard \sl240\slmult0\widctlpar Mit dieser Option prÅft Open 386MAX nicht, ob im System eine SCSI Bus Master-Steuerung installiert ist (SCSI = Small Computer System Interface).
 \par \pard \sl240\slmult0\widctlpar 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX ÅberprÅft Ihr System nach SCSI-Hardware. In seltenen FÑllen kann es dabei zu einer Blockierung Ihres Systems kommen.
+\par \pard \sl240\slmult0\widctlpar Open 386MAX ÅberprÅft Ihr System nach SCSI-Hardware. In seltenen FÑllen kann es dabei zu einer Blockierung Ihres Systems kommen.
 \par \pard \widctlpar 
 \par 
 \par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Ihr System bleibt beim Systemstart hÑngen. Sie wissen, da· Ihr System Åber keinen SCSI Bus-
-\par \pard \sl240\slmult0\widctlpar Master-Adapter vefÅgt. Tragen Sie in die Qualitas MAX Profildatei folgende Option ein.
+\par \pard \sl240\slmult0\widctlpar Master-Adapter vefÅgt. Tragen Sie in die Open 386MAX Profildatei folgende Option ein.
 \par \pard \widctlpar 
 \par  NOSCSI
 \par 
@@ -705,7 +705,7 @@ gen Sie in die Qualitas MAX Profildatei die folgende Option ein:
 \par \pard\plain \s15\widctlpar \f11\fs28\cf6 >>NOVGASIG
 \par \pard\plain \widctlpar \f11            {\i NOVGASIG} (Erweiterte Option)
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b   Zweck:} Teilt Qualitas MAX mit, da· keine 512 Byte 
+\par \pard \widctlpar {\b   Zweck:} Teilt Open 386MAX mit, da· keine 512 Byte 
 \par \pard \widctlpar          Video ROM Signatur erwÅnscht ist
 \par \pard \widctlpar  {\b Syntax:} NOVGASIG
 \par {\b Vorgabe:} ErhÑlt Video ROM Signature
@@ -713,7 +713,7 @@ gen Sie in die Qualitas MAX Profildatei die folgende Option ein:
 \par \pard \widctlpar Wenn VGASWAP ein VGA ROM von C000 nach B000 verlagert, bleibt eine 512 Byte gro·e VGA ROM Signatur bei C000 erhalten. Dies ist fÅr Systeme erforderlich, die bei C000 nach einer VGA ROM Signatur suchen. NOVGASIG schaltet diese
  Regelung ab.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel:} Wenn keine Ihrer Anwendungen an der Adresse C000 nach VGA ROMs sucht und Sie 512 Byte zusÑtzlichen HiDOS Speicher erhalten mîchten, fÅgen Sie in der Qualitas MAX Profildatei die Option NOVGASIG hinzu.
+\par \pard \widctlpar {\b Beispiel:} Wenn keine Ihrer Anwendungen an der Adresse C000 nach VGA ROMs sucht und Sie 512 Byte zusÑtzlichen HiDOS Speicher erhalten mîchten, fÅgen Sie in der Open 386MAX Profildatei die Option NOVGASIG hinzu.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} NOROM
 \par \pard \widctlpar 
@@ -726,9 +726,9 @@ gen Sie in die Qualitas MAX Profildatei die folgende Option ein:
 \par {\b Vorgabe:} FÑngt System-Neustart (Reboot) ab.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Mit dieser Option wird ein Abfangen des System-
-\par \pard \sl240\slmult0\widctlpar Neustarts (Reboot) durch Qualitas MAX verhindert. Qualitas MAX fÑngt normalerweise den Reboot ab, soda· er sich selbst zuvor abschalten kann.
+\par \pard \sl240\slmult0\widctlpar Neustarts (Reboot) durch Open 386MAX verhindert. Open 386MAX fÑngt normalerweise den Reboot ab, soda· er sich selbst zuvor abschalten kann.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie arbeiten mit einer frÅhen Intel Systemversion und in Ihrer Dokumentation wird das Setzen dieser Option empfohlen. FÅgen Sie in die Qualitas MAX Profildatei Die Option NOWARMBOOT ein.
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie arbeiten mit einer frÅhen Intel Systemversion und in Ihrer Dokumentation wird das Setzen dieser Option empfohlen. FÅgen Sie in die Open 386MAX Profildatei Die Option NOWARMBOOT ein.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} NOROM
 \par \pard \widctlpar 
@@ -740,10 +740,10 @@ gen Sie in die Qualitas MAX Profildatei die folgende Option ein:
 \par {\b Vorgabe:} UnterstÅtzung fÅr Windows 3 aktiv
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Mit dieser Option wird die UnterstÅtzung fÅr Windows 3 ausgeschaltet und der fÅ
-r Qualitas MAX erforderliche LoDOS-Speicher von ca. einem Kilobyte auf 80 Byte reduziert. Das Qualitas MAX Installationsprogramm fragt Sie, ob eine UnterstÅtzung fÅr Windows 3 gewÅnscht ist.
+r Open 386MAX erforderliche LoDOS-Speicher von ca. einem Kilobyte auf 80 Byte reduziert. Das Open 386MAX Installationsprogramm fragt Sie, ob eine UnterstÅtzung fÅr Windows 3 gewÅnscht ist.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Falls Sie keine UnterstÅzung fÅr Windows 3 benîtigen und die Qualitas MAX Speicher-Anforderungen im LoDOS-Speicher reduzieren mîchten, fÅ
-gen Sie in die Qualitas MAX Profildatei  die Option "NOWIN3" ein.
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Falls Sie keine UnterstÅzung fÅr Windows 3 benîtigen und die Open 386MAX Speicher-Anforderungen im LoDOS-Speicher reduzieren mîchten, fÅ
+gen Sie in die Open 386MAX Profildatei  die Option "NOWIN3" ein.
 \par \pard \widctlpar 
 \par \pard\plain \s15\widctlpar \f11\fs28\cf6 >>NOWIN30
 \par \pard\plain \widctlpar \f11                        {\i NOWIN30}
@@ -753,10 +753,10 @@ gen Sie in die Qualitas MAX Profildatei  die Option "NOWIN3" ein.
 \par \pard \widctlpar  {\b Syntax:} NOWIN30
 \par {\b Vorgabe:} Sperre bei 16 MB physikalischem Speicher
 \par \pard \widctlpar 
-\par \pard \widctlpar Aufgrund einer EinschrÑnkung in Windows 3.0 dÅrfen die Extended Memory Blocks (EMBs) die physikalische 16 MB Grenze nicht Åberschreiten. Aus diesem Grund errichtet Qualitas MAX bei 16 MB eine kÅ
-nstliche Sperre. Diese Begrenzung ist fÅr Windows 3.1 nicht mehr erforderlich. Wenn INSTALL nicht die Windows-Version 3.0 entdeckt, trÑgt es in die Qualitas MAX Profildatei die Option NOWIN30 ein.
+\par \pard \widctlpar Aufgrund einer EinschrÑnkung in Windows 3.0 dÅrfen die Extended Memory Blocks (EMBs) die physikalische 16 MB Grenze nicht Åberschreiten. Aus diesem Grund errichtet Open 386MAX bei 16 MB eine kÅ
+nstliche Sperre. Diese Begrenzung ist fÅr Windows 3.1 nicht mehr erforderlich. Wenn INSTALL nicht die Windows-Version 3.0 entdeckt, trÑgt es in die Open 386MAX Profildatei die Option NOWIN30 ein.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel:} Wenn die UnterstÅtzung fÅr Windows 3.0 nicht erforderlich ist, fÅgen Sie in die Qualitas MAX Profildatei die Option NOWIN30 ein.
+\par \pard \widctlpar {\b Beispiel:} Wenn die UnterstÅtzung fÅr Windows 3.0 nicht erforderlich ist, fÅgen Sie in die Open 386MAX Profildatei die Option NOWIN30 ein.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} NOWIN3
 \par \pard \widctlpar 
@@ -767,18 +767,18 @@ nstliche Sperre. Diese Begrenzung ist fÅr Windows 3.1 nicht mehr erforderlich. W
 \par  {\b Syntax:} NOXBIOS
 \par {\b Vorgabe:} Verlagert den XBIOS-Bereich
 \par \pard \widctlpar 
-\par \pard \widctlpar Mit dieser Option wird Qualitas MAX veranla·t, den XBIOS-Bereich (Extended BIOS Data Area) mit seiner Anfangsadresse zwischen 639 KB und 640 KB zu belassen.
+\par \pard \widctlpar Mit dieser Option wird Open 386MAX veranla·t, den XBIOS-Bereich (Extended BIOS Data Area) mit seiner Anfangsadresse zwischen 639 KB und 640 KB zu belassen.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Qual
 itas MAX erkennt automatisch einen XBIOS-Bereich auf Mikrokanal (MC)-Rechnern sowie auf einigen anderen Systemen wie z.B. Compaq 386S. Beim Systemstart weist das System BIOS automatisch 1 KB LoDOS-Speicher (zwischen 639 KB und 640 KB) zu. Daraus ergibt si
-ch ein "Speicherloch", das Qualitas MAX daran hindert, den LoDOS-Speicher auf monochromen oder CGA-Systemen (vom Ende des konventionellen Speichers bis zum Beginn des Bildschirm-Adapters) aufzufÅ
-llen. Aus diesem Grund lagert Qualitas MAX den XBIOS-Bereich gewîhnlich in den unteren Bereich des LoDOS-Speichers aus.
+ch ein "Speicherloch", das Open 386MAX daran hindert, den LoDOS-Speicher auf monochromen oder CGA-Systemen (vom Ende des konventionellen Speichers bis zum Beginn des Bildschirm-Adapters) aufzufÅ
+llen. Aus diesem Grund lagert Open 386MAX den XBIOS-Bereich gewîhnlich in den unteren Bereich des LoDOS-Speichers aus.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Bei Fehlfunktion einer SCSI-Festplatte mit Qualitas MAX setzen Sie die Option XBIOS.
+\par \pard \sl240\slmult0\widctlpar Bei Fehlfunktion einer SCSI-Festplatte mit Open 386MAX setzen Sie die Option XBIOS.
 \par \pard \sl240\slmult0\widctlpar 
 \par \pard \sl240\slmult0\widctlpar Einige SCSI-Festplattensteuerungen reagieren nicht auf die Virtual DMA Services (VDS) - Spezifikation und nehmen an, das XBIOS wÑre bei 639 KB plaziert.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie haben eine SCSI-Festplattensteurung mit fehlerhaftem Festplattenzugriff. Versuchen Sie das Problem zu lîsen, indem Sie in die Qualitas MAX Profildatei die Option "NOXBIOS" einfÅgen.
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie haben eine SCSI-Festplattensteurung mit fehlerhaftem Festplattenzugriff. Versuchen Sie das Problem zu lîsen, indem Sie in die Open 386MAX Profildatei die Option "NOXBIOS" einfÅgen.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} XBIOSHI
 \par \pard \widctlpar {\cf6 
@@ -789,10 +789,10 @@ llen. Aus diesem Grund lagert Qualitas MAX den XBIOS-Bereich gewîhnlich in den u
 \par  {\b Syntax:} NOXRAM
 \par {\b Vorgabe:} Stellt "Schatten-RAM" wieder her
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Mit dieser Option wird Qualitas MAX daran gehindert, die zusÑtzlichen 384 KB RAM-Speicher auf Systemen zurÅckzugewinnen, die diesen zusÑtzlichen RAM-Speicher (Schatten-RAM) fÅ
-r ihre System- und Video-ROMs nutzen. Qualitas MAX versucht standardmÑ·ig den gesamten Systemspeicher fÅr SmartMemory zu gewinnen.
+\par \pard \sl240\slmult0\widctlpar Mit dieser Option wird Open 386MAX daran gehindert, die zusÑtzlichen 384 KB RAM-Speicher auf Systemen zurÅckzugewinnen, die diesen zusÑtzlichen RAM-Speicher (Schatten-RAM) fÅ
+r ihre System- und Video-ROMs nutzen. Open 386MAX versucht standardmÑ·ig den gesamten Systemspeicher fÅr SmartMemory zu gewinnen.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Qualitas MAX bleibt beim Booten auf einem "Shadow RAM"-System hÑngen. Versuchen Sie das Problem zu lîsen, indem Sie in die Qualitas MAX Profildatei die Option NOXRAM einfÅgen.
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Open 386MAX bleibt beim Booten auf einem "Shadow RAM"-System hÑngen. Versuchen Sie das Problem zu lîsen, indem Sie in die Open 386MAX Profildatei die Option NOXRAM einfÅgen.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} SHADOWRAM, TOP384
 \par \pard \widctlpar 
@@ -816,12 +816,12 @@ r ihre System- und Video-ROMs nutzen. Qualitas MAX versucht standardmÑ·ig den ge
 \par \pard \widctlpar          zwischen 0 und 9 angibt
 \par \pard \widctlpar {\b Vorgabe:} PRGREG=1
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Mit dieser Option wird der Qualitas MAX Treiber (386MAX.SYS, BlueMAX.SYS, oder MOVE'EM.MGR, hier als xxx.SYS bezeichnet) in eine bestimmte Region des HiDOS-Speichers geladen. xxx.SYS lÑ
+\par \pard \sl240\slmult0\widctlpar Mit dieser Option wird der Open 386MAX Treiber (386MAX.SYS, BlueMAX.SYS, oder MOVE'EM.MGR, hier als xxx.SYS bezeichnet) in eine bestimmte Region des HiDOS-Speichers geladen. xxx.SYS lÑ
 dt sich automatisch in den ersten verfÅgbaren HiDOS-Bereich. Die Bereiche werden in aufsteigender Folge der Speicheradressen numeriert. Der niedrigste adressierbare Bereich im HiDOS-Speicher ist die Nummer 1. Die Option PRGREG=0 gibt LoDOS-Speicher an.
 
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Wenn in einem gegebenen Fall Qualitas MAX in Bereich 2 des HiDOS-Speichers geladen wird, dann kann ein grî·eres Programm in Bereich 1 geladen werden. Dann fÅ
-gen Sie in die Qualitas MAX Profildatei folgende Option ein:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Wenn in einem gegebenen Fall Open 386MAX in Bereich 2 des HiDOS-Speichers geladen wird, dann kann ein grî·eres Programm in Bereich 1 geladen werden. Dann fÅ
+gen Sie in die Open 386MAX Profildatei folgende Option ein:
 \par \pard \widctlpar 
 \par  PRGREG=2
 \par 
@@ -830,14 +830,14 @@ gen Sie in die Qualitas MAX Profildatei folgende Option ein:
 \par \pard \widctlpar {\fs28\cf6 >>PRO
 \par }\pard \widctlpar                          {\i PRO=}
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b   Zweck:} Bezeichnet die Qualitas MAX Profildatei
+\par \pard \widctlpar {\b   Zweck:} Bezeichnet die Open 386MAX Profildatei
 \par  {\b Syntax:} PRO=laufwerk:\\pfad\\dateiname
 \par {\b Vorgabe:} PRO=C:\\xxx\\xxx.PRO
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Diese Option bezeichnet das Qualitas MAX Profil (386MAX.PRO, BlueMAX.PRO oder MOVE'EM.PRO, hier als xxx.PRO bezeichnet). Dies ist eine Textdatei, die Optionen fÅr Qualitas MAX enthÑ
-lt und automatisch vom Installationsprogramm angelegt wird. Das Qualitas MAX "Profil" ist fÅr den Start von "Maximize" erforderlich.
+\par \pard \sl240\slmult0\widctlpar Diese Option bezeichnet das Open 386MAX Profil (386MAX.PRO, BlueMAX.PRO oder MOVE'EM.PRO, hier als xxx.PRO bezeichnet). Dies ist eine Textdatei, die Optionen fÅr Open 386MAX enthÑ
+lt und automatisch vom Installationsprogramm angelegt wird. Das Open 386MAX "Profil" ist fÅr den Start von "Maximize" erforderlich.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel: }Die Treiberzeile fÅr Qualitas MAX in CONFIG.SYS sollte folgenderma·en aussehen:
+\par \pard \widctlpar {\b Beispiel: }Die Treiberzeile fÅr Open 386MAX in CONFIG.SYS sollte folgenderma·en aussehen:
 \par \pard \widctlpar 
 \par \pard \widctlpar DEVICE=C:\\QMAX\\386MAX.SYS PRO=C:\\QMAX\\386MAX.PRO
 \par \pard \widctlpar 
@@ -858,38 +858,38 @@ ht. QPMS stellt Fehlersuchprogrammen Speicher im Extended Memory zur VerfÅgung, 
 r "n" oder "xxxx" lÑdt sich das Programm in die erste Region, in der ausreichend Platz ist.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar QPMS wird derzeit von Periscope/EM unterstÅtzt. FÅr den Einsatz von Periscope benîtigt ein System mindestens 300 KB Extended RAM und 32 KB zusammenhÑngende Speicherblîcke im HiDOS. Sie
- erhalten eine detailliertere Information im Periscope Handbuch (bzw. im Handbuch anderer QPMS-gestÅtzter Produkte). Periscope/EM und Qualitas MAX bieten zusammen die FunktionalitÑt eines Periscope Model I Boards.
+ erhalten eine detailliertere Information im Periscope Handbuch (bzw. im Handbuch anderer QPMS-gestÅtzter Produkte). Periscope/EM und Open 386MAX bieten zusammen die FunktionalitÑt eines Periscope Model I Boards.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie haben die Periscope Software bei Adresse C000H geladen und mîchten 512 KB fÅr Periscope/EM reservieren. FÅgen Sie dazu in die Qualitas MAX Profildatei folgende Zeile ein:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie haben die Periscope Software bei Adresse C000H geladen und mîchten 512 KB fÅr Periscope/EM reservieren. FÅgen Sie dazu in die Open 386MAX Profildatei folgende Zeile ein:
 \par \pard \widctlpar 
 \par  PSMEM=512,C000
 \par 
 \par \pard \widctlpar {\fs28\cf6 >>RAM
 \par }\pard \widctlpar                         {\i RAM=
 \par }\pard \widctlpar 
-\par \pard \widctlpar {\b   Zweck:} Hindert Qualitas MAX daran, Speicher in bestimmte
+\par \pard \widctlpar {\b   Zweck:} Hindert Open 386MAX daran, Speicher in bestimmte
 \par \pard \widctlpar          HiDOS-Regionen abzubilden
 \par \pard \widctlpar  {\b Syntax:} RAM=xxxx-yyyy, wobei xxxx und yyyy einen
 \par \pard \widctlpar          hexadezimalen Adre·bereich bezeichnen; xxxx
 \par          und yyyy mÅssen im 4 KB Raster liegen.
 \par \pard \widctlpar {\b Vorgabe:} Wird durch Maximize getroffen
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Mit dieser Option wird Qualitas MAX daran gehindert, Speicher in bestimmte HiDOS-Bereiche abzubilden.
+\par \pard \sl240\slmult0\widctlpar Mit dieser Option wird Open 386MAX daran gehindert, Speicher in bestimmte HiDOS-Bereiche abzubilden.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Bestimmte Adre·bereiche im HiDOS-Speicher sind fÅr ROMs und den RAM-Speicher der Adapterkarten reserviert. Es ist mîglich, da· Qualitas MAX Speicher auf Adressen abbilden mîchte, die von Adapterkarten benî
+\par \pard \sl240\slmult0\widctlpar Bestimmte Adre·bereiche im HiDOS-Speicher sind fÅr ROMs und den RAM-Speicher der Adapterkarten reserviert. Es ist mîglich, da· Open 386MAX Speicher auf Adressen abbilden mîchte, die von Adapterkarten benî
 tigt werden. Das Ergebnis wÑre ein Speicher-
 \par \pard \sl240\slmult0\widctlpar konflikt.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Das Handbuch der Adapterkarte gibt an, welche Adre·bereiche benîtigt werden.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Auf Mikrokanal-Systemen bestimmt Qualitas MAX die Adapteradressen aufgrund von Informationen aus ADF- und ADP-Dateien. Diese sind auf der Referenzdiskette des Mikrokanal-Systems gespeichert. Qualitas MAX fÅ
-gt entsprechende RAM-Optionen in die Qualitas MAX Profildatei ein.
+\par \pard \sl240\slmult0\widctlpar Auf Mikrokanal-Systemen bestimmt Open 386MAX die Adapteradressen aufgrund von Informationen aus ADF- und ADP-Dateien. Diese sind auf der Referenzdiskette des Mikrokanal-Systems gespeichert. Open 386MAX fÅ
+gt entsprechende RAM-Optionen in die Open 386MAX Profildatei ein.
 \par \pard \sl240\slmult0\widctlpar 
-\par \pard \sl240\slmult0\widctlpar Eine einzige RAM-Option kann mehrere durch Kommata getrennte Adre·bereiche umfassen. Die Qualitas MAX Profildatei kann mehr als eine RAM-Option enthalten.
+\par \pard \sl240\slmult0\widctlpar Eine einzige RAM-Option kann mehrere durch Kommata getrennte Adre·bereiche umfassen. Die Open 386MAX Profildatei kann mehr als eine RAM-Option enthalten.
 \par \pard \widctlpar 
 \par 
 \par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Ein System verfÅgt Åber eine IBM Token Ring Netzwerk-Adapterkarte. Die Karte hat einen
-\par \pard \sl240\slmult0\widctlpar 16 KB RAM-Speicher bei Adresse D800H und 8 KB ROM-Speicher bei Adresse CC00H. Tragen Sie in das Qualitas MAX Profil folgende Option ein:
+\par \pard \sl240\slmult0\widctlpar 16 KB RAM-Speicher bei Adresse D800H und 8 KB ROM-Speicher bei Adresse CC00H. Tragen Sie in das Open 386MAX Profil folgende Option ein:
 \par \pard \widctlpar 
 \par  RAM=D800-DC00,CC00-CE00
 \par 
@@ -905,18 +905,18 @@ gt entsprechende RAM-Optionen in die Qualitas MAX Profildatei ein.
 \par \pard \widctlpar {\b Vorgabe:} "ROM Caching" aktiv
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Diese Option veranla·
-t Qualitas MAX, den Inhalt der angegebenen ROM-Adressen in schnelles RAM zu kopieren. Die "ROM=" Option schaltet das automatische "ROM Caching" aus. Diese Option kann erforderlich sein, wenn durch die zusÑtzliche Optimierung eine Routine zu schnell l
+t Open 386MAX, den Inhalt der angegebenen ROM-Adressen in schnelles RAM zu kopieren. Die "ROM=" Option schaltet das automatische "ROM Caching" aus. Diese Option kann erforderlich sein, wenn durch die zusÑtzliche Optimierung eine Routine zu schnell l
 Ñuft und Systemkomponenten nicht mehr korrekt arbeiten.
 \par \pard \sl240\slmult0\widctlpar 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX ÅberprÅft die Geschwindigkeit jeder ROM-Routine
- im Computer. Sind die ROM-Routinen nicht so schnell wie das System RAM, dann kopiert Qualitas MAX den Inhalt jeder ROM-Adresse in den "schnellen" RAM-Speicher. Diesen Proze· nennt man ROM Caching. ROM Caching bedeutet also eine spÅ
+\par \pard \sl240\slmult0\widctlpar Open 386MAX ÅberprÅft die Geschwindigkeit jeder ROM-Routine
+ im Computer. Sind die ROM-Routinen nicht so schnell wie das System RAM, dann kopiert Open 386MAX den Inhalt jeder ROM-Adresse in den "schnellen" RAM-Speicher. Diesen Proze· nennt man ROM Caching. ROM Caching bedeutet also eine spÅ
 rbare Verbesserung der Systemleistung.
 \par \pard \sl240\slmult0\widctlpar 
-\par \pard \sl240\slmult0\widctlpar Eine einzige ROM-Option kann mehrere durch Kommata getrennte Adressbereiche enthalten. Die Qualitas MAX Profildatei kann mehr als eine ROM-Option enthalten.
+\par \pard \sl240\slmult0\widctlpar Eine einzige ROM-Option kann mehrere durch Kommata getrennte Adressbereiche enthalten. Die Open 386MAX Profildatei kann mehr als eine ROM-Option enthalten.
 \par \pard \widctlpar 
 \par 
 \par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Ihr System verfÅgt Åber eine ROM Festplatten-Steuerung bei Adresse C800 und ein System BIOS ROM bei Adresse F000. Gelegentlich stellt Ihr System seine Arbeit wÑ
-hrend einer Plattenoperation ein. Nehmen Sie in die Qualitas MAX Profildatei nachfolgende Option auf. Diese Option schaltet das automatische ROM Caching aus und installiert nur fÅr das System BIOS ROM einen ROM-Cache:
+hrend einer Plattenoperation ein. Nehmen Sie in die Open 386MAX Profildatei nachfolgende Option auf. Diese Option schaltet das automatische ROM Caching aus und installiert nur fÅr das System BIOS ROM einen ROM-Cache:
 \par \pard \widctlpar 
 \par  ROM=F000-10000
 \par 
@@ -930,16 +930,16 @@ hrend einer Plattenoperation ein. Nehmen Sie in die Qualitas MAX Profildatei nac
 \par \pard \widctlpar  {\b Syntax:} SHADOWRAM
 \par {\b Vorgabe:} Stellt Schatten-RAM wieder her
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Diese Option veranla·t Qualitas MAX zusÑtzlichen RAM-Speicher auf Systemen bereitzustellen, die mit einem NEAT-, AT/386- oder kompatiblen CHIPSet von Chips und Technologies ausgestattet sind. Derartige Computer verf
+\par \pard \sl240\slmult0\widctlpar Diese Option veranla·t Open 386MAX zusÑtzlichen RAM-Speicher auf Systemen bereitzustellen, die mit einem NEAT-, AT/386- oder kompatiblen CHIPSet von Chips und Technologies ausgestattet sind. Derartige Computer verf
 Ågen Åber 384 KB RAM auf der System-
 \par \pard \sl240\slmult0\widctlpar 
 platine. Der Speicher wird als Schatten-RAM ("Shadow-RAM") bezeichnet. Dieser gleicht dem HiDOS-Speicherbereich von 640 KB bis 1 MB. Die CHIPSet-Hardware kopiert langsame ROM-Bereiche wie das System BIOS ROM in Schatten-RAM. Dies fÅ
 hrt zu einer Leistungssteigerung Ihres Systems.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Nach der Adressumsetzung bleibt mîglicherweise noch Schatten-RAM Åbrig. Die Option SHADOWRAM veranla·t Qualitas MAX, diese Speicherbereiche fÅr SmartMemory zu gewinnen.
+\par \pard \sl240\slmult0\widctlpar Nach der Adressumsetzung bleibt mîglicherweise noch Schatten-RAM Åbrig. Die Option SHADOWRAM veranla·t Open 386MAX, diese Speicherbereiche fÅr SmartMemory zu gewinnen.
 \par \pard \sl240\slmult0\widctlpar 
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Mit einer CHIPSet-kompatiblen Hardware von Chips und Technologies setzen Sie in die Qualitas MAX Profildatei die Option SHADOWRAM ein.
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Mit einer CHIPSet-kompatiblen Hardware von Chips und Technologies setzen Sie in die Open 386MAX Profildatei die Option SHADOWRAM ein.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\fs28\cf6 >>SHADOWROM
 \par }\pard \widctlpar                       {\i SHADOWROM}
@@ -948,16 +948,16 @@ hrt zu einer Leistungssteigerung Ihres Systems.
 \par  {\b Syntax:} SHADOWROM
 \par {\b Vorgabe:} Schaltet Video-Shadow ROM aus
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Auf einigen Rechnern kopiert das System BIOS automatisch das EGA/VGA ROM ab Adresse C000 in den HiDOS-Speicherbereich bei Adresse E000. Dies fÅhrt zu einer Fragmentierung des HiDOS-Speichers; der fÅr Qualitas MAX verf
-Ågbare HiDOS-Speicherplatz wird reduziert. In der Regel versucht Qualitas MAX diese Systeme an der Verlagerung des Video-ROM zu hindern. Anschlie·end Åbernimmt Qualitas MAX selbst diese Aufgabe. Dies fÅ
+\par \pard \sl240\slmult0\widctlpar Auf einigen Rechnern kopiert das System BIOS automatisch das EGA/VGA ROM ab Adresse C000 in den HiDOS-Speicherbereich bei Adresse E000. Dies fÅhrt zu einer Fragmentierung des HiDOS-Speichers; der fÅr Open 386MAX verf
+Ågbare HiDOS-Speicherplatz wird reduziert. In der Regel versucht Open 386MAX diese Systeme an der Verlagerung des Video-ROM zu hindern. Anschlie·end Åbernimmt Open 386MAX selbst diese Aufgabe. Dies fÅ
 hrt zwar zu einer abnehmenden Systemleistung, sorgt aber fÅr mehr HiDOS-Speicher.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Die Option SHADOWROM setzt die Verlagerung im Video-
-\par \pard \sl240\slmult0\widctlpar Bereich durch Qualitas MAX au·er Kraft und ermîglicht es dem System, diese Aufgabe selbst vorzunehmen.
+\par \pard \sl240\slmult0\widctlpar Bereich durch Open 386MAX au·er Kraft und ermîglicht es dem System, diese Aufgabe selbst vorzunehmen.
 \par \pard \widctlpar 
 \par 
 \par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Die Bildschirmanzeige eines Shadow-ROM Systems weist Stîrungen auf. Das System kopiert normalerweise Video-ROMs bei Adresse E000 in schnelles RAM. Versuchen Sie das Problem zu lî
-sen, indem Sie in die Qualitas MAX Profildatei die Option SHADOWROM einfÅgen.
+sen, indem Sie in die Open 386MAX Profildatei die Option SHADOWROM einfÅgen.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} NOROM, ROM=, RAM=
 \par \pard \widctlpar 
@@ -973,7 +973,7 @@ sen, indem Sie in die Qualitas MAX Profildatei die Option SHADOWROM einfÅgen.
 \par \pard \widctlpar 
 \par \pard \widctlpar Diese Option legt die Grî·e und die Region der MAX Stack Overflow Protection (Stapelspeicher-öberlaufschutz) fest. Grî·e und Programmregion werden von Maximize ermittelt.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel:} Zum Laden der MAX Stack Overflow Protection UnterstÅtzung in HiDOS-Region 2 fÅgen Sie in die Qualitas MAX Profildatei die Option STACKREG=2 ein.
+\par \pard \widctlpar {\b Beispiel:} Zum Laden der MAX Stack Overflow Protection UnterstÅtzung in HiDOS-Region 2 fÅgen Sie in die Open 386MAX Profildatei die Option STACKREG=2 ein.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} STACKS=, PRGREG=
 \par \pard \widctlpar 
@@ -985,10 +985,10 @@ sen, indem Sie in die Qualitas MAX Profildatei die Option SHADOWROM einfÅgen.
 \par \pard \widctlpar  {\b Syntax:} STACKS=n,n wobei n ein Dezimalwert ist
 \par {\b Vorgabe:} Analog STACKS=6,128
 \par \pard \widctlpar 
-\par \pard \widctlpar Qualitas MAX bietet "Stack Overflow Protection" (Stapelspeicher-öberlaufschutz) durch Verwaltung der DOS Stacks auf der Protected Mode Ebene. Im Gegensatz zum Realmodus kann das System damit eine stabilere Plattfo
-rm erzielen, wenn Stack-hungrige TSRs die DOS Stacks fehlerhaft benutzen. Vorgabe fÅr Qualitas MAX ist die Einstellung 6,128.
+\par \pard \widctlpar Open 386MAX bietet "Stack Overflow Protection" (Stapelspeicher-öberlaufschutz) durch Verwaltung der DOS Stacks auf der Protected Mode Ebene. Im Gegensatz zum Realmodus kann das System damit eine stabilere Plattfo
+rm erzielen, wenn Stack-hungrige TSRs die DOS Stacks fehlerhaft benutzen. Vorgabe fÅr Open 386MAX ist die Einstellung 6,128.
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel:} Zum Abschalten der MAX Stack Overflow Protection fÅgen Sie in die Qualitas MAX Profildatei die Option STACKS=0 ein.
+\par \pard \widctlpar {\b Beispiel:} Zum Abschalten der MAX Stack Overflow Protection fÅgen Sie in die Open 386MAX Profildatei die Option STACKS=0 ein.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} STACKS=, PRGREG=
 \par \pard \widctlpar 
@@ -1006,11 +1006,11 @@ rm erzielen, wenn Stack-hungrige TSRs die DOS Stacks fehlerhaft benutzen. Vorgab
 \par \pard \sl240\slmult0\widctlpar Mit dieser Option wird langsamer Speicher auf der Systemplatine mit schnellem Extended Memory auf einer 386er (oder hîheren) Beschleunigungskarte getauscht (= Swapping). Die SWAP= Option gilt sowohl fÅr 8- als auch f
 År 16-Bit RAM-Speicher.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX tauscht die ersten "n" Kilobyte des Systemspeichers ab Adresse 0000H mit dem selben Betrag Extended Memory. Die SWAP= Option ist in der Regel 
+\par \pard \sl240\slmult0\widctlpar Open 386MAX tauscht die ersten "n" Kilobyte des Systemspeichers ab Adresse 0000H mit dem selben Betrag Extended Memory. Die SWAP= Option ist in der Regel 
 nur notwendig, wenn der Hauptsystemspeicher deutlich langsamer ist als Extended Memory. Dies ist bei Systemen mit einer 386er Beschleunigungskarte der Fall.
 \par \pard \sl240\slmult0\widctlpar 
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel:} Ein XT-Sytem verfÅgt Åber 640 KB Systemspeicher. Zudem hat es eine 386er Beschleunigungskarte, die Qualitas MAX nicht automatisch erkennt. FÅgen Sie in die Qualitas MAX Profildatei folgende Zeile ein:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel:} Ein XT-Sytem verfÅgt Åber 640 KB Systemspeicher. Zudem hat es eine 386er Beschleunigungskarte, die Open 386MAX nicht automatisch erkennt. FÅgen Sie in die Open 386MAX Profildatei folgende Zeile ein:
 
 \par \pard \widctlpar 
 \par  SWAP=640
@@ -1031,24 +1031,24 @@ nur notwendig, wenn der Hauptsystemspeicher deutlich langsamer ist als Extended 
 Ñuft. Nach Abschlu· der Anwendung wird die Auslagerungsdatei sofort wieder gelîscht. Eine 10 Byte gro·e "versteckte" Date (Hidden File) bleibt bestehen. Wenn 8 MB nicht verfÅ
 gbar sind, wird die Auslagerungsdatei mit 4 MB, 2 MB oder 1 MB angelegt(abhÑngig vom verfÅgbaren Plattenspeicher).
 \par \pard \widctlpar 
-\par \pard \widctlpar {\b Beispiel:} Zum Anlegen einer permanenten 8 MB gro·en Auslagerungsdatei mit Namen SWAP.FIL tragen Sie folgende Zeile in die Qualitas MAX PROfil-Datei ein:
+\par \pard \widctlpar {\b Beispiel:} Zum Anlegen einer permanenten 8 MB gro·en Auslagerungsdatei mit Namen SWAP.FIL tragen Sie folgende Zeile in die Open 386MAX PROfil-Datei ein:
 \par \pard \widctlpar 
 \par  SWAPFILE=C:\\QMAX\\SWAP.FIL /S=8192 /P
 \par 
-\par \pard \widctlpar {\b Vergleichen Sie:} Das MEMLIMIT Programm im Lieferumfang von Qualitas MAX.
+\par \pard \widctlpar {\b Vergleichen Sie:} Das MEMLIMIT Programm im Lieferumfang von Open 386MAX.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\fs28\cf6 >>SYS
 \par }\pard \widctlpar                         {\i SYS=}
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b   Zweck:} Erkennt besondere Systemtypen
 \par  {\b Syntax:} SYS=Systemname
-\par {\b Vorgabe:} Qualitas MAX erkennt Systeme automatisch
+\par {\b Vorgabe:} Open 386MAX erkennt Systeme automatisch
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Mit dieser Option kann Qualitas MAX gewisse 386er Beschleunigungskarten erkennen. Au·
+\par \pard \sl240\slmult0\widctlpar Mit dieser Option kann Open 386MAX gewisse 386er Beschleunigungskarten erkennen. Au·
 erdem erkennt er automatisch fast alle anderen Systeme. Derzeit ist die SYS= Option nur bei den Systemen Intel Inboard und Orchid Jet 386 notwendig. FÅr das Inboard gilt die Syntax SYS=INBOARD. FÅr das System Orchid Jet 386 gilt die 
 Syntax SYS=JET386.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel:} Ein IBM-Rechner enthÑlt das Intel Inboard. FÅgen Sie in die Qualitas MAX Profildatei folgende Option ein:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel:} Ein IBM-Rechner enthÑlt das Intel Inboard. FÅgen Sie in die Open 386MAX Profildatei folgende Option ein:
 \par \pard \widctlpar 
 \par  SYS=INBOARD
 \par 
@@ -1064,7 +1064,7 @@ Syntax SYS=JET386.
 \par 
 \par \pard \sl240\slmult0\widctlpar Diese Option gewinnt auf Compaq-kompatiblen Systemen 384 KB ungenutzten Schatten-RAM wieder und stellt ihn SmartMemory zur VerfÅgung.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie haben einen Compaq-kompatiblen Computer und mîchten die Grî·e von SmartMemory um 384 KB erweitern. FÅgen Sie in das Qualitas MAX Profil die Option TOP384 ein.
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie haben einen Compaq-kompatiblen Computer und mîchten die Grî·e von SmartMemory um 384 KB erweitern. FÅgen Sie in das Open 386MAX Profil die Option TOP384 ein.
 \par \pard \sl240\slmult0\widctlpar 
 \par \pard \widctlpar {\fs28\cf6 >>UMB
 \par }\pard \widctlpar                           {\i UMB}
@@ -1085,16 +1085,16 @@ nnen sich selbst in den UMB-Bereich laden oder UMBs fÅr andere Funktionen einset
 \par \pard \widctlpar          HiDOS-Regionen ab
 \par \pard \widctlpar  {\b Syntax:} USE=xxxx-yyyy, wobei xxxx-yyyy einen
 \par \pard \widctlpar          hexa-dezimalen Adre·bereich bezeichnet
-\par \pard \widctlpar {\b Vorgabe:} Qualitas MAX bildet Speicher in alle verfÅgbaren
+\par \pard \widctlpar {\b Vorgabe:} Open 386MAX bildet Speicher in alle verfÅgbaren
 \par \pard \widctlpar          HiDOS-Regionen ab
 \par 
-\par \pard \sl240\slmult0\widctlpar Mit dieser Option wird HiDOS-Speicher in einem Adre·bereich bereitgestellt, auf den Qualitas MAX normalerweise nicht zugreifen wÅrde.
+\par \pard \sl240\slmult0\widctlpar Mit dieser Option wird HiDOS-Speicher in einem Adre·bereich bereitgestellt, auf den Open 386MAX normalerweise nicht zugreifen wÅrde.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Einige Systeme verfÅgen Åber HiDOS-Regionen, die als "genutzt" ausgewiesen sind, aber in Wirklichkeit noch frei sind. Die Option USE= veranla·t Qualitas MAX, diese Adressen als zusÑ
-tzlichen HiDOS-Speicher zu nutzen. Dabei kann eine einzige "USE"-Option mehrere durch Kommata getrennte Adre·bereiche umfassen. Die Qualitas MAX Profildatei kann mehr als eine "USE"-Option enthalten.
+\par \pard \sl240\slmult0\widctlpar Einige Systeme verfÅgen Åber HiDOS-Regionen, die als "genutzt" ausgewiesen sind, aber in Wirklichkeit noch frei sind. Die Option USE= veranla·t Open 386MAX, diese Adressen als zusÑ
+tzlichen HiDOS-Speicher zu nutzen. Dabei kann eine einzige "USE"-Option mehrere durch Kommata getrennte Adre·bereiche umfassen. Die Open 386MAX Profildatei kann mehr als eine "USE"-Option enthalten.
 \par \pard \sl240\slmult0\widctlpar 
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie benutzen ein EGA- oder VGA-System ohne Monochromanzeige. FÅgen Sie in die Qualitas MAX Profildatei folgende Zeile ein:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Sie benutzen ein EGA- oder VGA-System ohne Monochromanzeige. FÅgen Sie in die Open 386MAX Profildatei folgende Zeile ein:
 \par \pard \widctlpar 
 \par  USE=B000-B800
 \par 
@@ -1109,7 +1109,7 @@ tzlichen HiDOS-Speicher zu nutzen. Dabei kann eine einzige "USE"-Option mehrere 
 \par {\b Vorgabe:} Erweitert LoDOS-Speicher, falls Qualitas
 \par \pard \widctlpar          MAX keinen VGA-Adapter erkennt
 \par 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX erkennt automatisch VGA-Hardware. Diese Option ist fÅr Systeme zu verwenden, die nicht als "VGA" erkannt werden, aber den Adressbereich A000H-C000H nutzen.
+\par \pard \sl240\slmult0\widctlpar Open 386MAX erkennt automatisch VGA-Hardware. Diese Option ist fÅr Systeme zu verwenden, die nicht als "VGA" erkannt werden, aber den Adressbereich A000H-C000H nutzen.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Bei einem System ohne Standard-VGA weist die Bildschirmausgabe Stîrungen auf. FÅgen Sie in das MAX Profil die Option VGA ein.
 \par \pard \widctlpar 
@@ -1166,15 +1166,15 @@ tion verlagern Sie das VGA-BIOS in den Bereich ab F400H:
 \par \pard \widctlpar          Bildschirmspeichers an
 \par \pard \widctlpar  {\b Syntax:} VIDMEM=xxxx-yyyy, wobei xxxx-yyyy einen
 \par \pard \widctlpar          hexa-dezimalen Adre·bereich bezeichnet
-\par \pard \widctlpar {\b Vorgabe:} Qualitas MAX erkennt automatisch den
+\par \pard \widctlpar {\b Vorgabe:} Open 386MAX erkennt automatisch den
 \par \pard \widctlpar          entsprechenden Adre·bereich fast aller
 \par          Bildschirme
 \par 
-\par \pard \sl240\slmult0\widctlpar Diese Option gibt den fÅr Bildschirmadapter reservierten Adre·bereich an. Es hindert Qualitas MAX daran, diesen Speicherbereich zu nutzen.
+\par \pard \sl240\slmult0\widctlpar Diese Option gibt den fÅr Bildschirmadapter reservierten Adre·bereich an. Es hindert Open 386MAX daran, diesen Speicherbereich zu nutzen.
 \par \pard \sl240\slmult0\widctlpar 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX kann den LoDOS-Speicherbereich bis zum Beginn des Bildschirmspeichers erweitern. FÅr CGA und Monochrom-Systeme ist eine Erweiterung des LoDOS-Speichers bis Åber 640 KB hinaus mîglich.
+\par \pard \sl240\slmult0\widctlpar Open 386MAX kann den LoDOS-Speicherbereich bis zum Beginn des Bildschirmspeichers erweitern. FÅr CGA und Monochrom-Systeme ist eine Erweiterung des LoDOS-Speichers bis Åber 640 KB hinaus mîglich.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX erkennt die Bildschirmadapter der folgenden Liste. Die zweite Spalte zeigt entsprechende Adressbereiche fÅ
+\par \pard \sl240\slmult0\widctlpar Open 386MAX erkennt die Bildschirmadapter der folgenden Liste. Die zweite Spalte zeigt entsprechende Adressbereiche fÅ
 r jeden Adapter. Die dritte Spalte gibt an, welcher Betrag des LoDOS-Speichers (in Kilobyte) mit der VIDMEM Option gewonnen werden kann:
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b  Adapter VIDMEM=    Gewinn}
@@ -1186,8 +1186,8 @@ r jeden Adapter. Die dritte Spalte gibt an, welcher Betrag des LoDOS-Speichers (
 \par \pard \sl240\slmult0\widctlpar Es gibt jedoch einige Bildschirmadapter, welche die oben gezeigten Adressbereiche nicht vollstÑndig nutzen. Entnehmen Sie aus der Adapter-Dokumentation den korrekten Adressbereich und fÅ
 gen Sie diesen in die VIDMEM Option ein.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Ein hochauflîsendes Monochrom-System nutzt normalerweise die Adressen im Bereich von B000-C000. Sie erhalten jedoch Systemstîrungen, wenn Qualitas MAX den LoDOS-Speicher auf 704 KB auffÅllt. FÅ
-gen Sie deshalb in die Qualitas MAX Profildatei folgende VIDMEM Option ein. Diese Option verhindert, da· Qualitas MAX diese Adressregion mit Speicher "auffÅllt".
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Ein hochauflîsendes Monochrom-System nutzt normalerweise die Adressen im Bereich von B000-C000. Sie erhalten jedoch Systemstîrungen, wenn Open 386MAX den LoDOS-Speicher auf 704 KB auffÅllt. FÅ
+gen Sie deshalb in die Open 386MAX Profildatei folgende VIDMEM Option ein. Diese Option verhindert, da· Open 386MAX diese Adressregion mit Speicher "auffÅllt".
 \par \pard \widctlpar 
 \par  VIDMEM=A000-C000
 \par 
@@ -1198,14 +1198,14 @@ gen Sie deshalb in die Qualitas MAX Profildatei folgende VIDMEM Option ein. Dies
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b   Zweck:} Gibt die Position der VXD-Datei an
 \par  {\b Syntax:} VXD=laufwerk:\\pfad\\386MAX.VXD
-\par {\b Vorgabe:} Qualitas MAX sucht im Qualitas MAX
+\par {\b Vorgabe:} Open 386MAX sucht im Open 386MAX
 \par \pard \widctlpar          Verzeichnis nach 386MAX.VXD
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Diese Option gibt die Position der VXD-Datei in Ihrem System an. Sie ist fÅr die Windows 3 UnterstÅ
-tzung erforderlich. Die VXD Option ist hilfreich, wenn Qualitas MAX auf einer sogenannten "Diskless-Workstation" (Computer ohne Festplatte) ablÑuft.
+tzung erforderlich. Die VXD Option ist hilfreich, wenn Open 386MAX auf einer sogenannten "Diskless-Workstation" (Computer ohne Festplatte) ablÑuft.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Eine Diskless-Workstation startet vom Netz-Server mit einem Boot-Image. Nach dem Systemstart sind diese Boot-Dateien nicht mehr verfÅ
-gbar. Die Qualitas MAX Dateien sind im Netz auf dem Server, Verzeichnis G:\\MAX, gespeichert. FÅgen Sie der Qualitas MAX Profildatei folgende Zeile hinzu:
+gbar. Die Open 386MAX Dateien sind im Netz auf dem Server, Verzeichnis G:\\MAX, gespeichert. FÅgen Sie der Open 386MAX Profildatei folgende Zeile hinzu:
 \par \pard \widctlpar 
 \par  VXD=G:\\MAX\\386MAX.VXD
 \par 
@@ -1221,13 +1221,13 @@ gbar. Die Qualitas MAX Dateien sind im Netz auf dem Server, Verzeichnis G:\\MAX,
 \par \pard \widctlpar          UnterstÅtzung fÅr den Weitek 1167
 \par          Koprozessor
 \par 
-\par \pard \sl240\slmult0\widctlpar Qualitas MAX untersucht einzelne Programmroutinen des System BIOS nach einem Weitek Koprozessor. Mit einigen Systemen kann es jedoch vorkommen, da· das System BIOS diese Weitek Informationen nicht korrekt weitergibt.
- Setzen Sie deshalb die Option WEITEK=FORCE um Qualitas MAX mitzuteilen, da· Ihr System Åber diesen Koprozessor verfÅgt.
+\par \pard \sl240\slmult0\widctlpar Open 386MAX untersucht einzelne Programmroutinen des System BIOS nach einem Weitek Koprozessor. Mit einigen Systemen kann es jedoch vorkommen, da· das System BIOS diese Weitek Informationen nicht korrekt weitergibt.
+ Setzen Sie deshalb die Option WEITEK=FORCE um Open 386MAX mitzuteilen, da· Ihr System Åber diesen Koprozessor verfÅgt.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Mit der Option WEITEK=FORCE im Qualitas MAX Profil sind die Optionen WEITEK=ON und WEITEK=OFF verfÅgbar, um die Weitek UnterstÅtzung ein- oder auszuschalten. Dabei kînnen Sie entweder Å
+\par \pard \sl240\slmult0\widctlpar Mit der Option WEITEK=FORCE im Open 386MAX Profil sind die Optionen WEITEK=ON und WEITEK=OFF verfÅgbar, um die Weitek UnterstÅtzung ein- oder auszuschalten. Dabei kînnen Sie entweder Å
 ber das MAX Profil vorgehen oder Åber die DOS-Befehlszeile.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Ihr Programm erkennt den Weitek Koprozessor nicht. Nehmen Sie in das Qualitas MAX Profil folgende Option auf:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Ihr Programm erkennt den Weitek Koprozessor nicht. Nehmen Sie in das Open 386MAX Profil folgende Option auf:
 \par \pard \widctlpar 
 \par  WEITEK=FORCE
 \par 
@@ -1243,9 +1243,9 @@ ber das MAX Profil vorgehen oder Åber die DOS-Befehlszeile.
 \par \pard \widctlpar          XBDA und r die Programm-Region angibt
 \par \pard \widctlpar {\b Vorgabe:} Von Maximize ermittelt
 \par \pard \widctlpar 
-\par \pard \widctlpar Qualitas MAX verlagert die eXtended BIOS Data Area, die normalerweise am oberen Ende des LoDOS liegt, in den HiDOS Speicher. Grî·e und Region der XBDA wird von Maximize ermittelt.
+\par \pard \widctlpar Open 386MAX verlagert die eXtended BIOS Data Area, die normalerweise am oberen Ende des LoDOS liegt, in den HiDOS Speicher. Grî·e und Region der XBDA wird von Maximize ermittelt.
 \par \pard \widctlpar  
-\par \pard \widctlpar {\b Beispiel:} Zum Laden der XBDA in Region 2 fÅgen Sie in der Qualitas MAX Profildatei die Option XBDAREG=2 hinzu.
+\par \pard \widctlpar {\b Beispiel:} Zum Laden der XBDA in Region 2 fÅgen Sie in der Open 386MAX Profildatei die Option XBDAREG=2 hinzu.
 \par \pard \widctlpar 
 \par \pard \widctlpar {\b Vergleichen Sie:} PRGREG=, HPDAREG=, STACKREG=
 \par \pard \widctlpar 
@@ -1257,12 +1257,12 @@ ber das MAX Profil vorgehen oder Åber die DOS-Befehlszeile.
 \par \pard \widctlpar  {\b Syntax:} XBIOSHI
 \par {\b Vorgabe:} BehÑlt den XBIOS-Bereich im LoDOS
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar Diese Option fordert Qualitas MAX auf, die Extended BIOS Data Area (XBIOS) vom LoDOS-Speich
-er in den HiDOS-Speicher zu verlagern. In der Regel plaziert Qualitas MAX das XBIOS in einer niedrigen Adresse im konventionellen Speicher (LoDOS). Das XBIOS beansprucht etwa 1 KB Speicher. Mit der Option XBIOSHI wird das XBIOS in den HiDOS-Speicher, zus
-Ñtzlich zum Qualitas MAX Einheiten-Treiber, aufgenommen.
+\par \pard \sl240\slmult0\widctlpar Diese Option fordert Open 386MAX auf, die Extended BIOS Data Area (XBIOS) vom LoDOS-Speich
+er in den HiDOS-Speicher zu verlagern. In der Regel plaziert Open 386MAX das XBIOS in einer niedrigen Adresse im konventionellen Speicher (LoDOS). Das XBIOS beansprucht etwa 1 KB Speicher. Mit der Option XBIOSHI wird das XBIOS in den HiDOS-Speicher, zus
+Ñtzlich zum Open 386MAX Einheiten-Treiber, aufgenommen.
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Um ein zusÑtzliches Kilobyte LoDOS-
-\par \pard \sl240\slmult0\widctlpar Speicher auf einem XBIOS System zu gewinnen, fÅgen Sie in die Qualitas MAX Profildatei die Option XBIOSHI ein:
+\par \pard \sl240\slmult0\widctlpar Speicher auf einem XBIOS System zu gewinnen, fÅgen Sie in die Open 386MAX Profildatei die Option XBIOSHI ein:
 \par \pard \widctlpar 
 \par  XBIOSHI
 \par 
@@ -1278,7 +1278,7 @@ er in den HiDOS-Speicher zu verlagern. In der Regel plaziert Qualitas MAX das XB
 \par \pard \widctlpar 
 \par \pard \sl240\slmult0\widctlpar Diese Option Ñndert die Zahl der verfÅgbaren XMS-Handles (Einheitennummern), ausgehend von der Vorgabe XMSHNDL=32. Jede Einheitennummer nutzt 6 Byte Extended Memory.
 \par \pard \widctlpar 
-\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Ein Programm benîtigt 512 XMS-Handles. Nehmen Sie in die Qualitas MAX Profildatei folgende Option auf:
+\par \pard \sl240\slmult0\widctlpar {\b Beispiel: }Ein Programm benîtigt 512 XMS-Handles. Nehmen Sie in die Open 386MAX Profildatei folgende Option auf:
 \par \pard \widctlpar 
 \par  XMSHNDL=512
 \par 

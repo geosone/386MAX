@@ -174,47 +174,56 @@ DriveType( char drive ) {
 
 	// First try IOCTL to determine if fixed
 	int IsFixed, nRes = DTYPE_INVAL;
+	int nExit;	// set by the _asm blocks: go to DRIVETYPE_EXIT
+				// (OpenWatcom's _asm can't jump to C labels)
 
 	// Convert to A=1, etc. (@ = 0 = default drive)
 	drive = toupper( drive ) - 'A' + 1;
 
+	nExit = 1;
 	_asm {
 
 		mov	bl,drive;	// Get drive number
 		mov	ax,0x4408;	// IOCTL - Is drive fixed?
 		int	0x21;		// CF=0 if valid, AX=1 if fixed
-		jc	DRIVETYPE_EXIT; // Jump if not valid
+		jc	EXIT1;		// Jump if not valid
 
 		mov	IsFixed,ax;	// Save flag
-
+		mov	nExit,0;
+	EXIT1:
 	}
+	if (nExit) goto DRIVETYPE_EXIT;
 
 	// If not fixed, see if it's a CD-ROM
 	if (!IsFixed) {
 
 		nRes = DTYPE_FLOPPY;
 
+		nExit = 1;
 		_asm {
 			mov	ax,0x1500;	// Check for CD-ROM drive letters
 			sub	bx,bx;
 			int	0x2f;		// Return CX=start (A=0), BX=total number of drives
 
 			or	bx,bx;		// Any CD-ROM drives?
-			jz	DRIVETYPE_EXIT; // Jump if not
+			jz	EXIT2;		// Jump if not
 
 			or	ch,ch;		// Is the starting letter valid?
-			jnz	DRIVETYPE_EXIT; // Jump if not
+			jnz	EXIT2;		// Jump if not
 
 			inc	cx;			// Convert to origin:1
 
 			cmp	cl,drive;	// Does it start past this drive?
-			ja	DRIVETYPE_EXIT; // Jump if so
+			ja	EXIT2;		// Jump if so
 
 			add	cx,bx;		// Get last drive + 1
 			cmp	cl,drive;	// Does it end before this drive?
-			jbe	DRIVETYPE_EXIT; // Jump if so
+			jbe	EXIT2;		// Jump if so
 
+			mov	nExit,0;
+		EXIT2:
 		}
+		if (nExit) goto DRIVETYPE_EXIT;
 
 		return DTYPE_CDROM;
 
@@ -224,15 +233,18 @@ DriveType( char drive ) {
 	nRes = DTYPE_INVAL;
 	WORD wBits;
 
+	nExit = 1;
 	_asm {
 		mov	bl,drive;	// Get drive number
 		mov	ax,0x4409;	// IOCTL - Get device bits
 		int	0x21;		// CF=0 if valid, DX=bits
-		jc	DRIVETYPE_EXIT; // Jump if failed (???)
+		jc	EXIT3;		// Jump if failed (???)
 
 		mov	wBits,dx;	// Save bits for inspection
-
+		mov	nExit,0;
+	EXIT3:
 	}
+	if (nExit) goto DRIVETYPE_EXIT;
 
 	// This is used as a jump target by inline _asm code and needs
 	// to be here so it's not out of range.

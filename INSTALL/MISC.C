@@ -437,7 +437,7 @@ void	 exec_maximize (char *optlist)
 {
  char	mwork1[MAXPATH+1];
  char	*arglst[] = {
-	mwork1, 	// 0: drive:\path\filename.exe
+	NULL,		// 0: drive:\path\filename.exe (mwork1)
 	"/d:",          // 1: drive
 	"/C",           // 2: color switch (default to color)
 	NULL,		// 3: Space for /V or /Z
@@ -450,6 +450,7 @@ void	 exec_maximize (char *optlist)
 	};
 int	argptr=3;
 
+	 arglst[0] = mwork1;	// (OpenWatcom: no auto address in initializer)
 // Capture just the startup drive letter in a string
 	 arglst[1][1] = boot_drive;
 
@@ -859,23 +860,23 @@ DWORD check_altfiles (char *fmt, char *arg1, char *arg2,
 DWORD CopyMax2Size;
 DWORD check_altpath (BOOL docopy)
 {
- char	*Altfmt1 = "%s%s";
+ static char Altfmt1[] = "%s%s";	// static: constant address (OpenWatcom)
 #if REDUIT
- char	bcftext[5];
+ static char bcftext[5];
 #endif
  char	fdrive[_MAX_DRIVE],
 	fdir[_MAX_DIR],
 	fname[_MAX_FNAME],
 	fext[_MAX_EXT];
  char *Altfmts[][2] = {
-	{Altfmt1, OEM_FileName},	// 386max.sys
+	{Altfmt1, NULL},		// 386max.sys (OEM_FileName, set below)
 	{Altfmt1, MAX_XLAT},		// XLAT.COM
 #if REDUIT
 	{"%s@%s.BCF", bcftext},         // @xxxx.BCF
 #endif
-	{"%s%s.VXD", OEM_ProdFile},     // 386MAX.VXD
-	{"%s%s.SYS", OEM_LoadBase},     // 386LOAD.SYS
-	{"%s%s.CFG", OEM_LoadBase},     // 386LOAD.CFG
+	{"%s%s.VXD", NULL},             // 386MAX.VXD (OEM_ProdFile)
+	{"%s%s.SYS", NULL},             // 386LOAD.SYS (OEM_LoadBase)
+	{"%s%s.CFG", NULL},             // 386LOAD.CFG (OEM_LoadBase)
 	{Altfmt1, QCACHE_WIN},		// QCACHE.WIN
 	{"%s%s", MAX_HARPO_EXE},        // EXTRADOS.MAX
 	{"%s%s.PRO", "*"},              // *.PRO (386SWAT, EXTRADOS)
@@ -885,6 +886,17 @@ DWORD check_altpath (BOOL docopy)
 
  int i;
  DWORD fsize = 0L;
+
+ // OpenWatcom: no variables in the initializer above
+ i = 0;
+ Altfmts[i][1] = OEM_FileName;
+ i += 2;
+#if REDUIT
+ i++;
+#endif
+ Altfmts[i++][1] = OEM_ProdFile;
+ Altfmts[i++][1] = OEM_LoadBase;
+ Altfmts[i][1] = OEM_LoadBase;
 
  CopyMax2Size = 0L;
 

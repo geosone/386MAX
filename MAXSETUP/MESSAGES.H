@@ -25,8 +25,8 @@
 // German
 //------------------------------------------------------------------
 #ifdef LANG_GR
-EXTERN LPSTR szMsg_Group     DEFVAL( "Setup konnte die Gruppe Qualitas MAX nicht aktivieren.");
-EXTERN LPSTR szMsg_Init      DEFVAL( "Setup kann die Gruppe Qualitas MAX nicht einrichten. Mˆglicherweise sind zu viele Programmgruppen vorhanden. Reduzieren Sie die Anzahl Programmgruppen und starten Sie Setup erneut.");
+EXTERN LPSTR szMsg_Group     DEFVAL( "Setup konnte die Gruppe Open 386MAX nicht aktivieren.");
+EXTERN LPSTR szMsg_Init      DEFVAL( "Setup kann die Gruppe Open 386MAX nicht einrichten. Mˆglicherweise sind zu viele Programmgruppen vorhanden. Reduzieren Sie die Anzahl Programmgruppen und starten Sie Setup erneut.");
 EXTERN LPSTR szMsg_InitTitle DEFVAL( "Initialisierung der MAX Gruppe");
 
 EXTERN LPSTR szMsg_DMFull    DEFVAL( "DOSMAX Vollbild" );
@@ -38,6 +38,7 @@ EXTERN LPSTR szMsg_Deleted  DEFVAL( "Lˆsch" );
 
 EXTERN LPSTR szMsg_Sernum   DEFVAL( "Seriennr.:" );
 EXTERN LPSTR szMsg_License  DEFVAL( "Lizenz fÅr" );
+EXTERN LPSTR szMsg_NoLicense DEFVAL( "Die Datei LICENSE.TXT fehlt auf der Installationsdiskette.\r\n\r\nOpen 386MAX steht unter der GNU General Public License Version 3, siehe https://www.gnu.org/licenses/gpl-3.0.html" );
 
 EXTERN LPSTR szMsg_SFFail      DEFVAL( "Setup kann Windows nicht beenden.\nSchlieﬂen Sie alle Anwendungen und starten Sie den Vorgang erneut." ); 
 EXTERN LPSTR szMsg_SFFailTitle DEFVAL( "Systemabschluﬂ fehlgeschlagen" );
@@ -80,7 +81,7 @@ EXTERN LPSTR szMsg_TheDir  DEFVAL( "Das Verzeichnis");
 EXTERN LPSTR szMsg_NoXst   DEFVAL( "ist nicht vorhanden - mˆchten Sie dieses anlegen?");
 
 EXTERN LPSTR szMsg_NoSpc   DEFVAL( "Nicht gen¸gend freier Plattenspeicher" );
-EXTERN LPSTR szMsg_NS      DEFVAL( "Auf dem angegebenen Laufwerk ist nicht gen¸gend Platz frei, um Qualitas MAX 8.0 zu installieren.");
+EXTERN LPSTR szMsg_NS      DEFVAL( "Auf dem angegebenen Laufwerk ist nicht gen¸gend Platz frei, um Open 386MAX zu installieren.");
 
 EXTERN LPSTR szMsg_Xtr     DEFVAL( "Extrahiere");
 EXTERN LPSTR szMsg_Copy    DEFVAL( "Kopiere");
@@ -96,7 +97,7 @@ EXTERN LPSTR szFmt_Rest    DEFVAL( "Stelle das Verzeichnis %s wieder her - bitte
     // these are the WinHelp keys.
     // they MUST match the topics in the Help File.
 EXTERN LPSTR szHKEY_SrcDir  DEFVAL( "Quellen-Verzeichnis" );
-EXTERN LPSTR szHKEY_Welcome DEFVAL( "Willkommen bei Qualitas MAX 8" );
+EXTERN LPSTR szHKEY_Welcome DEFVAL( "Willkommen bei Open 386MAX" );
 EXTERN LPSTR szHKEY_RegInf  DEFVAL( "Registrierungs-Information" );
 EXTERN LPSTR szHKEY_RegConf DEFVAL( "Registrierungs-Best‰tigung" );
 EXTERN LPSTR szHKEY_Up      DEFVAL( "Update" );
@@ -106,7 +107,7 @@ EXTERN LPSTR szHKEY_FMod    DEFVAL( "Datei-ƒnderungen" );
 EXTERN LPSTR szHKEY_MaxNow  DEFVAL( "Mˆchten Sie jetzt Maximize starten?" );
 EXTERN LPSTR szHKEY_Reboot  DEFVAL( "Mˆchten Sie den Computer jetzt neu starten?" );
 EXTERN LPSTR szHKEY_Restart DEFVAL( "Mˆchten Sie den Computer jetzt neu starten?" );
-EXTERN LPSTR szHKEY_Config  DEFVAL( "Qualitas MAX Einstellungen" );
+EXTERN LPSTR szHKEY_Config  DEFVAL( "Open 386MAX Einstellungen" );
 EXTERN LPSTR szHKEY_RefDir  DEFVAL( "Referenzdiskette einlegen" );
 
 	/* bcffnd_txt */
@@ -152,8 +153,8 @@ EXTERN LPSTR szFmt_IDScan DEFVAL( "%*cSeriennr.:  %s Lizenz fÅr %[^-\r\n] - %[^\
 //------------------------------------------------------------------
 // English
 //------------------------------------------------------------------
-EXTERN LPSTR szMsg_Group     DEFVAL( "Setup was unable to activate the Qualitas MAX group.");
-EXTERN LPSTR szMsg_Init      DEFVAL( "Setup is unable to initialize the Qualitas MAX group. You may have too many groups on your desktop. Please decrease the number of groups on your desktop and re-run Setup.");
+EXTERN LPSTR szMsg_Group     DEFVAL( "Setup was unable to activate the Open 386MAX group.");
+EXTERN LPSTR szMsg_Init      DEFVAL( "Setup is unable to initialize the Open 386MAX group. You may have too many groups on your desktop. Please decrease the number of groups on your desktop and re-run Setup.");
 EXTERN LPSTR szMsg_InitTitle DEFVAL( "MAX Group Initialization");
 
 EXTERN LPSTR szMsg_DMFull    DEFVAL( "DOSMAX Fullscreen" );
@@ -165,6 +166,7 @@ EXTERN LPSTR szMsg_Deleted  DEFVAL( "Deleted" );
 
 EXTERN LPSTR szMsg_Sernum   DEFVAL( "Serial #" );
 EXTERN LPSTR szMsg_License  DEFVAL( "Licensed to" );
+EXTERN LPSTR szMsg_NoLicense DEFVAL( "LICENSE.TXT is missing on the installation disk.\r\n\r\nOpen 386MAX is licensed under the GNU General Public License version 3, see https://www.gnu.org/licenses/gpl-3.0.html" );
 
 EXTERN LPSTR szMsg_SFFail      DEFVAL( "Setup cannot exit Windows.\nClose all apps and try again." ); 
 EXTERN LPSTR szMsg_SFFailTitle DEFVAL( "Shutdown Failed" );
@@ -207,7 +209,7 @@ EXTERN LPSTR szMsg_TheDir  DEFVAL( "The directory");
 EXTERN LPSTR szMsg_NoXst   DEFVAL( "does not exist - do you want to create it?");
 
 EXTERN LPSTR szMsg_NoSpc   DEFVAL( "Insufficient disk space" );
-EXTERN LPSTR szMsg_NS      DEFVAL( "The specified drive does not have enough free space to install Qualitas MAX 8.0.");
+EXTERN LPSTR szMsg_NS      DEFVAL( "The specified drive does not have enough free space to install Open 386MAX.");
 
 EXTERN LPSTR szMsg_Xtr     DEFVAL( "Extracting");
 EXTERN LPSTR szMsg_Copy    DEFVAL( "Copying");
@@ -223,7 +225,7 @@ EXTERN LPSTR szFmt_Rest    DEFVAL( "Restoring the %s directory - please wait ...
     // these are the WinHelp keys.
     // they MUST match the topics in the Help File.
 EXTERN LPSTR szHKEY_SrcDir  DEFVAL( "Source directory" );
-EXTERN LPSTR szHKEY_Welcome DEFVAL( "Welcome to Qualitas MAX 8" );
+EXTERN LPSTR szHKEY_Welcome DEFVAL( "Welcome to Open 386MAX" );
 EXTERN LPSTR szHKEY_RegInf  DEFVAL( "Registration information" );
 EXTERN LPSTR szHKEY_RegConf DEFVAL( "Registration confirmation" );
 EXTERN LPSTR szHKEY_Up      DEFVAL( "Update" );
@@ -233,7 +235,7 @@ EXTERN LPSTR szHKEY_FMod    DEFVAL( "File modifications" );
 EXTERN LPSTR szHKEY_MaxNow  DEFVAL( "Would you like to run Maximize now?" );
 EXTERN LPSTR szHKEY_Reboot  DEFVAL( "Would you like to reboot now?" );
 EXTERN LPSTR szHKEY_Restart DEFVAL( "Would you like to restart now?" );
-EXTERN LPSTR szHKEY_Config  DEFVAL( "Configuring Qualitas MAX" );
+EXTERN LPSTR szHKEY_Config  DEFVAL( "Configuring Open 386MAX" );
 EXTERN LPSTR szHKEY_RefDir  DEFVAL( "Insert Reference Disk" );
 
     /* bcffnd_txt */

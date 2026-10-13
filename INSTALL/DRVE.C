@@ -128,6 +128,7 @@ void backup_file (char *fname)
 // chkabort().
 void chkescape (void)
 {
+ int	abort = 0;	// (OpenWatcom: no jumps from _asm to C labels)
 
  _asm {
 
@@ -145,14 +146,14 @@ void chkescape (void)
  jne	chkesc_exit	// Leave it in the buffer and skip out if not
 
 CALL_CHKABORT:
+ mov	abort,1
+chkesc_exit:
  }
 
- chkabort();		// Confirm that user REALLY wants to abort
+ if (abort)
+  chkabort();		// Confirm that user REALLY wants to abort
 			// Note that chkabort() is a one-way street if they
 			// DO choose to abort...
-
-chkesc_exit:
- ;
 
 } // chkescape ()
 #pragma optimize("",on)
@@ -348,7 +349,7 @@ unsigned far pascal Explode_In (char far *buff, unsigned short far *size)
 	bytesread = (unsigned int) arcbytes;
  arcbytes -= (long) bytesread;
  if (bytesread)
-  arcCRC = crc32 (buff, &bytesread, &arcCRC);
+  arcCRC = crc32 (buff, (unsigned short far *) &bytesread, &arcCRC);
 
  return (bytesread);
 } // Explode_In ()

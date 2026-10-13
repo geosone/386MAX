@@ -1388,16 +1388,16 @@ static void RemoveMaxStuff(void)
 	if (bRemoveINIFile)
 		remove( szIniName );
 
-	// remove the Qualitas MAX group from Program Manager
+	// remove the Open 386MAX group from Program Manager
 	if (bRemoveMaxGroup)
-		pmDeleteGroup( "Qualitas MAX" );
+		pmDeleteGroup( "Open 386MAX" );
 
 	if (bRemoveMaxFiles) {
 
         uError = SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 		SetBusy();
 		hModeless = CreateDialog(ghInstance, MAKEINTRESOURCE(MODELESSDLGBOX), HWND_DESKTOP, ModelessDlgProc);
-		SetDlgItemText( hModeless, 100, "Removing Qualitas MAX program files - please wait ..." );
+		SetDlgItemText( hModeless, 100, "Removing Open 386MAX program files - please wait ..." );
 
 		// FIXME - shut down Go Ahead / MAXmeter if they're running
 		if ((hWnd = FindWindow( "MaxMeterWClass", NULL)) != 0)
@@ -1720,15 +1720,12 @@ LRESULT CALLBACK _export SubdialogCallback(HWND hDlg, int DialogID, UINT uMsg, W
 
 BOOL __export CALLBACK AboutDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	char szBuffer[256], szName[64], szCompany[64], szSerial[32];
+	char szBuffer[256];
 
 	switch (message) {
 	case WM_INITDIALOG:
-		// get name & company from QMAX.INI
-		GetPrivateProfileString( "Registration", "Name", "", szName, sizeof(szName), szIniName );
-		GetPrivateProfileString( "Registration", "Company", "", szCompany, sizeof(szCompany), szIniName );
-		GetPrivateProfileString( "Registration", "S/N", "", szSerial, sizeof(szSerial), szIniName );
-		wsprintf( szBuffer, "%s\r\n%s\r\nS/N  %s", (char _far *)szName, (char _far *)szCompany, (char _far *)szSerial );
+		// Open 386MAX (GPL): no registration, show the license
+		lstrcpy( szBuffer, "GNU General Public License version 3" );
 		SetDlgItemText( hDlg, 102, szBuffer );
 		return TRUE;
 

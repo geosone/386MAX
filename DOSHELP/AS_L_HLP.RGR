@@ -27,7 +27,7 @@
 \par }\pard \fi-288\li288\ri-2700 
 \par \pard {\fs28\cf6 >>H.L_Abt_Q
 \par }@P H.Products H.Tuning
-\par                    {\i Qualitas Produkt-Information}
+\par                    {\i Open 386MAX Produkt-Information}
 \par 
 \par Qualitas bietet {\b Memory Management Software} f\'81r die Optimierung und Leistungssteigerung Ihres Systems. Diese Produkte laufen auf:
 \par 
@@ -46,7 +46,7 @@ erste" aus Ihrem Computer herauszuholen. Folgende Abschnitte beschreiben #RECPRO
 \par }@P H.Products H.Tuning
 \par {\b Qualit}{\b as MAX}
 \par 
-\par Qualitas MAX ist ein Memory Management-Programm f\'81r {\b 80386, 80486 und Pentium} Computer, das ...
+\par Open 386MAX ist ein Memory Management-Programm f\'81r {\b 80386, 80486 und Pentium} Computer, das ...
 \par 
 \par   * Pop-Up Utilities, Netzwerk-Treiber und andere speicherresidente
 \par     Programme aus dem konventionellen Speicher in ungenutzte
@@ -90,7 +90,7 @@ erste" aus Ihrem Computer herauszuholen. Folgende Abschnitte beschreiben #RECPRO
 \par }@P H.Products H.Tuning
 \par {\b 80286 Support}
 \par 
-\par Qualitas MAX und BlueMAX bieten Unterst\'81tzung f\'81r {\b 80286} Computer, die mit einem NEAT CHIPSet ausgestattet sind. Zudem unterst\'81tzen sie jeden Computer mit einer EMS 4.0 Hardware-Speicherkarte; diese mu\'e1
+\par Open 386MAX und BlueMAX bieten Unterst\'81tzung f\'81r {\b 80286} Computer, die mit einem NEAT CHIPSet ausgestattet sind. Zudem unterst\'81tzen sie jeden Computer mit einer EMS 4.0 Hardware-Speicherkarte; diese mu\'e1
  hardwareseitig dem EMS 4.0 Standard in vollen Umfang entsprechen.
 \par 
 \par Die 80286 Unterst\'81tzung ...
@@ -115,7 +115,7 @@ ge. Folgen Sie stets den speziellen Empfehlungen Ihres Software- oder Hardware-L
 \par 
 \par Dieses System l\'84dt momentan speicherresidente Programme und/oder Einheiten-Treiber in den LoDOS-Speicher.
 \par 
-\par Ein Qualitas Produkt f\'81r das Memory Management ist in der Lage, einige bzw. alle dieser Programme in den HiDOS-Speicher zu laden. Durch die Verlagerung der Programme k\rdblquote nnten Sie m\rdblquote glicherweise bis zu {\b #TSR# KB }
+\par Ein Open 386MAX Produkt f\'81r das Memory Management ist in der Lage, einige bzw. alle dieser Programme in den HiDOS-Speicher zu laden. Durch die Verlagerung der Programme k\rdblquote nnten Sie m\rdblquote glicherweise bis zu {\b #TSR# KB }
 konventionellen Speicher gewinnen. Dies ist von folgenden Faktoren abh\'84ngig:
 \par 
 \par   * Hardware-Bustyp
@@ -134,7 +134,7 @@ konventionellen Speicher gewinnen. Dies ist von folgenden Faktoren abh\'84ngig:
 \par Einige DOS-Versionen vor DOS 3.30 k\rdblquote nnen m\rdblquote glicherweise nicht mit den Anwendungsprogrammen neueren Datums kooperieren. Insbesondere unterst\'81tzen die Versionen vor DOS 3.10 keine Netzwerke.
 \par 
 \par DOS 3.30 ist die \'84lteste heute noch {\b empfohlene} DOS-Version. DOS 4.x verf\'81gt \'81ber einige Funktionen, die Sie m\rdblquote glicherweise nicht nutzen k\rdblquote nnen, die aber LoDOS-Speicher beanspruchen. DOS 5.x hat die begrenzte F\'84
-higkeit, Programme in den HiDOS-Speicher zu laden; es verf\'81gt jedoch nicht \'81ber die Funktion der Speicheranalyse und Speicher-Optimierung wie sie mit den Qualitas Produkten realisiert sind.
+higkeit, Programme in den HiDOS-Speicher zu laden; es verf\'81gt jedoch nicht \'81ber die Funktion der Speicheranalyse und Speicher-Optimierung wie sie mit den Open 386MAX Produkten realisiert sind.
 \par 
 \par {\fs28\cf6 >>H.L_Tun_FILLow
 \par }@P H.Products H.Tuning

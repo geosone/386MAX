@@ -12,7 +12,7 @@
 #include <io.h>
 
 extern "C"
-Access( LPCSTR lpPath, int nMode ) {
+int Access( LPCSTR lpPath, int nMode ) {
 
 	if (!nMode) {
 

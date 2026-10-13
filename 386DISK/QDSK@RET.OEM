@@ -10,6 +10,6 @@
 @OEM_IOCTL	 equ <'386MAX'>         ; IOCTL name for 386MAX
 @OEM_MAX	 equ <'386MAX'>         ; File name for 386MAX
 @OEM_DISK	 equ <'386DISK'>        ; File name for 386DISK
-@OEM_PTEXT	 equ <'Qualitas MAX'>   ; Text name for Qualitas MAX
+@OEM_PTEXT	 equ <'Open 386MAX'>    ; Text name for Open 386MAX
 
 

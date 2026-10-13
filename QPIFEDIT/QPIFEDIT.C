@@ -2960,15 +2960,12 @@ VOID MenuHelpAbout(VOID)		/* Help.About */
 
 BOOL CALLBACK _export ABOUTMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	char szBuffer[512], szName[64], szCompany[64], szSerial[32];
+	char szBuffer[512];
 
 	switch (msg) {
 	case WM_INITDIALOG:
-		// get name & company from QMAX.INI
-		GetPrivateProfileString( "Registration", "Name", "", szName, sizeof (szName), szIniName );
-		GetPrivateProfileString( "Registration", "Company", "", szCompany, sizeof (szCompany), szIniName );
-		GetPrivateProfileString( "Registration", "S/N", "", szSerial, sizeof (szSerial), szIniName );
-		wsprintf( szBuffer, "%s\r\n%s\r\nS/N  %s", (char _far *)szName, (char _far *)szCompany, (char _far *)szSerial );
+		// Open 386MAX (GPL): no registration, show the license
+		lstrcpy( szBuffer, "GNU General Public License version 3" );
 		SetDlgItemText( hWnd, 102, szBuffer );
 		return TRUE;
 

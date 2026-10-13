@@ -947,13 +947,18 @@ void maxout (int errcode)
 
 	if (Pass > 1 || errcode == 0 || (Pass == 1 && !premaxim_exists)) {
 
-	 if (Pass == 1 && RecallString)
-		/* Reload QSHELL */
+	 if (Pass == 1 && RecallString) {
+		/* Reload QSHELL.  We may run on the stack of the assembler part
+		 * (abort), outside DGROUP: OpenWatcom's stack check of exec
+		 * would see an overflow */
+		extern unsigned _STACKLOW;
+		_STACKLOW = 0;
 		_execl(	RecallString,
 			RecallString,
 			"/Y0",
 			ScreenType == SCREEN_MONO ? "/B" : "/C",
 			NULL);
+	 }
 
 	 /* Let AUTOEXEC.BAT handle it */
 	 exit (errcode);	/* Fall through if _execl() fails as well */
@@ -1319,6 +1324,10 @@ void parse_maxcfg (void)
 
 #ifdef HARPO
   /* Check for DR DOS.	If active, turn on NOHARPO. */
+  /* (OpenWatcom: no jumps from _asm to C labels) */
+  {
+  int drdos = 0;
+
   _asm {
 	mov	 ah,0x30;	/* Get DOS version */
 	int	 0x21;		/* AH=minor, AL=major */
@@ -1326,13 +1335,13 @@ void parse_maxcfg (void)
 	je	 short DRDOS;	/* Maybe so... */
 
 	cmp	 ax,0x0006;	/* Izit Novell DOS 7? */
-	jne	 short NOT_DRDOS; /* Jump if not */
+	jne	 short NOTDR; /* Jump if not */
 
 DRDOS:
 	mov	 ax,0x4452;	/* DR DOS detection call */
 	stc			/* CF=0 on return */
 	int	 0x21;		/* AX = DR DOS version code */
-	jc	 short NOT_DRDOS; /* Jump if call failed */
+	jc	 short NOTDR; /* Jump if call failed */
 
 	and	 ax,0xFFF0;	/* Get high order 12 bits */
 	cmp	 ax,0x1060;	/* Izit a DR DOS version? */
@@ -1340,17 +1349,20 @@ DRDOS:
 				/* 1063h	3.41 */
 				/* 1065h	5.0 */
 				/* 1066h	6.0 */
-	je	 short DRDOS2;	/* Jump if so
+	je	 short DRDOS2;	/* Jump if so */
 
 	cmp	 ax,0x1070;	/* Izit Novell DOS 7? */
-	jne	 short NOT_DRDOS; /* Jump if not DR DOS */
+	jne	 short NOTDR; /* Jump if not DR DOS */
 
 DRDOS2:
+	mov	 drdos,1;
+NOTDR:
   }
-  maxcfg.noharpo = 1; /* Disable HARPO support */
-  maxcfg.drdos = 1;
-NOT_DRDOS:
-	;
+  if (drdos) {
+	maxcfg.noharpo = 1; /* Disable HARPO support */
+	maxcfg.drdos = 1;
+  }
+  }
 #endif /* ifdef HARPO */
 
 } /* parse_maxcfg () */

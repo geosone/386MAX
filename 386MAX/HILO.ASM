@@ -106,13 +106,13 @@ if @OEM_BETA
 endif				; IF @OEM_BETA
 ifdef LANG_GR
 	 db	 ' -- Ein Memory-Manager fÅr 386-Systeme',CR,LF
-	 db	 '   (C) Copyright 1987-95 Qualitas, Inc.'
-	 db	 '  Alle Rechte vorbehalten.',CR,LF
+	 db	 '   (C) Copyright 1987-95 Qualitas, Inc.',CR,LF
+	 db	 '   Open 386MAX-Mitwirkende 2022-2026, GNU General Public License Version 3.',CR,LF
 	 db	 EOS
 else
 	 db	 ' -- A Memory Manager for 386 Systems',CR,LF
-	 db	 '   (C) Copyright 1987-95 Qualitas, Inc.'
-	 db	 '  GNU General Public License version 3.',CR,LF
+	 db	 '   (C) Copyright 1987-95 Qualitas, Inc.',CR,LF
+	 db	 '   Open 386MAX contributors 2022-2026, GNU General Public License version 3.',CR,LF
 	 db	 EOS
 endif				; IFDEF LANG_GR
 

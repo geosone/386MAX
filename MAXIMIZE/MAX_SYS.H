@@ -34,7 +34,8 @@
 
 #if SYSTEM == MAX
 #define MAXSYS		"386MAX.SYS"
-#define PRODNAME	"Qualitas MAX"        /* PRODUCTNAME in VERSDATA.ASM */
+#define PRODNAME	"Open 386MAX"         /* PRODUCTNAME in VERSDATA.ASM */
+#define PROFNAME	"386MAX"              /* base name of a new profile */
 #endif
 
 #endif

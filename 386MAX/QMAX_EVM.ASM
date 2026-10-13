@@ -723,6 +723,23 @@ if @OEM_BCF
 endif				; IF @OEM_BCF
 
 if @OEM_DEBUG
+ifdef @CPD_SERIAL
+CPDSER_PM proc near		; Send AL to COM1 (debug builds)
+	 push	 dx		; Save for a moment
+	 push	 ax		; ...
+	 mov	 dx,03FDh	; COM1 line status register
+@@:
+	 in	 al,dx		; Get status
+	 test	 al,20h		; Transmit holding register empty?
+	 jz	 short @B	; Jump if not
+	 pop	 ax		; Restore character
+	 mov	 dx,03F8h	; COM1 data register
+	 out	 dx,al		; Send it
+	 pop	 dx		; Restore
+	 ret			; Return to caller
+CPDSER_PM endp
+endif
+
 	 NPPROC  DISP_CPDMSG_PM -- Display CPD Message From PM
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
@@ -759,6 +776,24 @@ DISPCPD_STR ends
 	 mov	 ax,DTE_SS	; Get PGROUP data selector at PL0
 	 mov	 ds,ax		; Address it
 	 assume  ds:PGROUP	; Tell the assembler about it
+ifdef @CPD_SERIAL
+	 push	 fs		; Show PTE for linear 7C000 (debug)
+	 mov	 ax,DTE_PDT
+	 mov	 fs,ax
+	 mov	 esi,1F0h
+	 mov	 ebx,fs:[esi]
+	 pop	 fs
+	 mov	 cx,8
+@@:
+	 rol	 ebx,4
+	 movzx	 eax,bl
+	 and	 al,0Fh
+	 mov	 al,HEXTABLE[eax]
+	 call	 CPDSER_PM
+	 loop	 @B
+	 mov	 al,' '
+	 call	 CPDSER_PM
+endif
 
 ; Check for display buffer:  mono or color
 
@@ -801,12 +836,18 @@ DISP_CPDMSG_PM_NEXT:
 	 cmp	 al,-1		; Izit time to pause?
 	 je	 near ptr DISP_CPDMSG_PM_PAUSE ; Jump if so
 DISP_CPDMSG_PM_SAVE:
+ifdef @CPD_SERIAL
+	 call	 CPDSER_PM	; Copy AL to COM1
+endif
 	 mov	 ah,07h 	; Use white on black attribute
 S32	 stos	 AGROUP:[edi].ELO ; Save in screen
 
 	 jmp	 short DISP_CPDMSG_PM_NEXT ; Go around again
 
 DISP_CPDMSG_PM_LF:
+ifdef @CPD_SERIAL
+	 call	 CPDSER_PM	; Copy AL to COM1
+endif
 
 ; If we're at the last row, scroll the screen up by one row
 
@@ -845,6 +886,9 @@ DISP_CPDMSG_PM_NOSCROLL:
 	 cmp	 CPDCNT,@CPDCNT ; Izit time to pause?
 	 jb	 short DISP_CPDMSG_PM_NOPAUSE ; Jump if not
 DISP_CPDMSG_PM_PAUSE:
+ifdef @CPD_SERIAL
+	 jmp	 DISP_CPDMSG_PM_NOPAUSE ; No pauses (COM1)
+endif
 	 mov	 CPDCNT,0	; Reset for the next time
 
 	CPDPMNP 'Pausing, press any key to continue...'
@@ -877,6 +921,9 @@ DISP_CPDMSG_PM_NOPAUSE:
 	 jmp	 DISP_CPDMSG_PM_NEXT ; Go around again
 
 DISP_CPDMSG_PM_CR:
+ifdef @CPD_SERIAL
+	 call	 CPDSER_PM	; Copy AL to COM1
+endif
 	 call	 ROUND_SCRDN_PM ; Round EDI down to the last screen row
 
 	 jmp	 DISP_CPDMSG_PM_NEXT ; Go around again
@@ -1051,6 +1098,9 @@ DISP_CPDMSG_PM_COM:
 	 movzx	 eax,bl 	; Copy to format
 	 and	 al,@NIB0	; Isolate the nibble
 	 mov	 al,HEXTABLE[eax] ; Get the ASCII character
+ifdef @CPD_SERIAL
+	 call	 CPDSER_PM	; Copy AL to COM1
+endif
 	 mov	 ah,07h 	; Use white on black attribute
 S32	 stos	 AGROUP:[edi].ELO ; Save in screen
 

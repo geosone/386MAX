@@ -283,8 +283,10 @@ void qlogo(		/* Do qlogo, part 1 */
 		return;
 	}
 
-	/* Else:  ON */
-	set_vmode(ON, isvga);
+	/* Else:  ON.  VGA stays in its 400 line mode (not every VGA BIOS
+	 * switches to 350 lines, e.g. QEMU's): the 14 line characters are
+	 * loaded as 16 line ones below */
+	set_vmode(ON, 0);
 
 	if (callback) (*callback)();
 
@@ -304,11 +306,18 @@ void qlogo(		/* Do qlogo, part 1 */
 	/* allocate temporary space for the logo character redefinitions p2
 	   and for the character matrix to print */
 	if ((p1 = (char *)my_malloc(12 * 22))	 == NULL) goto done;
-	if ((p2 = (char *)my_malloc(nchars * 14))	 == NULL) goto done;
+	if ((p2 = (char *)my_malloc(nchars * (isvga ? 16 : 14))) == NULL) goto done;
 
 	/* _read in the character redefinitions and the print matrix */
 	if (( nothing = _read (fh,p1,12 * 22 )) != 12 * 22) goto done;
 	if (( nothing = _read (fh,p2, nchars * 14)) != nchars * 14) goto done;	  /* nchars1 * 14 */
+	if (isvga) {
+		/* 14 -> 16 lines: from the last character down (in place) */
+		int ch, ln;
+		for (ch = nchars - 1; ch >= 0; ch--)
+			for (ln = 15; ln >= 0; ln--)
+				p2[ch * 16 + ln] = p2[ch * 14 + ln * 14 / 16];
+	}
 
 	/* load up the altered character set */
 	wait_retrace();   /* wait until we are in retrace */
@@ -316,6 +325,10 @@ void qlogo(		/* Do qlogo, part 1 */
 	_asm {
 		mov ax, 1100H  /* Set function and subfunction number */
 		mov bx, 0E00H	/* set bytes per character and block (use 0E00H for ega */
+		cmp isvga, 0
+		je  bpc_ok
+		mov bh, 16	/* VGA: 16 lines */
+	bpc_ok:
 		mov cx, nchars /* redefine n characters */
 		mov dx, 127	/* starting at character 127 */
 		les si, fp2

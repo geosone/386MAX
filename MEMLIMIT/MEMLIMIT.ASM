@@ -1481,13 +1481,13 @@ endif				; IFDEF LANG_GR
 
 	public MSG_NOTPRES, MSG_SYNTAX, MSG_NOXMS, MSG_WIN1, MSG_WINDOWS_NFG
 ifdef LANG_GR
-MSG_NOTPRES db	'kann Qualitas MAX/BLUEMAX nicht finden.',CR,LF,EOS
+MSG_NOTPRES db	'kann Open 386MAX/BLUEMAX nicht finden.',CR,LF,EOS
 MSG_SYNTAX  db	'ungÅltige Option in der Befehlszeile.',CR,LF,EOS
 MSG_NOXMS   db	'XMS-Service nicht vorhanden.',CR,LF,EOS
 MSG_WIN1    db	'kein nicht-zugewiesener XMS-Speicher oberhalb 16 MB.',CR,LF,EOS
 MSG_WINDOWS_NFG db 'Kann MEMLIMIT nicht unter Windows im erweiterten Modus ausfÅhren',CR,LF,EOS
 else
-MSG_NOTPRES db	'Unable to find Qualitas MAX/BLUEMAX.',CR,LF,EOS
+MSG_NOTPRES db	'Unable to find Open 386MAX/BLUEMAX.',CR,LF,EOS
 MSG_SYNTAX  db	'Invalid command line option.',CR,LF,EOS
 MSG_NOXMS   db	'No XMS services available.',CR,LF,EOS
 MSG_WIN1    db	'No unallocated XMS memory above 16Mb.',CR,LF,EOS
@@ -1568,7 +1568,7 @@ endif
 	public MSG_HELP
 MSG_HELP    label byte
 ifdef LANG_GR
-	    db	'éndert Typ u. Grî·e des von Qualitas MAX/BlueMAX ermittelten verfÅgb. Speichers.',CR,LF
+	    db	'éndert Typ u. Grî·e des von Open 386MAX/BlueMAX ermittelten verfÅgb. Speichers.',CR,LF
 	    db	'ZulÑssige Befehlszeilen-Optionen:',CR,LF
 	    db	'  EMS    - begrenzt verfÅgbaren EMS Speicher (mit EMSFREE freigeben)',CR,LF
 	    db	'  VCPI   - begrenzt verfÅgbaren VCPI Speicher (mit VCPIFREE freigeben)',CR,LF
@@ -1602,7 +1602,7 @@ ifdef LANG_GR
 	    db	'begrenzt EMS-Speicher auf 100 16-KB-Seiten fÅr einen Aufruf und schaltet',CR,LF
 	    db	'DPMI dauerhaft ab.',CR,LF
 else
-	    db	'Changes the type and amount of available memory reported by Qualitas MAX/BlueMAX',CR,LF
+	    db	'Changes the type and amount of available memory reported by Open 386MAX/BlueMAX',CR,LF
 	    db	'The following are valid command line options:',CR,LF
 	    db	'  EMS    - to limit EMS memory available. (EMSFREE to cancel)',CR,LF
 	    db	'  VCPI   - to limit VCPI memory available. (VCPIFREE to cancel)',CR,LF

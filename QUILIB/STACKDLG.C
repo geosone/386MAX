@@ -124,6 +124,8 @@ char *make_stackopts (void)
 #pragma optimize("leg",off)
 int valid_drv (char driveltr)
 {
+  int valid;		/* AX of the _asm block (OpenWatcom: no implicit return value) */
+
   driveltr = (char) toupper (driveltr);
   if (isalpha (driveltr)) {
     _asm {
@@ -149,7 +151,9 @@ not_dos31:
 	sub	ah,'A';         /* A=0, B=1, C=2, etc. */
 	cmp	ah,al;		/* Izit in range? */
 	sbb	ax,ax;		/* AX=-1 if valid */
+	mov	valid,ax;
     }
+    return valid;
 
   } /* It's alphanumeric */
   else return (0); /* Invalid drive letter */

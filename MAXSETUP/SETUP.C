@@ -1,6 +1,6 @@
 // $Header:   P:/PVCS/MAX/MAXSETUP/SETUP.C_V   1.57   30 May 1997 11:53:04   BOB  $
 //
-// SETUP.C - Windows installation routine for Qualitas MAX 8.0
+// SETUP.C - Windows installation routine for Open 386MAX
 //  Copyright (C) 1995-7 Qualitas Inc.
 
 #include "setup.h"
@@ -77,7 +77,6 @@ char szStrip95[] = "stripm95.pif";
 char szStripPIF[ 20 ];
 
 char szIniConfig[] = "CONFIG";
-char szIniReg[] = "Registration";
 char szIniGaProgs[] = "Go Ahead - Programs";
 char szIniGaIncompatable[] = "Go Ahead - Incompatible Drivers";
 char szIniGaIgnore[] = "Ignore";
@@ -120,8 +119,6 @@ char *szGaInc[ ] = {
 //------------------------------------------------------------------
 
 int fRefresh = 0;
-int fPreBrand = 0;
-int fUpdate = 0;
 int	Overwrite = 0;
 int nCountry = 1;
 BOOL PatchPrep = FALSE;
@@ -153,9 +150,9 @@ char szMaxMaxPro[80];
 char szMaxExtraDosPro[80];
 char *szAppName = PROGNAME;		// App name
 // Caption
-char *szCaption = MAX8PRODUCT "." VER_MINOR_STR " Setup";
+char *szCaption = MAX8PRODUCT " " VER_MAJOR_STR "." VER_MINOR_STR " Setup";
 char szDest[_MAX_PATH+1]  = "C:\\QMAX";         // Destination path
-char *szProgmanGroup = "Qualitas MAX";          // Progman group caption
+char *szProgmanGroup = "Open 386MAX";          // Progman group caption
 char *szUSStartupGroup = "Startup";
 char *szDEStartupGroup = "AutoStart";
 char szStartupGroup[ 80 ];
@@ -178,9 +175,6 @@ int nOldMaxLine = -1;			// Origin:0 line number of original 386max.sys
 								// bluemax.sys)
 BOOL bMaxFound = FALSE; 		// TRUE if 386MAX.SYS or BLUEMAX.SYS was found
 
-char szName[64];
-char szCompany[64];
-char szSerial[64];
 
     // strings for IOS.INI
 char *szSafeList = "SafeList";
@@ -274,11 +268,7 @@ BOOL InitInstance(HANDLE, int);
 void ReadMulticonfig(void);
 void Install(void);
 int DrawMeter(HWND, int);
-static void Encrypt(void);
-static void Decrypt( void );
-int BrandFile (char *);
 void CheckForMax( void );
-void CheckForBrand( void );
 int ParseInstallCfg( char *szLine );
 void InsertInConfigSys(char *, char *, char *, int);
 int ModifyAutoexec(char *, int);
@@ -286,7 +276,6 @@ int ModifyDOSMAXReg( void );
 void ModifyMaxPro( char *, int );
 char * ParsePro(char *, char *);
 void CreatePreinst(void);
-int ReadBrand ( char *, int );
 int AddDOSMAXKeys( void );
 void ModifyIOSIni( char *, char * );
 void ShutDownMaxUtils();
@@ -307,13 +296,10 @@ long CALLBACK __export SplashWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK __export RefDirDlgProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK __export ModelessDlgProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK __export WelcomeDlgProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK __export RegisterDlgProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK __export ConfirmDlgProc(HWND, UINT, WPARAM, LPARAM);
+BOOL CALLBACK __export LicenseDlgProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK __export MultiDlgProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK __export DirectoryDlgProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK __export ConfigureDlgProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK __export UpdateDlgProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK __export UpdateErrorDlgProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK __export ExtractDlgProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK __export FilesDlgProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK __export ShowDlgProc(HWND, UINT, WPARAM, LPARAM);
@@ -368,7 +354,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	_fstrcpy( szStripPIF, szStrip31 );
     }
 
-    // create or activate the "Qualitas MAX" group
+    // create or activate the "Open 386MAX" group
     if (bWin95 == 0) {
 	if ((pmCreateGroup( szProgmanGroup, NULLSTR ) == FALSE ) || (pmShowGroup( szProgmanGroup, 1 ) == FALSE )) {
 	    MessageBox(0, szMsg_Init, szMsg_InitTitle, MB_OK | MB_ICONSTOP);
@@ -802,60 +788,26 @@ void Install()
 	ReadMulticonfig();
 
 	SetupYield(0);
+Welcome:
 	rc = DialogBox(ghInstance, MAKEINTRESOURCE(WELCOMEDLGBOX), hParent, WelcomeDlgProc);
 	SetupYield(0);
 
-	MakePath( path_part(szSetupName), "setupdos.ovl", szBuf );
-	ReadBrand( szBuf, 1 );
-
-Preregistered:
-	if (szName[0]) {
-		fPreBrand = 1;
-		DialogBox(ghInstance, MAKEINTRESOURCE(PREBRANDEDDLGBOX), hParent, ConfirmDlgProc);
-		goto Multiconfig;
-	}
-
-Register:
-	rc = DialogBox(ghInstance, MAKEINTRESOURCE(REGISTERDLGBOX), hParent, RegisterDlgProc);
-	SetupYield(0);
-
-	rc = DialogBox(ghInstance, MAKEINTRESOURCE(CONFIRMDLGBOX), hParent, ConfirmDlgProc);
+	// the GNU GPL v3 (LICENSE.TXT on the installation disk)
+	rc = DialogBox(ghInstance, MAKEINTRESOURCE(LICENSEDLGBOX), hParent, LicenseDlgProc);
 	SetupYield(0);
 	if (rc == 2)
-		goto Register;
+		goto Welcome;
 
-	// check for Update
-	if (szSerial[1] == '2') {
+	// Open 386MAX (GPL): no registration, no serial number, no branding of
+	// the installed programs (like the DOS installer)
 
-		// check for previous 386MAX installation
-		CheckForMax( );
-		CheckForBrand( );
-
-		if (fUpdate == 0) {
-Update:
-			DialogBox(ghInstance, MAKEINTRESOURCE(UPDATEDLGBOX), hParent, UpdateDlgProc);
-	    SetupYield(0);
-
-			CheckForBrand();
-			if (fUpdate == 0) {
-				rc = DialogBox(ghInstance, MAKEINTRESOURCE(UPDATEERRORDLGBOX), hParent, UpdateErrorDlgProc);
-				SetupYield(0);
-				if (rc == 2)
-					goto Update;
-				szMax[0] = '\0';
-			}
-		}
-	}
 	// check for multiconfig
 Multiconfig:
 	if (szSections[0]) {
 		rc = DialogBox(ghInstance, MAKEINTRESOURCE(MULTIDLGBOX), hParent, MultiDlgProc);
 		SetupYield(0);
-		if (rc == 2) {
-			if (fPreBrand)
-				goto Preregistered;
-			goto Register;
-		}
+		if (rc == 2)
+			goto Welcome;
 	}
 
 	// check for previous 386MAX installation
@@ -868,7 +820,7 @@ Multiconfig:
 		if (szSections[0])
 			goto Multiconfig;
 		else
-			goto Register;
+			goto Welcome;
 	}
 
 	if (szMaxPro[0] == '\0') {
@@ -894,38 +846,6 @@ Multiconfig:
 	if ((bPrograms == 0) && (fRefresh == 0))
 		goto SetupGroup;
 
-	// Branding note! As of now (ver 8.0) only DOS apps are branded.
-	// The files below should not be part of a necessary exit to DOS copy
-	// from Windows. When it is necessary for a Windows file to get
-	// branded, the branding mechanism will have to be moved to
-	// post-dos copy to ensure the file gets branded.
-
-	MakePath(szDest, "386max.sys", szTemp );
-	BrandFile( szTemp );
-
-	SetupYield(0);
-	MakePath(szDest, "asq.exe", szTemp );
-	BrandFile( szTemp );
-
-	SetupYield(0);
-	MakePath(szDest, "qmt.exe", szTemp );
-	BrandFile( szTemp );
-
-	SetupYield(0);
-	MakePath(szDest, "386util.com", szTemp );
-	BrandFile( szTemp );
-
-	SetupYield(0);
-	MakePath(szDest, "386load.com", szTemp );
-	BrandFile( szTemp );
-
-	SetupYield(0);
-	MakePath(szDest, "max.exe", szTemp );
-	BrandFile( szTemp );
-
-	SetupYield(0);
-	MakePath(szDest, "maximize.exe", szTemp );
-	BrandFile( szTemp );
 
 	SetupYield(0);
 
@@ -1231,11 +1151,6 @@ SetupGroup:
 	WritePrivateProfileString( szIniConfig, "Qualitas MAX Path", szDest, szININame );
 	WritePrivateProfileString( szIniConfig, "Qualitas MAX Help", "maxhelp.hlp", szININame );
 
-	if (fRefresh == 0) {
-		WritePrivateProfileString( szIniReg, "Name", szName, szININame );
-		WritePrivateProfileString( szIniReg, "Company", szCompany, szININame );
-		WritePrivateProfileString( szIniReg, "S/N", szSerial, szININame );
-	}
 	SetupYield(0);
 
 	// Build QMAX.INI was here before it moved above GALoadClearance.
@@ -1661,7 +1576,7 @@ BOOL CALLBACK __export ModelessDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 }
 
 
-// "Welcome to Qualitas MAX Setup" dialog box
+// "Welcome to Open 386MAX Setup" dialog box
 BOOL CALLBACK __export WelcomeDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
@@ -1698,99 +1613,40 @@ BOOL CALLBACK __export WelcomeDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 }
 
 
-// "Register MAX" dialog box
-BOOL CALLBACK __export RegisterDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+// The license page: LICENSE.TXT (GNU GPL v3) from the installation disk
+BOOL CALLBACK __export LicenseDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
-	case WM_INITDIALOG:
-		CenterWindow(hDlg);
+	case WM_INITDIALOG: {
+		char szLicense[144];
+		HFILE hFile;
+		LONG lLen;
+		HGLOBAL hText;
+		LPSTR lpText;
 
-		// get name & company from QMAX.INI
-		if (szName[0] == '\0') {
-			GetPrivateProfileString( "Registration", "Name", szName, szName, 48, szININame );
-			GetPrivateProfileString( "Registration", "Company", szCompany, szCompany, 48, szININame );
-			GetPrivateProfileString( "Registration", "S/N", szSerial, szSerial, 24, szININame );
-		}
-
-		SendDlgItemMessage(hDlg, IDC_NAME, EM_LIMITTEXT, 48, 0L);
-		SendDlgItemMessage(hDlg, IDC_COMPANY, EM_LIMITTEXT, 48, 0L);
-		SendDlgItemMessage(hDlg, IDC_SERIAL, EM_LIMITTEXT, 24, 0L);
-
-		SetDlgItemText( hDlg, IDC_NAME, szName );
-		SetDlgItemText( hDlg, IDC_COMPANY, szCompany );
-		SetDlgItemText( hDlg, IDC_SERIAL, szSerial );
-		return TRUE;
-
-	case WM_COMMAND:
-
-		switch (LOWORD(wParam)) {
-		case IDC_BACK:
-			EndDialog(hDlg, 2);
-			return TRUE;
-
-		case IDC_CONTINUE:
-
-			// save name, company, and serial number
-			szName[0] = '\0';
-			GetDlgItemText(hDlg, IDC_NAME, szName, 79);
-			if ( szName[0] == '\0' ) {
-				MessageBox( hDlg, szMsg_Name, szMsg_Reg, MB_OK | MB_ICONSTOP );
-				SetFocus(GetDlgItem(hDlg, IDC_NAME));
-				break;
+		CenterWindow( hDlg );
+		MakePath( path_part( szSetupName ), "LICENSE.TXT", szLicense );
+		if ((hFile = _lopen( szLicense, OF_READ | OF_SHARE_DENY_NONE )) != HFILE_ERROR) {
+			lLen = _llseek( hFile, 0L, 2 );
+			_llseek( hFile, 0L, 0 );
+			if (lLen > 60000L)
+				lLen = 60000L;
+			if ((hText = GlobalAlloc( GHND, lLen + 1 )) != NULL) {
+				lpText = (LPSTR)GlobalLock( hText );
+				lpText[ _lread( hFile, lpText, (UINT)lLen ) ] = '\0';
+				SendDlgItemMessage( hDlg, IDC_TEXT, EM_LIMITTEXT, 0, 0L );
+				SetDlgItemText( hDlg, IDC_TEXT, lpText );
+				GlobalUnlock( hText );
+				GlobalFree( hText );
 			}
-
-			szCompany[0] = '\0';
-			GetDlgItemText(hDlg, IDC_COMPANY, szCompany, 79);
-
-			szSerial[0] = '\0';
-			GetDlgItemText(hDlg, IDC_SERIAL, szSerial, 31);
-			if ( szSerial[0] == '\0' ) {
-				MessageBox( hDlg, szMsg_Serial, szMsg_Reg, MB_OK | MB_ICONSTOP );
-				SetFocus(GetDlgItem(hDlg, IDC_SERIAL));
-				break;
-			}
-
-			// verify serial number
-			if ( decode_serialno ( (unsigned char *) szSerial ) == NULL ) {
-				MessageBox( hDlg, szMsg_InvSer, szMsg_Reg, MB_OK | MB_ICONSTOP );
-				SetFocus(GetDlgItem(hDlg, IDC_SERIAL));
-				break;
-			}
-
-			EndDialog(hDlg, 0);
-			return TRUE;
-
-		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hParent, AskQuitDlgProc) == 1) {
-				EndDialog(hDlg, 1);
-				longjmp(quit_env, -1);
-			}
-			SetFocus(hDlg);
-			return TRUE;
-
-		case IDC_HELP:
-			WinHelp( hDlg, szHelpName, HELP_KEY, (DWORD)((LPSTR) szHKEY_RegInf ));
-			break;
-		}
+			_lclose( hFile );
+		} else
+			SetDlgItemText( hDlg, IDC_TEXT, szMsg_NoLicense );
+		SetFocus( GetDlgItem( hDlg, IDC_CONTINUE ));
+		return FALSE;
 	}
 
-	return FALSE;
-}
-
-
-// Confirm registration info
-BOOL CALLBACK __export ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uMsg) {
-	case WM_INITDIALOG:
-		CenterWindow( hDlg );
-		SetDlgItemText( hDlg, 100, szName );
-		SetDlgItemText( hDlg, 101, szCompany );
-		SetDlgItemText( hDlg, 102, szSerial );
-		return TRUE;
-
 	case WM_COMMAND:
-
 		switch (LOWORD(wParam)) {
 		case IDC_BACK:
 			EndDialog( hDlg, 2 );
@@ -1809,7 +1665,7 @@ BOOL CALLBACK __export ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			return TRUE;
 
 		case IDC_HELP:
-			WinHelp( hDlg, szHelpName, HELP_KEY, (DWORD)(( LPSTR ) szHKEY_RegConf ));
+			WinHelp( hDlg, szHelpName, HELP_KEY, (DWORD)((LPSTR)szHKEY_Welcome ));
 			break;
 		}
 	}
@@ -1818,70 +1674,12 @@ BOOL CALLBACK __export ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 }
 
 
-// "Get original MAX directory" dialog box
-BOOL CALLBACK __export UpdateDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uMsg) {
-	case WM_INITDIALOG:
-		CenterWindow( hDlg );
-		SetFocus( GetDlgItem( hDlg, IDC_PATH ) );
-		return 0;
-
-	case WM_COMMAND:
-
-		switch (LOWORD(wParam)) {
-		case IDC_CONTINUE:
-			GetDlgItemText(hDlg, IDC_PATH, szMax, 127);
-			EndDialog( hDlg, 0 );
-			break;
-
-		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hDlg, AskQuitDlgProc) == 1) {
-				EndDialog( hDlg, 1 );
-				longjmp( quit_env, -1 );
-			}
-			break;
-
-		case IDC_HELP:
-			WinHelp( hDlg, szHelpName, HELP_PARTIALKEY, (DWORD)(( LPSTR ) szHKEY_Up ));
-			break;
-		}
-	}
-
-	return FALSE;
-}
 
 
-BOOL CALLBACK __export UpdateErrorDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uMsg) {
-	case WM_INITDIALOG:
-		CenterWindow( hDlg );
-		SetFocus( hDlg );
-		return 0;
 
-	case WM_COMMAND:
 
-		switch (LOWORD(wParam)) {
-		case IDC_CONTINUE:
-			EndDialog( hDlg, 0 );
-			break;
 
-		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hDlg, AskQuitDlgProc) == 1) {
-				EndDialog( hDlg, 1 );
-				longjmp( quit_env, -1 );
-			}
-			break;
 
-		case IDC_BACK:
-			EndDialog( hDlg, 2 );
-			return TRUE;
-		}
-	}
-
-	return FALSE;
-}
 
 
 // Get Multiconfig section dialog box
@@ -2196,10 +1994,6 @@ BOOL CALLBACK __export ExtractDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		DrawMeter( GetDlgItem( hDlg, IDC_METER), 0);
 		lstrcpy( szSource, path_part( szDest ));
 		if ((fRefresh == 0) && (lstrcmpi( szSource, path_part( szSetupName ) ) != 0)) {
-
-		    // brand SETUPDOS.OVL on the floppy!
-		    MakePath( path_part(szSetupName), "setupdos.ovl", szBuf );
-		    BrandFile( szBuf );
 
 		    fCopiedSetup = 1;
 		    for (i = 0; (MaxFiles[i].pszFilename != NULL); i++) {
@@ -2722,155 +2516,6 @@ int DrawMeter(HWND hWnd, int nPercent)
 	return 0;
 }
 
-#define SECURITY_LEN 350		// Length of Pattern
-#define SECURITY_CHK 2
-
-unsigned char szPattern[SECURITY_LEN+SECURITY_CHK];
-
-// Encrypt Pattern
-static void Encrypt (void)
-{
-	register unsigned int i, accum = 0;
-
-	// Swap the nibbles and add a constant
-	for ( i = 0; (i < SECURITY_LEN); i++ )
-	     szPattern[i] = (char) ( ( (szPattern[i] << 4) | (szPattern[i] >> 4) ) + 0x23);
-
-	for ( i = 0; (i < SECURITY_LEN); i++ )	  // Build a checksum
-	     accum += (unsigned int) szPattern[i];
-
-	// Store the checksum after the encrypted bytes
-	*( (unsigned int *)( szPattern+i ) ) = accum;
-}
-
-
-static void Decrypt ( void )
-{
-	register unsigned int kk, sum;
-	BYTE cc;
-
-	/* First, check the checksum */
-	sum = 0;
-	for (kk = 0; (kk < SECURITY_LEN); kk++)
-		sum += szPattern[kk];
-
-	if (sum != *(WORD *)(szPattern+kk))
-		return;
-
-	/* Checksum ok, decrypt the string */
-	for (kk = 0; (kk < SECURITY_LEN); kk++) {
-		/* Subtract a constant and swap the nibbles  */
-		cc = (BYTE)((szPattern[kk]) - 0x23);
-		szPattern[kk] = (BYTE)((cc << 4) | (cc >> 4));
-	}
-}
-
-
-int BrandFile (char *pszFileName)
-{
-	int rc = 0;
-	unsigned int uDate, uTime;
-	long lOffset;
-	HFILE fh;
-	EXEHDR_STR exe_hdr;
-
-	if ((fh = _lopen ( pszFileName, READ_WRITE )) == HFILE_ERROR)
-		return -1;
-
-	_dos_getftime (fh, &uDate, &uTime);
-
-	if ((_llseek (fh, -((long) sizeof (lOffset)), SEEK_END) == HFILE_ERROR ) || (_lread (fh, &lOffset, sizeof (lOffset)) == HFILE_ERROR )) {
-		rc = -1;
-		goto Close_file;
-	}
-
-	lOffset = ( ( lOffset & 0xFFFF0000L ) >> 12 ) + ( lOffset & 0x0000FFFFL );
-
-	if ((_llseek (fh, 0L, SEEK_SET) == HFILE_ERROR ) || (_lread (fh, &exe_hdr, sizeof (exe_hdr)) == HFILE_ERROR )) {
-		rc = -1;
-		goto Close_file;
-	}
-
-	if (exe_hdr.exe_sign == 0x5a4d) // If .EXE format, skip over header
-		lOffset += ((unsigned long) exe_hdr.exe_hsiz) << 4;
-
-	// Ensure Pattern is initialized to 0's
-	memset (szPattern, '\0', sizeof(szPattern) );
-
-	// Encrypt data
-	if (szCompany[0])
-		wsprintf (szPattern, "\x02%s  %s\r\n%s %s - %s\r\n", szMsg_Sernum, szSerial, szMsg_License, szName, szCompany );
-	else
-		wsprintf (szPattern, "\x02%s  %s\r\n%s %s\r\n", szMsg_Sernum, szSerial, szMsg_License, szName );
-	Encrypt ();
-
-	// Write it out
-	if ((_llseek (fh, lOffset, SEEK_SET) == HFILE_ERROR ) || (_lwrite (fh, szPattern, SECURITY_LEN+SECURITY_CHK) == HFILE_ERROR )) {
-		rc = -1;
-		goto Close_file;
-	}
-
-	// Restore file date/time
-	_dos_setftime (fh, uDate, uTime);
-
-Close_file:
-	_lclose (fh);
-
-	return rc;
-}
-
-
-// Try to get a valid brand from the specified file
-int ReadBrand ( char *pszFileName, int fReset )
-{
-	int rc = 0;
-	long lOffset;
-	HFILE fh;
-	EXEHDR_STR exe_hdr;
-
-	// Ensure Pattern is initialized to 0's
-	memset (szPattern, '\0', sizeof(szPattern) );
-
-	if ((fh = _lopen ( pszFileName, READ )) == HFILE_ERROR)
-		return -1;
-
-	if ((_llseek (fh, -((long) sizeof (lOffset)), SEEK_END) == HFILE_ERROR ) || (_lread (fh, &lOffset, sizeof (lOffset)) == HFILE_ERROR )) {
-		rc = -1;
-		goto Close_file;
-	}
-
-	lOffset = ( ( lOffset & 0xFFFF0000L ) >> 12 ) + ( lOffset & 0x0000FFFFL );
-
-	if ((_llseek (fh, 0L, SEEK_SET) == HFILE_ERROR ) || (_lread (fh, &exe_hdr, sizeof (exe_hdr)) == HFILE_ERROR )) {
-		rc = -1;
-		goto Close_file;
-	}
-
-	if (exe_hdr.exe_sign == 0x5a4d) // If .EXE format, skip over header
-		lOffset += ((unsigned long) exe_hdr.exe_hsiz) << 4;
-
-	// Read it in
-	if ((_llseek (fh, lOffset, SEEK_SET) == HFILE_ERROR ) || (_lread (fh, szPattern, SECURITY_LEN+SECURITY_CHK) == HFILE_ERROR )) {
-		rc = -1;
-		goto Close_file;
-	}
-
-Close_file:
-	_lclose (fh);
-
-	Decrypt();
-
-	if (( szPattern[0] == 1 ) || (szPattern[0] == 2 )) {
-		if (fReset) {
-			sscanf (szPattern, szFmt_IDScan, szSerial, szName, szCompany );
-			strip_trailing( szName, " \t" );
-		}
-		return 1;
-	}
-
-	return rc;
-}
-
 // look for 386MAX.SYS or BLUEMAX.SYS in CONFIG.SYS
 void CheckForMax( void )
 {
@@ -2982,48 +2627,6 @@ ReadSection:
 		MakePath( szMax, "extrados.pro", szExtraDosPro );
 }
 
-void CheckForBrand(void)
-{
-	static char *szaDirs[] = {
-		NULL,
-		"c:\\386max",
-		"c:\\qmax"
-	};
-	static char *szaUpdate[] = {
-		NULL,
-		"386load.sys",
-		"386util.com"
-	};
-	register int i, n;
-	char szBuf[256];
-
-	szaDirs[0] = szMax;
-	szaUpdate[0] = "386max.sys";
-
-	// look for a branded 386MAX
-	for (i = 0; ((i < 3) && (fUpdate == 0)); i++) {
-
-		for (n = 0; (n < 3); n++) {
-			MakePath( szaDirs[i], szaUpdate[n], szBuf );
-			if (QueryFileExists( szBuf ) == 0)
-				break;
-			fUpdate = (ReadBrand( szBuf, 0 ) != 0);
-		}
-	}
-
-	if (fUpdate)
-		return;
-
-	szaUpdate[0] = "bluemax.sys";
-
-	// look for a branded BLUEMAX
-	for (n = 0; (n < 3); n++) {
-		MakePath( "c:\\bluemax", szaUpdate[n], szBuf );
-		if (QueryFileExists( szBuf ) == 0)
-			break;
-		fUpdate = (ReadBrand( szBuf, 0 ) != 0);
-	}
-}
 
 // insert/delete a line in 386MAX.PRO
 void ModifyMaxPro( char *pszLine, int fDelete )
@@ -3856,14 +3459,14 @@ BOOL NeedBackup( LPSTR lpOld, LPSTR lpNew )
     ntime.dtime = 0L;
 
     if (( ohandle = _lopen( lpOld, READ | OF_SHARE_COMPAT )) != HFILE_ERROR ) {
-	  _dos_getftime( ohandle, &(otime.dt.date), &(otime.dt.time));
+	  _dos_getftime( ohandle, (unsigned *) &(otime.dt.date), (unsigned *) &(otime.dt.time));
 	  _lclose( ohandle );
     } else {
 	return FALSE;
     }
 
     if (( nhandle = _lopen( lpNew, READ | OF_SHARE_COMPAT )) != HFILE_ERROR ) {
-	  _dos_getftime( nhandle, &(ntime.dt.date), &(ntime.dt.time));
+	  _dos_getftime( nhandle, (unsigned *) &(ntime.dt.date), (unsigned *) &(ntime.dt.time));
 	  _lclose( nhandle );
     } else {
 	return TRUE;

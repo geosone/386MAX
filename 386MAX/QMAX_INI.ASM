@@ -286,6 +286,22 @@ if @OEM_WIN3
 	 extrn	 JGRBASE:dword
 	 extrn	 JGRSIZE:dword
 endif				; IF @OEM_WIN3
+ifdef @CPD_SERIAL
+	 extrn	 LMLBASE:dword,PPDTLML:dword,PPDTPRG:dword,PPDTRSV:dword
+	 extrn	 SWPSIZE:word
+ifndef @OEM_WIN3
+	 extrn	 PaPRGBASE:dword,PRGBASE:dword
+endif
+endif
+E820_STR struc			; INT 15h/E820h memory map entry (see QMAX_MEM)
+
+E820_BASE dq	 ?		; Base address
+E820_LEN dq	 ?		; Length in bytes
+E820_TYPE dd	 ?		; Type (1 = available)
+
+E820_STR ends
+
+	 extrn	 LCLMEM:tbyte
 	 extrn	 MSG_STAT:byte
 	 extrn	 MSG_STATLEN:abs
 	 extrn	 @MSG_STAT_ROWCNT:abs
@@ -370,7 +386,11 @@ DOSVER	 dw	 ?		; DOS version # in comparison order
 if @OEM_DEBUG
 	 public  CPD_FLAG
 	 include QMAX_CPD.INC
+ifdef @CPD_SERIAL
+CPD_FLAG dw	 @CPD_MSG	; Checkpoint Debugging flags (always on, COM1)
+else
 CPD_FLAG dw	 0		; Checkpoint Debugging flags
+endif
 endif				; IF @OEM_DEBUG
 
 EDATA	 ends			; End EDATA segment
@@ -744,7 +764,9 @@ YDATZ	 ends			; End YDATZ segment
 
 
 XCODE	 segment use16 byte public 'xcode' ; Start XCODE segment
+
 	 assume  cs:XGROUP
+	 extrn	 E820_GET:near
 
 	 public  @QMAX_INI_XCODE
 @QMAX_INI_XCODE:		; Mark module start in .MAP file
@@ -791,6 +813,29 @@ endif				; IF @OEM_FLEXROM
 	extrn	IZIT_PnP:near
 
 if @OEM_DEBUG
+CPDSER	 macro
+ifdef @CPD_SERIAL
+	 call	 CPDSER_OUT	; Copy AL to COM1
+endif
+	 endm			; CPDSER
+
+ifdef @CPD_SERIAL
+CPDSER_OUT proc near		; Send AL to COM1 (debug builds)
+	 push	 dx		; Save for a moment
+	 push	 ax		; ...
+	 mov	 dx,03FDh	; COM1 line status register
+@@:
+	 in	 al,dx		; Get status
+	 test	 al,20h		; Transmit holding register empty?
+	 jz	 short @B	; Jump if not
+	 pop	 ax		; Restore character
+	 mov	 dx,03F8h	; COM1 data register
+	 out	 dx,al		; Send it
+	 pop	 dx		; Restore
+	 ret			; Return to caller
+CPDSER_OUT endp
+endif
+
 	 FPPROC  DISP_CPDMSG -- Display CPD Message
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
@@ -877,12 +922,14 @@ DISP_CPDMSG_NEXT:
 	 cmp	 al,-1		; Izit time to pause?
 	 je	 short DISP_CPDMSG_PAUSE ; Jump if so
 DISP_CPDMSG_SAVE:
+	 CPDSER 		; Copy to COM1 (debug builds)
 	 mov	 ah,07h 	; Use white on black attribute
 S16	 stos	 es:[di].ELO	; Save in screen
 
 	 jmp	 short DISP_CPDMSG_NEXT ; Go around again
 
 DISP_CPDMSG_LF:
+	 CPDSER 		; Copy to COM1 (debug builds)
 
 ; If we're at the last row, scroll the screen up by one row
 
@@ -921,6 +968,9 @@ DISP_CPDMSG_NOSCROLL:
 	 cmp	 CPDCNT,@CPDCNT ; Izit time to pause?
 	 jb	 short DISP_CPDMSG_NOPAUSE ; Jump if not
 DISP_CPDMSG_PAUSE:
+ifdef @CPD_SERIAL
+	 jmp	 short DISP_CPDMSG_NOPAUSE ; No pauses (COM1)
+endif
 	 in	 al,@IMR	; Get the current IMR mask
 
 	 test	 al,mask $IRQ1	; Is the keyboard enabled?
@@ -935,9 +985,10 @@ DISP_CPDMSG_NOPAUSE:
 	 jmp	 short DISP_CPDMSG_NEXT ; Go around again
 
 DISP_CPDMSG_CR:
+	 CPDSER 		; Copy to COM1 (debug builds)
 	 call	 ROUND_SCRDN	; Round DI down to the last screen row
 
-	 jmp	 short DISP_CPDMSG_NEXT ; Go around again
+	 jmp	 DISP_CPDMSG_NEXT ; Go around again
 
 DISP_CPDMSG_SUB:
 	 lods	 YGROUP:[si].LO ; Get next character from message
@@ -1109,6 +1160,7 @@ DISP_CPDMSG_COM:
 	 movzx	 eax,bl 	; Copy to format
 	 and	 al,@NIB0	; Isolate the nibble
 	 mov	 al,HEXTABLE[eax] ; Get the ASCII character
+	 CPDSER 		; Copy to COM1 (debug builds)
 	 mov	 ah,07h 	; Use white on black attribute
 S16	 stos	 es:[di].ELO	; Save in screen
 
@@ -1301,10 +1353,10 @@ CX	 =	 1 if a one-line message was displayed (ignored here)
 	 pop	 ds		; Address it
 	 assume  ds:XGROUP	; Tell the assembler about it
 
-ife @OEM_INST
+; GPL release: no SETUP/serial number any more. An unbranded IDENTIFY
+; block (IDENT_CHK = 0) is simply skipped.
 	 cmp	 IDENT_CHK,0	; Has it been filled in as yet?
 	 je	 short CHECK_INFO_EXIT ; Jump if not (note CF=0)
-endif
 
 	 CHKIDN  @STD_OUT,@STD_OUT ; Check and display all messages to
 				; standard output
@@ -1750,7 +1802,9 @@ CF	 =	 0 if all went well
 
 ; See if COMPAQ/Phoenix/maybe others memory function works
 
-	xor	cx,cx		; Set to known value
+	xor	ax,ax		; Set to known value
+	xor	bx,bx		; ...
+	xor	cx,cx		; ...
 	xor	dx,dx		; ...
 	mov	ax,0E801h	; Get function code to return extended memory
 	int	15h		; Request BIOS service
@@ -1758,17 +1812,30 @@ CF	 =	 0 if all went well
 				; ...	 BX = ..		 64KB above 16MB
 				; ...	 CX = configured extmem in 1KB up to 16MB
 				; ...	 DX = ..		 64KB above 16MB
-	jcxz	@F		; Jump if not supported
+	jc	short CHECK_EXT_X801 ; Jump if not supported
 
-	movzx	eax,cx		; Get extended memory up to 16MB in 1KB
-	movzx	edx,dx		; Zero to use as dword
+; Some BIOSes return the values in AX/BX only (and CX=DX=0)
+
+	jcxz	@F		; Jump if CX/DX not used
+	mov	ax,cx		; Use configured memory
+	mov	bx,dx		; ...
+@@:
+	cmp	ax,15*1024	; More than 15MB below 16MB?
+	ja	short CHECK_EXT_X801 ; Jump if so (invalid)
+
+	movzx	eax,ax		; Get extended memory up to 16MB in 1KB
+	jb	short @F	; Jump if there's a memory hole below 16MB
+				; (memory above 16MB isn't contiguous)
+	movzx	edx,bx		; Zero to use as dword
 	shl	edx,16-10	; Convert from 64KB to 1KB
-	add	eax,edx 	; Plus extmem up to 16MB
+	add	eax,edx 	; Plus extmem above 16MB
+@@:
+	and	eax,eax 	; Anything there?
+	jz	short CHECK_EXT_X801 ; Jump if not
 
 	jmp	CHECK_EXT2	; Join common code
 
-@@:
-
+CHECK_EXT_X801:
 ; See if the AMI BIOS PCI Memory Function works
 
 	mov	ax,0DA88h	; Get function code to return extended memory
@@ -1840,6 +1907,7 @@ CHECK_EXT1:
 
 	 mov	 eax,edx	; Use EISA findings as total ext memory
 CHECK_EXT2:
+	 call	 CHECK_E820	; Limit EAX to the BIOS memory map
 	 and	 eax,not (4-1)	; Round down to a multiple of four
 
 	 CPD	 'TOTSIZE=%EAX'
@@ -1857,6 +1925,97 @@ CHECK_EXT_EXIT:
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 CHECK_EXT endp			; End CHECK_EXT procedure
+	 NPPROC  CHECK_E820 -- Check Extended Memory Against E820h
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+If the BIOS memory map (INT 15h, AX=E820h) is available, limit the
+size of extended memory to the available memory contiguous with 1MB.
+E801h and older functions may report memory beyond reserved or ACPI
+areas on newer systems, and we load ourselves at the top.  If the
+older functions found nothing above 64MB but the memory map does,
+use the memory map.
+
+On entry:
+
+EAX	 =	 extended memory in 1KB from older functions
+
+On exit:
+
+EAX	 =	 extended memory in 1KB
+
+|
+
+	 REGSAVE <ebx,ecx,edx,esi,edi> ; Save registers
+
+	 mov	 edi,eax	; Save original value
+	 mov	 esi,100000h	; End of contiguous available memory so far
+	 mov	 cx,16		; Maximum # passes (entries may be unsorted)
+CHECK_E820_PASS:
+	 mov	 edx,esi	; Save to detect changes
+	 xor	 ebx,ebx	; First entry
+CHECK_E820_NEXT:
+	 call	 E820_GET	; Return entry in LCLMEM, EBX = next
+	 jc	 short CHECK_E820_EOL ; Jump if no more
+
+	 cmp	 LCLMEM.E820_TYPE,1 ; Available memory?
+	 jne	 short CHECK_E820_LOOP ; Jump if not
+
+	 cmp	 dword ptr LCLMEM.E820_BASE[4],0 ; Above 4GB?
+	 jne	 short CHECK_E820_LOOP ; Jump if so
+
+	 mov	 eax,dword ptr LCLMEM.E820_BASE ; Get start
+	 cmp	 eax,esi	; Does it start beyond our end?
+	 ja	 short CHECK_E820_LOOP ; Jump if so (not contiguous)
+
+	 cmp	 dword ptr LCLMEM.E820_LEN[4],0 ; Huge?
+	 jne	 short @F	; Jump if so
+
+	 add	 eax,dword ptr LCLMEM.E820_LEN ; Plus length to get end
+	 jnc	 short CHECK_E820_END ; Jump if below 4GB
+@@:
+	 mov	 eax,-4096	; Use 4GB less 4KB
+CHECK_E820_END:
+	 cmp	 eax,esi	; Does it extend our area?
+	 jbe	 short CHECK_E820_LOOP ; Jump if not
+
+	 mov	 esi,eax	; Save as new end
+CHECK_E820_LOOP:
+	 and	 ebx,ebx	; Was that the last entry?
+	 jnz	 short CHECK_E820_NEXT ; Jump if not
+CHECK_E820_EOL:
+	 cmp	 esi,edx	; Any change in this pass?
+	 je	 short @F	; Jump if not
+	 loop	 CHECK_E820_PASS ; Go around again
+@@:
+	 mov	 eax,edi	; Restore original value
+
+	 sub	 esi,100000h	; Less first megabyte
+	 jz	 short CHECK_E820_EXIT ; Jump if no memory map
+
+	 shr	 esi,10-0	; Convert from bytes to 1KB
+
+	 mov	 edx,esi	; Copy for display
+	 CPD	 'E820 contiguous extended memory=%EDX KB, older=%EAX KB'
+
+	 cmp	 eax,64*1024	; Did the older functions find more than 64MB?
+	 ja	 short @F	; Jump if so
+
+	 cmp	 esi,eax	; Is the memory map larger?
+	 ja	 short CHECK_E820_USE ; Jump if so (use it)
+@@:
+	 cmp	 esi,eax	; Use the smaller
+	 jae	 short CHECK_E820_EXIT ; Jump if older value is OK
+CHECK_E820_USE:
+	 mov	 eax,esi	; Use the memory map value
+CHECK_E820_EXIT:
+	 REGREST <edi,esi,edx,ecx,ebx> ; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+CHECK_E820 endp 		; End CHECK_E820 procedure
 	 NPPROC  CHECK_EISA_SHD -- Check On Extra EISA RAM
 	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
@@ -4591,6 +4750,24 @@ endif				; IF @OEM_DMA and @OEM_SYS ne @OEMSYS_ILIM
 
 	 call	 CALC_SIZE	; Calculate various sizes
 	 jc	 near ptr UGH_INIT ; Something went wrong
+ifdef @CPD_SERIAL
+	 pushad			; Save registers
+	 mov	 eax,LMLBASE	; Low memory load base
+	 mov	 ebx,PaPRGBASE	; Physical program base
+	 mov	 ecx,PPDTLML	; PDT offsets
+	 mov	 edx,PPDTPRG
+	 mov	 esi,PPDTRSV
+	 mov	 edi,LMLTOP
+	 CPD	 'SIZES LMLBASE=%EAX PaPRG=%EBX PPDTLML=%ECX PPDTPRG=%EDX PPDTRSV=%ESI LMLTOP=%EDI'
+	 movzx	 eax,SWPSIZE	; Swap size
+	 movsx	 ebx,LOWSIZE	; Low fill size
+	 mov	 ecx,VIDOFF
+	 mov	 edx,LOWOFF
+	 movzx	 esi,PRGSIZE
+	 movzx	 edi,LCL_FLAG
+	 CPD	 'SIZES SWPSIZE=%EAX LOWSIZE=%EBX VIDOFF=%ECX LOWOFF=%EDX PRGSIZE=%ESI LCL=%EDI'
+	 popad			; Restore
+endif
 
 if @OEM_WIN3
 	 CPD	 'Calling CALC_WIN3,  CS:IP=%CS:%IP  DS=%DS  ES=%ES'

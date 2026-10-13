@@ -1801,10 +1801,10 @@ CX	 =	 1 if a one-line message was displayed
 	 pop	 ds		; Address it
 	 assume  ds:PGROUP	; Tell the assembler about it
 
-ife @OEM_INST
+; GPL release: no SETUP/serial number any more. An unbranded IDENTIFY
+; block (IDENT_CHK = 0) is simply skipped.
 	 cmp	 IDENT_CHK,0	; Has it been filled in as yet?
 	MJ e	 CHECK_INFO_EXIT ; Jump if not (note CF=0)
-endif
 
 	 CHKIDN  @STD_OUT,@STD_ERR,PBID_MSG,ID_LEN ; Check and save message pointer
 				; Return with CX and CF significant

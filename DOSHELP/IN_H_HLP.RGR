@@ -265,7 +265,7 @@ t des Systems begrenzt und kann von System zu System unterschiedlich sein. Die m
 \par 
 \par Geben Sie den Namen f\'81r die Registrierung von #FLENME____# ein. #PROGNAME# ben\rdblquote tigt den {\b Namen}, um dieses Exemplar von #FLENME____# zu personalisieren.
 \par 
-\par Geben Sie die Seriennnummer in der korrekten Form an. Die Nummer befindet sich auf der R\'81ckseite des Qualitas MAX 8 Handbuch- und Disketten- Umschlags. Die Seriennummer mu\'e1 aus {\b genau 12 Ziffern }bestehen. Andere Eingaben werden abgewiesen.
+\par Geben Sie die Seriennnummer in der korrekten Form an. Die Nummer befindet sich auf der R\'81ckseite des Open 386MAX Handbuch- und Disketten- Umschlags. Die Seriennummer mu\'e1 aus {\b genau 12 Ziffern }bestehen. Andere Eingaben werden abgewiesen.
 
 \par 
 \par Mit der R\'81cktaste, den Tasten EINFG, ENTF, POS1, ENDE und den Pfeiltasten k\rdblquote nnen Sie sich innerhalb der Felder bewegen.
@@ -323,7 +323,7 @@ Nein }w\'84hlen. Diese Programme greifen auf den MDA-Bereich zu. Mit Auswahl der
 \par }@P H.Default I_NoMaximize
 \par                             {\i DOS Verzeichnis}
 \par 
-\par Wenn Sie es w\'81nschen, wird #PROGNAME# Hilfe-Informationen f\'81r die  Qualitas Produkte #FLENME#, 386LOAD, 386UTIL, ASQ, MAX, Maximize und SnapShot in das DOS 5.x Hilfe-System aufnehmen. #PROGNAME# ben\rdblquote tigt dazu die DOS 5.x {\b Hilfe}
+\par Wenn Sie es w\'81nschen, wird #PROGNAME# Hilfe-Informationen f\'81r die  Open 386MAX Produkte #FLENME#, 386LOAD, 386UTIL, ASQ, MAX, Maximize und SnapShot in das DOS 5.x Hilfe-System aufnehmen. #PROGNAME# ben\rdblquote tigt dazu die DOS 5.x {\b Hilfe}
 -Datei. Diese Datei - DOSHELP.HLP - befindet sich normalerweise Verzeichnis der DOS Dateien.
 \par 
 \par Geben Sie {\b Laufwerk und Pfad} ihres DOS-Verzeichnisses an.
@@ -375,7 +375,7 @@ n. Somit wird Ihren Anwendungsprogrammen der {\b maximale} konventionelle Speich
 \par \pard\plain \f4\lang1033 @P H.Default I_NoMaximize
 \par                              {\i Kein Maximize}
 \par 
-\par Wir empfehlen Ihnen {\b ausdr\'81cklich}, nach Installation von #PROGNAME# Maximize zu starten. Maximize konfiguriert Ihr System so, da\'e1 die  Memory Management Funktionen der Qualitas Software wirksam werden.
+\par Wir empfehlen Ihnen {\b ausdr\'81cklich}, nach Installation von #PROGNAME# Maximize zu starten. Maximize konfiguriert Ihr System so, da\'e1 die  Memory Management Funktionen der Open 386MAX Software wirksam werden.
 \par 
 \par Maximize kann auch sp\'84ter aus der DOS-Befehlsebene oder aus der MAX-Oberfl\'84che aufgerufen werden.
 \par 
@@ -499,7 +499,7 @@ fung des gesamten Systemspeichers sollte QMT von Zeit zu Zeit auf dem System in 
 \par }@N I_updatedir I_updatedir
 \par                             {\i MAX Verzeichnis}
 \par 
-\par #PROGNAME# funktioniert nicht ohne Qualitas MAX oder BlueMAX. Sie m\'81ssen das {\b Laufwerk und den Pfad }der Qualitas MAX oder BlueMAX-Software angeben.
+\par #PROGNAME# funktioniert nicht ohne Open 386MAX oder BlueMAX. Sie m\'81ssen das {\b Laufwerk und den Pfad }der Open 386MAX oder BlueMAX-Software angeben.
 \par 
 \par Mit der R\'81cktaste, den Tasten EINFG, ENTF, POS1, ENDE und den Pfeiltasten k\rdblquote nnen Sie das Feld ver\'84ndern.
 \par 

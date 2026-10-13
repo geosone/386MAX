@@ -19,6 +19,8 @@
 #pragma optimize ("leg",off)    /* Global optimization precludes ... */
 char far *truename_fn (char far *dst_path, char far *src_path)
 {
+ int failed;		// CF of the call (OpenWatcom: no jumps from _asm to C labels)
+
  _asm {
 
 	push	si		// Save SI
@@ -39,12 +41,13 @@ char far *truename_fn (char far *dst_path, char far *src_path)
 	pop	di
 	pop	si
 
-	jnc	Truename_OK	// No errors
+	sbb	ax,ax		// AX = -1 if CF (error)
+	mov	failed,ax
 
  }
-	return (NULL);		// Indicate failure
+	if (failed)
+		return (NULL);	// Indicate failure
 
-Truename_OK:
 	return (dst_path);	// Indicate success
 
 } /* truename_fn () */

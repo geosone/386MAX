@@ -207,13 +207,13 @@ int sysinfo_read(char *buf,WORD nbuf)
 			rtn = scn_FLAGS(&SysInfo->flags);
 			break;
 		case K_ROMSEG:
-			rtn = scn_HEXWORD(&SysInfo->romseg);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->romseg);
 			break;
 		case K_ROMSIZE:
-			rtn = scn_HEXWORD(&SysInfo->romsize);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->romsize);
 			break;
 		case K_BOOTDRV:
-			rtn = scn_DECWORD(&SysInfo->bootdrv);
+			rtn = scn_DECWORD((WORD *)&SysInfo->bootdrv);
 			break;
 		case K_CPUPARM:
 			rtn = scn_CPUPARM(&SysInfo->cpu);
@@ -222,13 +222,13 @@ int sysinfo_read(char *buf,WORD nbuf)
 			rtn = scn_double(&SysInfo->mhz);
 			break;
 		case K_CHIPSET:
-			rtn = scn_HEXWORD(&SysInfo->chipset);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->chipset);
 			break;
 		case K_LOGDRV:
-			rtn = scn_DECWORD(&SysInfo->logdrv);
+			rtn = scn_DECWORD((WORD *)&SysInfo->logdrv);
 			break;
 		case K_DOSVER:
-			rtn = scn_HEXWORD(&SysInfo->dosver);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->dosver);
 			break;
 		case K_IONAME:
 			rtn = scn_string(SysInfo->ioname,sizeof(SysInfo->ioname));
@@ -240,13 +240,13 @@ int sysinfo_read(char *buf,WORD nbuf)
 			rtn = scn_string(SysInfo->comname,sizeof(SysInfo->comname));
 			break;
 		case K_BASEMEM:
-			rtn = scn_DECWORD(&SysInfo->basemem);
+			rtn = scn_DECWORD((WORD *)&SysInfo->basemem);
 			break;
 		case K_EXTMEM:
-			rtn = scn_DECWORD(&SysInfo->extmem);
+			rtn = scn_DECWORD((WORD *)&SysInfo->extmem);
 			break;
 		case K_EXTFREE:
-			rtn = scn_DECWORD(&SysInfo->extfree);
+			rtn = scn_DECWORD((WORD *)&SysInfo->extfree);
 			break;
 		case K_BIOSID:
 			rtn = scn_BIOSID(&SysInfo->biosid);
@@ -258,10 +258,10 @@ int sysinfo_read(char *buf,WORD nbuf)
 			rtn = scn_SYSBUFH(&SysInfo->machname);
 			break;
 		case K_ENVSIZE:
-			rtn = scn_DECWORD(&SysInfo->envsize);
+			rtn = scn_DECWORD((WORD *)&SysInfo->envsize);
 			break;
 		case K_ENVUSED:
-			rtn = scn_DECWORD(&SysInfo->envused);
+			rtn = scn_DECWORD((WORD *)&SysInfo->envused);
 			break;
 		case K_VIDEO:
 			rtn = scn_VIDEO(SysInfo->video,&SysInfo->nvideo);
@@ -273,16 +273,16 @@ int sysinfo_read(char *buf,WORD nbuf)
 			rtn = scn_string(SysInfo->sv_model,sizeof(SysInfo->sv_model));
 			break;
 		case K_KEYBOARD:
-			rtn = scn_HEXWORD(&SysInfo->keyboard);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->keyboard);
 			break;
 		case K_MOUSE:
 			rtn = scn_MOUSE(&SysInfo->mouse);
 			break;
 		case K_DISKROM:
-			rtn = scn_HEXWORD(&SysInfo->diskrom);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->diskrom);
 			break;
 		case K_DISKROMSIZE:
-			rtn = scn_HEXWORD(&SysInfo->diskromsize);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->diskromsize);
 			break;
 		case K_ROMLIST:
 			rtn = scn_ROMLIST(&SysInfo->romlist,&SysInfo->romlen);
@@ -312,10 +312,10 @@ int sysinfo_read(char *buf,WORD nbuf)
 			rtn = scn_HEXDWORD(&SysInfo->data_end);
 			break;
 		case K_PSP:
-			rtn = scn_HEXWORD(&SysInfo->psp);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->psp);
 			break;
 		case K_EMSXMS:
-			rtn = scn_DECWORD(&SysInfo->ems_xms);
+			rtn = scn_DECWORD((WORD *)&SysInfo->ems_xms);
 			break;
 		case K_EMSPARM:
 			rtn = scn_EMSPARM(&SysInfo->emsparm);
@@ -342,10 +342,10 @@ int sysinfo_read(char *buf,WORD nbuf)
 			rtn = scn_XMSPARM(&SysInfo->xmsparm);
 			break;
 		case K_DPMIVER:
-			rtn = scn_HEXWORD(&SysInfo->dpmi_ver);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->dpmi_ver);
 			break;
 		case K_DPMI32:
-			rtn = scn_DECWORD(&SysInfo->dpmi_32bit);
+			rtn = scn_DECWORD((WORD *)&SysInfo->dpmi_32bit);
 			break;
 		case K_TIMELIST:
 			rtn = scn_TIMELIST(&SysInfo->timelist,&SysInfo->timelen);
@@ -366,7 +366,7 @@ int sysinfo_read(char *buf,WORD nbuf)
 			rtn = scn_ENVSTR(&SysInfo->envstrs,&SysInfo->envlen);
 			break;
 		case K_OPENFCBS:
-			rtn = scn_DECWORD(&SysInfo->openfcbs);
+			rtn = scn_DECWORD((WORD *)&SysInfo->openfcbs);
 			break;
 		case K_OPENFILE:
 			rtn = scn_OPENFILE(&SysInfo->openfiles,&SysInfo->openlen);
@@ -414,13 +414,13 @@ int sysinfo_read(char *buf,WORD nbuf)
 			rtn = scn_LSEG(&SysInfo->pLseg);
 			break;
 		case K_MAXBESTSIZE:
-			rtn = scn_HEXWORD(&SysInfo->MaximizeBestsize);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->MaximizeBestsize);
 			break;
 		case K_MAXBEST:
 			rtn = scn_MAXBEST(&SysInfo->pMaxBest);
 			break;
 		case K_WINDOWSVER:
-			rtn = scn_HEXWORD(&SysInfo->WindowsData.windowsver);
+			rtn = scn_HEXWORD((WORD *)&SysInfo->WindowsData.windowsver);
 			break;
 		case K_WINDOWSDIR:
 			rtn = scn_SYSBUFH(&SysInfo->WindowsData.windowsdir);
@@ -438,19 +438,19 @@ int sysinfo_read(char *buf,WORD nbuf)
 			rtn = scn_FARPTRS(SysInfo->vectors,256);
 			break;
 		case K_LOWMEM:	/* 1.30 */
-			rtn = scn_130_QMAP(&SysInfo->lowdos,&SysInfo->nlowdos);
+			rtn = scn_130_QMAP(&SysInfo->lowdos,(WORD *)&SysInfo->nlowdos);
 			break;
 		case K_HIGHMEM: /* 1.30 */
-			rtn = scn_130_QMAP(&SysInfo->highdos,&SysInfo->nhighdos);
+			rtn = scn_130_QMAP(&SysInfo->highdos,(WORD *)&SysInfo->nhighdos);
 			break;
 		case K_LOWDOS:
-			rtn = scn_MACINFO(&SysInfo->lowdos,&SysInfo->nlowdos);
+			rtn = scn_MACINFO(&SysInfo->lowdos,(WORD *)&SysInfo->nlowdos);
 			break;
 		case K_HIGHDOS:
-			rtn = scn_MACINFO(&SysInfo->highdos,&SysInfo->nhighdos);
+			rtn = scn_MACINFO(&SysInfo->highdos,(WORD *)&SysInfo->nhighdos);
 			break;
 		case K_HIGHLOAD:
-			rtn = scn_MACINFO(&SysInfo->highload,&SysInfo->nhighload);
+			rtn = scn_MACINFO(&SysInfo->highload,(WORD *)&SysInfo->nhighload);
 			break;
 		case K_DDLIST:
 			rtn = scn_DDLIST(&SysInfo->ddlist,&SysInfo->ddlen);
@@ -715,7 +715,7 @@ static int near scn_HEXWORDS(WORD *value,WORD nvalue)
 	WORD kk;
 	WORD count;
 
-	if (scn_DECWORD(&count)) return rtn;
+	if (scn_DECWORD((WORD *)&count)) return rtn;
 	if (count > nvalue) count = nvalue;
 
 	for (kk = 0; kk < count; kk++) {
@@ -731,7 +731,7 @@ static int near scn_HEXBYTES(BYTE *value,WORD nvalue)
 	WORD kk;
 	WORD count;
 
-	if (scn_DECWORD(&count)) return rtn;
+	if (scn_DECWORD((WORD *)&count)) return rtn;
 	if (count > nvalue) count = nvalue;
 
 	for (kk = 0; kk < count; kk++) {
@@ -749,7 +749,7 @@ static int near scn_FARPTRS(void far * *value,WORD nvalue)
 	WORD kk;
 	WORD count;
 
-	if (scn_DECWORD(&count)) return rtn;
+	if (scn_DECWORD((WORD *)&count)) return rtn;
 	if (count > nvalue) count = nvalue;
 
 	for (kk = 0; kk < count; kk++) {
@@ -906,13 +906,13 @@ static int near scn_CPUPARM(CPUPARM *value)
 {
 	char szTemp[ 16 ];
 
-	if (scn_DECWORD(&value->cpu_type) != 0) return -1;
-	if (scn_DECWORD(&value->vir_flag) != 0) return -1;
-	if (scn_DECWORD(&value->fpu_type) != 0) return -1;
-	if (scn_DECWORD(&value->fpu_bug) != 0) return -1;
-	if (scn_DECWORD(&value->wei_flag) != 0) return -1;
-	if (scn_HEXWORD(&value->vcpi_ver) != 0) return -1;
-	if (scn_HEXWORD(&value->win_ver) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->cpu_type) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->vir_flag) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->fpu_type) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->fpu_bug) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->wei_flag) != 0) return -1;
+	if (scn_HEXWORD((WORD *)&value->vcpi_ver) != 0) return -1;
+	if (scn_HEXWORD((WORD *)&value->win_ver) != 0) return -1;
 	(void)scn_HEXDWORD( &value->dwFlags );
 	(void)scn_HEXDWORD( &value->dwCPUID );
 	(void)scn_string( szTemp, sizeof( szTemp ) );
@@ -928,12 +928,12 @@ static int near scn_BIOSID(BIOSID *value)
 	if (scn_HEXBYTE(&value->flags) != 0) return -1;
 	if (scn_HEXBYTE(&value->bus_flag) != 0) return -1;
 	if (scn_HEXBYTE(&value->ncrc) != 0) return -1;
-	if (scn_HEXWORD(&value->crc) != 0) return -1;
-	if (scn_HEXWORD(&value->sys_id) != 0) return -1;
-	if (scn_HEXWORD(&value->xbseg) != 0) return -1;
-	if (scn_HEXWORD(&value->xbsize) != 0) return -1;
+	if (scn_HEXWORD((WORD *)&value->crc) != 0) return -1;
+	if (scn_HEXWORD((WORD *)&value->sys_id) != 0) return -1;
+	if (scn_HEXWORD((WORD *)&value->xbseg) != 0) return -1;
+	if (scn_HEXWORD((WORD *)&value->xbsize) != 0) return -1;
 	if (scn_string(value->date,sizeof(value->date)) != 0) return -1;
-	if (scn_FARPTR(&value->i15_ptr) != 0) return -1;
+	if (scn_FARPTR((void far **)&value->i15_ptr) != 0) return -1;
 	return 0;
 }
 
@@ -947,19 +947,19 @@ static int near scn_VIDEO(VIDEO *value,WORD *nvalue)
 	for (kk = 0; kk < *nvalue; kk++) {
 		VIDEO *vp = value + kk;
 
-		if (scn_DECWORD(&vp->acode) != 0) return -1;
-		if (scn_DECWORD(&vp->dcode) != 0) return -1;
+		if (scn_DECWORD((WORD *)&vp->acode) != 0) return -1;
+		if (scn_DECWORD((WORD *)&vp->dcode) != 0) return -1;
 		if (scn_string(vp->name,sizeof(vp->name)) != 0) return -1;
 		if (scn_string(vp->mode,sizeof(vp->mode)) != 0) return -1;
-		if (scn_HEXWORD(&vp->text) != 0) return -1;
-		if (scn_HEXWORD(&vp->tsize) != 0) return -1;
-		if (scn_HEXWORD(&vp->graph) != 0) return -1;
-		if (scn_HEXWORD(&vp->gsize) != 0) return -1;
-		if (scn_HEXWORD(&vp->rom) != 0) return -1;
-		if (scn_HEXWORD(&vp->rsize) != 0) return -1;
-		if (scn_HEXWORD(&vp->osize) != 0) return -1;
-		if (scn_DECWORD(&vp->cols) != 0) return -1;
-		if (scn_DECWORD(&vp->rows) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->text) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->tsize) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->graph) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->gsize) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->rom) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->rsize) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->osize) != 0) return -1;
+		if (scn_DECWORD((WORD *)&vp->cols) != 0) return -1;
+		if (scn_DECWORD((WORD *)&vp->rows) != 0) return -1;
 	}
 	return 0;
 }
@@ -967,56 +967,56 @@ static int near scn_VIDEO(VIDEO *value,WORD *nvalue)
 static int near scn_MOUSE(MOUSEINFO *value)
 {
 	if (scn_VERSION(&value->version) != 0) return -1;
-	if (scn_DECWORD(&value->type) != 0) return -1;
-	if (scn_DECWORD(&value->irq) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->type) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->irq) != 0) return -1;
 	return 0;
 }
 
 static int near scn_EMSPARM(EMSPARM *value)
 {
-	if (scn_HEXWORD(&value->version) != 0) return -1;
-	if (scn_HEXWORD(&value->frame) != 0) return -1;
-	if (scn_DECWORD(&value->avail) != 0) return -1;
-	if (scn_DECWORD(&value->total) != 0) return -1;
-	if (scn_DECWORD(&value->mpages) != 0) return -1;
-	if (scn_DECWORD(&value->tothand) != 0) return -1;
-	if (scn_DECWORD(&value->acthand) != 0) return -1;
-	if (scn_DECWORD(&value->rawsize) != 0) return -1;
-	if (scn_DECWORD(&value->amrs) != 0) return -1;
-	if (scn_DECWORD(&value->mcsize) != 0) return -1;
-	if (scn_DECWORD(&value->dmars) != 0) return -1;
-	if (scn_DECWORD(&value->dmatype) != 0) return -1;
+	if (scn_HEXWORD((WORD *)&value->version) != 0) return -1;
+	if (scn_HEXWORD((WORD *)&value->frame) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->avail) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->total) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->mpages) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->tothand) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->acthand) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->rawsize) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->amrs) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->mcsize) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->dmars) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->dmatype) != 0) return -1;
 	return 0;
 }
 
 static int near scn_XMSPARM(XMSPARM *value)
 {
-	if (scn_DECWORD(&value->flag) != 0) return -1;
-	if (scn_HEXWORD(&value->version) != 0) return -1;
-	if (scn_HEXWORD(&value->driver) != 0) return -1;
-	if (scn_DECWORD(&value->hmaexist) != 0) return -1;
-	if (scn_DECWORD(&value->hmaavail) != 0) return -1;
-	if (scn_DECWORD(&value->a20state) != 0) return -1;
-	if (scn_DECWORD(&value->embhand) != 0) return -1;
-	if (scn_DECWORD(&value->embtotal) != 0) return -1;
-	if (scn_DECWORD(&value->embavail) != 0) return -1;
-	if (scn_DECWORD(&value->umbtotal) != 0) return -1;
-	if (scn_DECWORD(&value->umbavail) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->flag) != 0) return -1;
+	if (scn_HEXWORD((WORD *)&value->version) != 0) return -1;
+	if (scn_HEXWORD((WORD *)&value->driver) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->hmaexist) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->hmaavail) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->a20state) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->embhand) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->embtotal) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->embavail) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->umbtotal) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->umbavail) != 0) return -1;
 	return 0;
 }
 
 static int near scn_CONFIG(CONFIG *value)
 {
-	if (scn_DECWORD(&value->files) != 0) return -1;
-	if (scn_DECWORD(&value->buffers) != 0) return -1;
-	if (scn_DECWORD(&value->fcbx) != 0) return -1;
-	if (scn_DECWORD(&value->fcby) != 0) return -1;
-	if (scn_DECWORD(&value->stackx) != 0) return -1;
-	if (scn_DECWORD(&value->stacky) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->files) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->buffers) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->fcbx) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->fcby) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->stackx) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->stacky) != 0) return -1;
 	if (scn_ichar(&value->lastdrive) != 0) return -1;
-	if (scn_DECWORD(&value->brk) != 0) return -1;
-	if (scn_DECWORD(&value->print) != 0) return -1;
-	if (scn_DECWORD(&value->fastopen) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->brk) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->print) != 0) return -1;
+	if (scn_DECWORD((WORD *)&value->fastopen) != 0) return -1;
 	if (scn_token(TokenBuf,MAXTOKEN) == EOF) return -1;
 	if (strlen(TokenBuf) > 0) {
 		sysbuf_store(&value->maxpro,TokenBuf,0);
@@ -1039,16 +1039,16 @@ static int near scn_DRIVEPARM(DRIVEPARM *value)
 	WORD kk;
 	WORD count;
 
-	if (scn_DECWORD(&count)) return rtn;
+	if (scn_DECWORD((WORD *)&count)) return rtn;
 
 	for (kk = 0; kk < count; kk++) {
 		DRIVEPARM *vp = value + kk;
 
 		if (scn_string(vp->text,sizeof(vp->text)) != 0) return -1;
-		if (scn_DECWORD(&vp->heads) != 0) return -1;
-		if (scn_DECWORD(&vp->cyls) != 0) return -1;
-		if (scn_DECWORD(&vp->sectors) != 0) return -1;
-		if (scn_DECWORD(&vp->type) != 0) return -1;
+		if (scn_DECWORD((WORD *)&vp->heads) != 0) return -1;
+		if (scn_DECWORD((WORD *)&vp->cyls) != 0) return -1;
+		if (scn_DECWORD((WORD *)&vp->sectors) != 0) return -1;
+		if (scn_DECWORD((WORD *)&vp->type) != 0) return -1;
 	}
 	return 0;
 }
@@ -1059,7 +1059,7 @@ static int near scn_PARTTABLE(PARTTABLE *value,WORD nvalue)
 	WORD kk;
 	WORD count;
 
-	if (scn_DECWORD(&count)) return rtn;
+	if (scn_DECWORD((WORD *)&count)) return rtn;
 
 	if (count > nvalue) count = nvalue;
 
@@ -1086,19 +1086,19 @@ static int near scn_MCAID(MCAID *value,WORD nvalue)
 	WORD kk;
 	WORD count;
 
-	if (scn_DECWORD(&count)) return rtn;
+	if (scn_DECWORD((WORD *)&count)) return rtn;
 
 	if (count > nvalue) count = nvalue;
 
 	for (kk = 0; kk < count; kk++) {
 		MCAID *vp = value + kk;
 
-		if (scn_HEXWORD(&vp->aid) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->aid) != 0) return -1;
 		if (scn_HEXBYTE(&vp->pos[0]) != 0) return -1;
 		if (scn_HEXBYTE(&vp->pos[1]) != 0) return -1;
 		if (scn_HEXBYTE(&vp->pos[2]) != 0) return -1;
 		if (scn_HEXBYTE(&vp->pos[3]) != 0) return -1;
-		if (scn_HEXWORD(&vp->suba) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->suba) != 0) return -1;
 	}
 	return 0;
 }
@@ -1109,14 +1109,14 @@ static int near scn_EMSHAND(EMSHAND *value,WORD nvalue)
 	WORD kk;
 	WORD count;
 
-	if (scn_DECWORD(&count)) return rtn;
+	if (scn_DECWORD((WORD *)&count)) return rtn;
 
 	if (count > nvalue) count = nvalue;
 
 	for (kk = 0; kk < count; kk++) {
 		EMSHAND *vp = value + kk;
 
-		if (scn_HEXWORD(&vp->handle) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->handle) != 0) return -1;
 		if (scn_string(vp->name,sizeof(vp->name)) != 0) return -1;
 	}
 	return 0;
@@ -1128,15 +1128,15 @@ static int near scn_EMSMAP(EMSMAP *value,WORD nvalue)
 	WORD kk;
 	WORD count;
 
-	if (scn_DECWORD(&count)) return rtn;
+	if (scn_DECWORD((WORD *)&count)) return rtn;
 
 	if (count > nvalue) count = nvalue;
 
 	for (kk = 0; kk < count; kk++) {
 		EMSMAP *vp = value + kk;
 
-		if (scn_HEXWORD(&vp->base) != 0) return -1;
-		if (scn_HEXWORD(&vp->number) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->base) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->number) != 0) return -1;
 	}
 	return 0;
 }
@@ -1153,9 +1153,9 @@ static int near scn_TIMELIST(SYSBUFH *value,WORD *nvalue)
 	vp = sysbuf_ptr(*value);
 
 	for (kk = 0; kk < *nvalue; kk++,vp++) {
-		if (scn_HEXWORD(&vp->start) != 0) return -1;
-		if (scn_HEXWORD(&vp->length) != 0) return -1;
-		if (scn_HEXWORD(&vp->count) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->start) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->length) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->count) != 0) return -1;
 	}
 	return 0;
 }
@@ -1172,8 +1172,8 @@ static int near scn_ROMLIST(SYSBUFH *value,WORD *nvalue)
 	vp = sysbuf_ptr(*value);
 
 	for (kk = 0; kk < *nvalue; kk++,vp++) {
-		if (scn_HEXWORD(&vp->seg) != 0) return -1;
-		if (scn_HEXWORD(&vp->size) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->seg) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->size) != 0) return -1;
 	}
 	return 0;
 }
@@ -1190,10 +1190,10 @@ static int near scn_FLEXROM(SYSBUFH *value,WORD *nvalue)
 	vp = sysbuf_ptr(*value);
 
 	for (kk = 0; kk < *nvalue; kk++,vp++) {
-		if (scn_HEXWORD(&vp->src) != 0) return -1;
-		if (scn_HEXWORD(&vp->dst) != 0) return -1;
-		if (scn_HEXWORD(&vp->len) != 0) return -1;
-		if (scn_HEXWORD(&vp->flag) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->src) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->dst) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->len) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->flag) != 0) return -1;
 		/* Because of a bug in previous (pre-7.0 beta 3) ASQ */
 		/* versions, we may have invalid FLEXROM entries in a */
 		/* snapshot file. */
@@ -1223,7 +1223,7 @@ static int near scn_HOLES(SYSBUFH *value,WORD *nvalue)
 	for (kk = 0; kk < *nvalue; kk++,vp++) {
 		if (scn_HEXDWORD(&vp->faddr) != 0) return -1;
 		if (scn_HEXDWORD(&vp->length) != 0) return -1;
-		if (scn_DECWORD(&vp->class) != 0) return -1;
+		if (scn_DECWORD((WORD *)&vp->class) != 0) return -1;
 		if (scn_string(vp->name,sizeof(vp->name)) != 0) return -1;
 	}
 	return 0;
@@ -1281,10 +1281,10 @@ static int near scn_MACINFO(SYSBUFH *value,WORD *nvalue)
 	vp = sysbuf_ptr(*value);
 	for (kk = 0; kk < *nvalue; kk++,vp++) {
 		memset( vp, 0, sizeof(MACINFO) );		// Zero INIT structure
-		if (scn_ichar(&vp->type) != 0) return -1;
-		if (scn_HEXWORD(&vp->start) != 0) return -1;
-		if (scn_HEXWORD(&vp->size) != 0) return -1;
-		if (scn_HEXWORD(&vp->owner) != 0) return -1;
+		if (scn_ichar((int *)&vp->type) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->start) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->size) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->owner) != 0) return -1;
 		if (scn_string(vp->name,sizeof(vp->name)) != 0) return -1;
 		if (scn_string(vp->text,sizeof(vp->text)) != 0) return -1;
 		assert_EOL();
@@ -1315,12 +1315,12 @@ static int near scn_130_QMAP(SYSBUFH *value,WORD *nvalue)
 	for (kk = 0; kk < *nvalue; kk++,vp++) {
 		QMAP oldvalue;
 
-		if (scn_DECWORD(&oldvalue.id) != 0) return -1;
-		if (scn_HEXWORD(&oldvalue.start) != 0) return -1;
-		if (scn_HEXWORD(&oldvalue.end) != 0) return -1;
-		if (scn_HEXWORD(&oldvalue.owner) != 0) return -1;
+		if (scn_DECWORD((WORD *)&oldvalue.id) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&oldvalue.start) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&oldvalue.end) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&oldvalue.owner) != 0) return -1;
 		if (scn_HEXDWORD(&oldvalue.length) != 0) return -1;
-		if (scn_DECWORD(&oldvalue.ntext) != 0) return -1;
+		if (scn_DECWORD((WORD *)&oldvalue.ntext) != 0) return -1;
 		if (scn_string(oldvalue.name,sizeof(oldvalue.name)) != 0) return -1;
 		if (scn_string(oldvalue.text,sizeof(oldvalue.text)) != 0) return -1;
 
@@ -1355,18 +1355,18 @@ static int near scn_DDLIST(SYSBUFH *value,WORD *nvalue)
 	*value = sysbuf_alloc(*nvalue * sizeof(MEMHOLE));
 	vp = sysbuf_ptr(*value);
 	for (kk = 0; kk < *nvalue; kk++,vp++) {
-		if (scn_FARPTR(&vp->this) != 0) return -1;
-		if (scn_FARPTR(&vp->next) != 0) return -1;
-		if (scn_HEXWORD(&vp->attr) != 0) return -1;
-		if (scn_HEXWORD(&vp->strat) != 0) return -1;
-		if (scn_HEXWORD(&vp->intr) != 0) return -1;
+		if (scn_FARPTR((void far **)&vp->this) != 0) return -1;
+		if (scn_FARPTR((void far **)&vp->next) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->attr) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->strat) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&vp->intr) != 0) return -1;
 		if (vp->attr & 0x8000) {
 			if (scn_string(vp->name,sizeof(vp->name)) != 0) return -1;
 		}
 		else {
 			WORD num;
 
-			if (scn_DECWORD(&num) != 0) return -1;
+			if (scn_DECWORD((WORD *)&num) != 0) return -1;
 			memset(vp->name,8,0);
 			*(BYTE *)vp->name = (BYTE)num;
 		}
@@ -1387,10 +1387,10 @@ static int near scn_DOSDATA(SYSBUFH *value,WORD *nvalue)
 	vp = sysbuf_ptr(*value);
 	for (kk = 0; kk < *nvalue; kk++,vp++) {
 		if (scn_ichar(&vp->type) != 0) return -1;
-		if (scn_FARPTR(&vp->saddr) != 0) return -1;
+		if (scn_FARPTR((void far **)&vp->saddr) != 0) return -1;
 		if (scn_HEXDWORD(&vp->faddr) != 0) return -1;
 		if (scn_HEXDWORD(&vp->length) != 0) return -1;
-		if (scn_DECWORD(&vp->count) != 0) return -1;
+		if (scn_DECWORD((WORD *)&vp->count) != 0) return -1;
 		if (scn_string(vp->name,sizeof(vp->name)) != 0) return -1;
 		assert_EOL();
 	}
@@ -1405,15 +1405,15 @@ static int near scn_ADFINFO(SYSBUFH *value,WORD nvalue)
 
 	memset(value,0,nvalue * sizeof(SYSBUFH));
 
-	if (scn_DECWORD(&count)) return rtn;
+	if (scn_DECWORD((WORD *)&count)) return rtn;
 	if (count > nvalue) count = nvalue;
 
 	for (kk = 0; kk < count; kk++) {
 		ADFINFO v;
 
-		if (scn_HEXWORD(&v.aid) != 0) return -1;
+		if (scn_HEXWORD((WORD *)&v.aid) != 0) return -1;
 		if (scn_string(v.name,sizeof(v.name)) != 0) return -1;
-		if (scn_DECWORD(&v.noption) != 0) return -1;
+		if (scn_DECWORD((WORD *)&v.noption) != 0) return -1;
 		v.foption = v.loption = 0;
 		if (v.noption > 0) {
 			scn_ADFOPTION(&v);
@@ -1438,7 +1438,7 @@ static int near scn_ADFOPTION(ADFINFO *value)
 		ADFOPTION v;
 
 		if (scn_string(v.name,sizeof(v.name)) != 0) return -1;
-		if (scn_DECWORD(&v.nchoice) != 0) return -1;
+		if (scn_DECWORD((WORD *)&v.nchoice) != 0) return -1;
 		if (v.nchoice > 0) {
 			scn_ADFCHOICE(&v);
 		}
@@ -1494,7 +1494,7 @@ static int near scn_FSTATS(SYSBUFH *value)
 	FILESTATS fs, *fp;
 	SYSBUFH newh;
 
-	if (scn_DECWORD(&kk)) return -1;
+	if (scn_DECWORD((WORD *)&kk)) return -1;
 
 	*value = 0;
 	for (fp=NULL; kk; kk--) {
@@ -1515,7 +1515,7 @@ static int near scn_LSEG(SYSBUFH *value)
 	LSEGDATA ls, *lp;
 	SYSBUFH newh;
 
-	if (scn_DECWORD(&kk)) return -1;
+	if (scn_DECWORD((WORD *)&kk)) return -1;
 
 	*value = 0;
 	for (lp=NULL; kk; kk--) {
@@ -1542,7 +1542,7 @@ static int near scn_MAXBEST(SYSBUFH *value)
 	MAXIMIZEBST ms, *mp;
 	SYSBUFH newh;
 
-	if (scn_DECWORD(&kk)) return -1;
+	if (scn_DECWORD((WORD *)&kk)) return -1;
 
 	*value = 0;
 	for (mp=NULL; kk; kk--) {

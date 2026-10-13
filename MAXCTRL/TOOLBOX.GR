@@ -121,11 +121,11 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP, 5, 49, 190, 10
     CONTROL         "Datei &QMAX.INI entfernen", IDC_REMOVEINIFILE, "Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 5, 65, 190, 10
-    CONTROL         "Qualitas MAX Programmgr&uppe entfernen", IDC_REMOVEMAXGROUP, "Button",
+    CONTROL         "Open 386MAX Programmgr&uppe entfernen", IDC_REMOVEMAXGROUP, "Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 5, 81, 190, 10
-    CONTROL         "Qualitas MAX &Verzeichnis entfernen", IDC_REMOVEMAXDIR, "Button",
+    CONTROL         "Open 386MAX &Verzeichnis entfernen", IDC_REMOVEMAXDIR, "Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 5, 97, 190, 10
-    CONTROL         "Qualitas MAX &Programme entfernen", IDC_REMOVEMAX, "Button",
+    CONTROL         "Open 386MAX &Programme entfernen", IDC_REMOVEMAX, "Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 5, 113, 190, 10
 END
 

@@ -715,7 +715,7 @@ void get_bios_mfr(SYSBUFH *biosp,SYSBUFH *machp)
 	if (*machp) return;
 
 	/* Part II:  Secondary list */
-	if (*mfp->whatmach == '@') {
+	if (mfp->whatmach && *mfp->whatmach == '@') {
 		BIOSMFR *mfp0 = mfp;
 
 		for (mfp = MfrList2; mfp->what; mfp++) {
@@ -3031,8 +3031,8 @@ void fixtabs(char *dst,char *src,int n)
  */
 
 int _cdecl dosdatcmp(
-	void *p1,	/* Pointer to first item */
-	void *p2)	/* Pointer to second item */
+	const void *p1,	/* Pointer to first item */
+	const void *p2)	/* Pointer to second item */
 {
 	if (((DOSDATA *)p1)->faddr < ((DOSDATA *)p2)->faddr) return -1;
 	if (((DOSDATA *)p1)->faddr > ((DOSDATA *)p2)->faddr) return  1;
@@ -3191,7 +3191,7 @@ GetPnPData( void ) {
 	SysInfo->wPnP_ver = (SysInfo->wPnP_ver & 0x0f) |
 			    ((SysInfo->wPnP_ver & 0xf0) << 4);
 
-	if (fnGetNumNodes( PnP_GET_NUM_NODES, &wNumNodes, &wMaxNodeSize,
+	if (fnGetNumNodes( PnP_GET_NUM_NODES, (unsigned short _far *)&wNumNodes, (unsigned short _far *)&wMaxNodeSize,
 				wPnPDataSeg ) != PnP_SUCCESS) {
 		return FALSE;
 	} /* Unable to get number of nodes */

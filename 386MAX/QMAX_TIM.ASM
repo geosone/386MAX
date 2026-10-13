@@ -60,6 +60,7 @@ CODE	 segment use16 byte public 'prog' ; Start CODE segment
 	 assume  cs:PGROUP,ds:PGROUP
 
 	 extrn	 ENABLE_IMR:near
+	 extrn	 SHDRD:word
 
 	 extrn	 GOREAL_SUB:near
 
@@ -1514,6 +1515,67 @@ REST_CACHEPM_EXIT:
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 REST_CACHEPM endp		; End REST_CACHEPM procedure
+	 NPPROC  IS_SHDROM -- Check For ROM In Shadow DRAM
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+See if (part of) the region at BX:0 of CX paras is read from shadow
+DRAM (see GET_SHDMAP in QMAX_MEM, called by FILL_MAP).  Such a ROM is already as fast as RAM and
+mustn't be moved into extended memory, as the BIOS might keep
+writable data next to its code there (e.g. SeaBIOS' stack at E8000).
+
+On entry:
+
+BX	 =	 segment of the region
+CX	 =	 length in paras
+
+On exit:
+
+CF	 =	 0 if in shadow DRAM
+	 =	 1 otherwise
+
+|
+
+	 REGSAVE <ax,bx,cx> ; Save registers
+
+	 jcxz	 IS_SHDROM_NO	; Jump if empty
+
+	 cmp	 bx,0C000h	; Izit below C0000?
+	 jb	 short IS_SHDROM_NO ; Jump if so
+
+	 add	 cx,bx		; Skip to the end
+	 jc	 short @F	; Jump if it ends at 1MB
+	 dec	 cx		; Last para
+	 jmp	 short IS_SHDROM_END ; Join common code
+@@:
+	 mov	 cx,0FFFFh	; Last para
+IS_SHDROM_END:
+	 sub	 bx,0C000h	; Less start
+	 shr	 bx,14-4	; Convert from paras to 16KB
+	 sub	 cx,0C000h	; Less start
+	 shr	 cx,14-4	; Convert from paras to 16KB
+IS_SHDROM_NEXT:
+	 bt	 SHDRD,bx	; Izit read from DRAM?
+	 jc	 short IS_SHDROM_YES ; Jump if so
+
+	 inc	 bx		; Next 16KB block
+	 cmp	 bx,cx		; Any more?
+	 jbe	 short IS_SHDROM_NEXT ; Jump if so
+IS_SHDROM_NO:
+	 stc			; Mark as not in shadow DRAM
+
+	 jmp	 short IS_SHDROM_EXIT ; Join common exit code
+
+IS_SHDROM_YES:
+	 clc			; Mark as in shadow DRAM
+IS_SHDROM_EXIT:
+	 REGREST <cx,bx,ax>	; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+IS_SHDROM endp			; End IS_SHDROM procedure
 	 FPPROC  TIME_ALLMEM -- Time Memory Accesses
 	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
@@ -1856,6 +1918,19 @@ TIME_ALLMEM_NEXT1A:
 	 jnz	 short TIME_ALLMEM_SWAP ; Yes, so be sure to swap it
 
 TIME_ALLMEM_NEXT1B:
+
+; A ROM in shadow DRAM is already fast; don't move it (the BIOS may keep
+; writable data next to its code there)
+
+	 push	 bx		; Save for a moment
+	 push	 cx		; ...
+	 mov	 bx,MAPTAB.MAP_PARA_SRC[si] ; Get start
+	 mov	 cx,MAPTAB.MAP_LEN[si] ; Get length in paras
+	 call	 IS_SHDROM	; Return CF=0 if in shadow DRAM
+	 pop	 cx		; Restore
+	 pop	 bx		; ...
+	 jnc	 near ptr TIME_ALLMEM_LOOP ; Jump if so (don't swap it)
+
 	 cmp	 ax,MAPTAB.MAP_TIME[si] ; Compare 'em
 	 jae	 short TIME_ALLMEM_LOOP ; ROM time is better, don't swap it
 TIME_ALLMEM_SWAP:

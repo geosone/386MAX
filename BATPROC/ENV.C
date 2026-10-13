@@ -15,8 +15,8 @@
 
 extern jmp_buf env;
 
-unsigned char *environment;	// pointer to environment (paragraph aligned)
-unsigned char *alias_list;	// pointer to alias list (paragraph aligned)
+char *environment;		// pointer to environment (char: unsigned with /J) (paragraph aligned)
+char *alias_list;		// pointer to alias list (paragraph aligned)
 
 
 // search paths for file -- return pathname if found, NULL otherwise

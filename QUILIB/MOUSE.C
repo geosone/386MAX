@@ -97,14 +97,14 @@ int get_mouse(			/* Poll for mouse event */
 	if (!MouseAvail) return 0;
 	rtn = mousein(&xcur,&ycur,&button,NULL);
 #else	/* DOS_VERSION */
-	if (MouseAvail) _asm {
+	if (MouseAvail) { _asm {
 		mov ax,3	/* Get mouse position and button status */
 		/*mov ax,5*/	/* Get button press information */
 		int 0x33
 		mov button,bx	/* Save button status */
 		mov xcur,cx	/* Save x-coordinate */
 		mov ycur,dx	/* Save y-coordinate */
-	}
+	} }
 	xcur /= 8;
 	ycur /= 8;
 	rtn = 1;
@@ -122,12 +122,12 @@ void set_mouse_pos(	/*	Set the mouse cursor here. */
 	x *= 8;
 	y *= 8;
 
-	if (MouseAvail) _asm {
+	if (MouseAvail) { _asm {
 		mov ax, 4			/*	Set mouse position */
 		mov cx, x			/*	Column position */
 		mov dx, y			/*	what row */
 		int 0x33
-	}
+	} }
 }
 
 #pragma optimize ("",on)

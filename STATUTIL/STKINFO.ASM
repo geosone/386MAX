@@ -47,7 +47,7 @@ FillStack  proc  lpPattern:dword ; Far pointer to filler pattern
 	 les	 bx,lpPattern ; Address filler pattern
 ;;;; assume	 es:DGROUP
 
-	 mov	 eax,es:[dword ptr bx] ; Get filler dword
+	 mov	 eax,dword ptr es:[bx] ; Get filler dword
 	 mov	 dwFiller,eax ; Save for later
 
 	 mov	 bx,ss		; Get stack segment

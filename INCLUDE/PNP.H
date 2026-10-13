@@ -277,7 +277,7 @@ typedef struct tagPnPSmallResource {
 		Name:4,			/* Name (type) of resource - see list */
 		Large:1;		/* Large resource flag - always 0 */
 	union {
-		unsigned char Data[ 0 ];
+		unsigned char Data[ 1 ];	/* [0]: MS C only; the union is larger */
 		PNPSMALLVER Ver;
 		PNPSMALLIRQ IRQ;
 		PNPSMALLDMA DMA;
@@ -388,7 +388,7 @@ typedef struct tagPnPLargeRes {
 	unsigned int wLength;	/* Length in bytes of Data */
 
 	union {
-		unsigned char Data[ 0 ];
+		unsigned char Data[ 1 ];	/* [0]: MS C only; the union is larger */
 		PNPM32F M32F;
 		PNPM16 M16;
 		PNPM32 M32;
@@ -426,7 +426,7 @@ typedef struct tagPnPDevNodeStr {
 				   11b = configurable only at runtime */
 		Rsvd:7;		/* Unused */
 	union {
-		unsigned char paRest[ 0 ]; /* Remainder */
+		unsigned char paRest[ 1 ]; /* Remainder ([0]: MS C only; the union is larger) */
 
 		PNPSMALLRES s;	/* Small resource */
 		PNPLARGERES l;	/* Large resource */

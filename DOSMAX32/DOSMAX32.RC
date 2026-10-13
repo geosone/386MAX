@@ -134,4 +134,3 @@ BEGIN
     IDS_UNABLEREG	    "Unable to register DOSMAX16.DLL.  DOSMAX feature not available."
 END
 
-

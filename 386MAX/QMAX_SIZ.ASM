@@ -513,9 +513,15 @@ endif				; IF @OEM_FLEXROM
 ; The theoretical maximum for EMS memory appears to be 256MB
 ; calculated as no more than 128 2MB "boards" as limited by
 ; the EMS 3.0 I/O mapping functions.
+;
+; RPNs are word offsets of dwords (16KB page # * 4), see INIT_DATA,
+; so the EMS pages plus the mappable conventional and screen pages
+; (at most 1MB) must stay below 16384 pages.  Thus EMS is limited
+; to 256MB less 1MB; with 256MB the RPNs of the conventional memory
+; wrapped to zero (crash on systems with more than 257MB of RAM).
 
 	 public  MAX_EMSMEM
-MAX_EMSMEM dd	 256*1024	; Maximum EMS allowed in 1KB
+MAX_EMSMEM dd	 (256-1)*1024	; Maximum EMS allowed in 1KB
 				; The stated EMS 4.0 limit is 32MB, but the
 				; theoretical EMS 4.0 limit is 256MB.
 				; Mostly we're changing this so Shared memory
@@ -2247,7 +2253,11 @@ Calculate various sizes for error message.
 
 ; Display the amount of low DOS memory needed
 
-	 movzx	 eax,LOWSIZE	; Get total amount of low DOS memory
+	 movsx	 eax,LOWSIZE	; Get total amount of low DOS memory
+	 or	 eax,eax	; Negative (DOS memory reduced)?
+	 jns	 short @F	; Jump if not
+	 xor	 eax,eax	; Nothing to fill
+@@:
 	 add	 ebx,eax	; Add in to accumulator
 	 lea	 di,YGROUP:MSG_SIZE_LOW-1 ; ES:DI ==> units digit in message
 	 mov	 cx,10		; Convert in decimal
@@ -2483,13 +2493,11 @@ if @OEM_EMS
 	 mov	 eax,MAX_EMSMEM ; Use maximum
 	 sub	 EXTSIZE,eax	; Less EMMSIZE
 
-; So we can remain at the maximum EMS memory, set @CMD_EMS if EXT=
-; is not specified
-
-	 test	 CMD_FLAG,@CMD_EXT ; Izit specified?
-	 jnz	 short CALC_SIZE_NOMAX ; Jump if so
-
-	 or	 CMD_FLAG,@CMD_EMS ; Mark as specified
+; Open 386MAX:  don't mark EMS= as specified here (that kept EMS at the
+; maximum in the later passes even when the program storage grew, so
+; systems with more than 257MB failed with "Insufficient extended
+; memory").  Each pass computes EMS = min (rest, MAX_EMSMEM) again;
+; what's above the maximum stays in EXTSIZE.
 CALC_SIZE_NOMAX:
 	 mov	 EMMSIZE,eax	; Save as size of EMS
 endif				; IF @OEM_EMS
@@ -3192,6 +3200,7 @@ CALC_SIZE_XSHD_EXIT:
 	 mov	 eax,LMLTOP	; Get top of low memory load in 1KB
 	 movzx	 ebx,PRGSIZE	; Get size of program in 1KB
 	 sub	 eax,ebx	; Less size of program in 1KB
+	 jc	 short CALC_SIZE_NOLML ; Jump if LMLTOP is below PRGSIZE
 
 ; If we're providing support for Windows, we can't allow LMLTOP-PRGSIZE
 ; to be below 640KB
@@ -3233,6 +3242,7 @@ CALC_SIZE_NOLML:
 @@:
 	 movzx	 ebx,PRGSIZE	; Get size of PRG including PDT
 	 sub	 eax,ebx	; Less size of PRG including PDT
+	jc	short CALC_SIZE_XLML0 ; Jump if LMLTOP is below PRGSIZE (no LML)
 
 	cmp	eax,1024+64	; Izit below 1.1MB in KB (and thus too small)?
 	jb	short CALC_SIZE_XLML0 ; Jump if so (no LML)

@@ -26,6 +26,7 @@
 #define SPLASHDLGBOX        100
 #define SPLASH_BITMAP	    110
 #define WELCOMEDLGBOX       120
+#define LICENSEDLGBOX       125
 #define REGISTERDLGBOX      130
 #define CONFIRMDLGBOX       140
 #define PREBRANDEDDLGBOX    150

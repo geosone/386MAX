@@ -184,13 +184,13 @@ how a memory management program might make your system more productive.
 \par 
 \par {\b Distribution}
 \par 
-\par The ASQ utility is an integral part of Qualitas products.  ASQ is copyright Qualitas, Incorporated and is not public domain software.  Unlike previous releases of ASQ, this version is {\b not} shareware and may not be distributed to other users.
+\par The ASQ utility is an integral part of Open 386MAX products.  ASQ is copyright Qualitas, Incorporated and is not public domain software.  Unlike previous releases of ASQ, this version is {\b not} shareware and may not be distributed to other users.
 \par 
 \par      (C) Copyright 1987-96 Qualitas, Inc.  GNU General Public License version 3.
 \par 
 \par {\b Trademarks}
 \par 
-\par Qualitas, Qualitas MAX, BlueMAX, MOVE'EM, ROMsearch, QCache, SmartMemory, and VGAswap are trademarks of Qualitas, Inc.
+\par Qualitas, Open 386MAX, BlueMAX, MOVE'EM, ROMsearch, QCache, SmartMemory, and VGAswap are trademarks of Qualitas, Inc.
 \par 
 \par All other company and product names are registered trademarks or trademarks of their respective companies.
 \par 
@@ -599,7 +599,7 @@ ams may be able to discover and use even more.
 \par 
 \par Physical memory is not actually {\b moved} into unused high DOS address areas.  The 80386/486/++ CPUs can trans
 late physical addresses into logical addresses, then present the logical addresses to application programs, which can't tell the difference.  When unused address regions are found in the high DOS area, the actual addresses of physical memory are {\b 
-mapped} to the regions by the memory management program.  A somewhat different technique with similar results can be used on some 80286 computers, using the 80286 support provided in Qualitas products.
+mapped} to the regions by the memory management program.  A somewhat different technique with similar results can be used on some 80286 computers, using the 80286 support provided in Open 386MAX products.
 \par 
 \par DOS versions earlier than 5.00 will not directly load programs into high DOS areas, so {\b memory management}
  programs must load the designated programs there.  In addition, there may be three or more separate holes of various sizes, since high DOS holes are usually fragmented, so good memory management software will help the user allocate wisely among the avail
@@ -622,7 +622,7 @@ alitas MAX from Qualitas supports EMS, XMS, VCPI, DPMI, and VDS to meet both cur
 \par {\b How Much Gain?}
 \par 
 \par The amount of memory to be gained by memory management is not fixed; it is a function of the hardware and software configuration and of the memory management technique used.  {\b Optimized}
- program loading results in the highest gain.  As implemented by Qualitas products, reordering optimization involves testing possible load orders before relocating software and finding the combination which l
+ program loading results in the highest gain.  As implemented by Open 386MAX products, reordering optimization involves testing possible load orders before relocating software and finding the combination which l
 oads the most software high.  Obviously, as the number of programs and drivers to optimize grows, the process becomes exponentially more complex.
 \par 
 \par Depending on the computer setup, memory management may be able to free up as much as {\b 200 KB}
@@ -764,7 +764,7 @@ nated with a .SYS filename extension.
 \par \pard\plain \f11 @P H.T_Cfg_Lsn_01 H.T_Cfg_CMO
 \par                           {\i MAXIMIZE PROfile
 \par }
-\par When a Qualitas product is installed on the system, a PROfile is created.  The file, named {\b 386MAX.PRO}, {\b BLUEMAX.PRO}, or {\b MOVE'EM.PRO}, contains commands used during system bootup and configuration.
+\par When a Open 386MAX product is installed on the system, a PROfile is created.  The file, named {\b 386MAX.PRO}, {\b BLUEMAX.PRO}, or {\b MOVE'EM.PRO}, contains commands used during system bootup and configuration.
 \par 
 \par Commands in the PROfile are documented in Qualitas User Guides and can be changed using any standard text editor.  The MAX Editor contains an Option Editor feature that provides help in the creation of PROfile options.
 \par 
@@ -784,12 +784,12 @@ memory. DOS subsegments include Files, Buffers, FCBs, LASTDRIVE and Stacks. Subs
 \par }
 \par The SYSTEM.INI file is displayed if Windows is in the path. SYSTEM.INI contains information used by Windows during startup, including specific hardware drivers. 
 \par 
-\par INSTALL will add the options SystemROMBreakPoint=FALSE and VCPIWarning=FALSE to SYSTEM.INI.  These ensure compatibility between Qualitas products and Windows, and are harmless if Qualitas products are not active in the system.
+\par INSTALL will add the options SystemROMBreakPoint=FALSE and VCPIWarning=FALSE to SYSTEM.INI.  These ensure compatibility between Open 386MAX products and Windows, and are harmless if Open 386MAX products are not active in the system.
 \par \pard\plain \s16 \f11\fs28\cf6 >>H.T_Cfg_Qualit
 \par \pard\plain \f11 @P H.T_Cfg_Lsn_01 H.T_Cfg_CMO
 \par                           {\i Qualitas Products
 \par }
-\par Information on version number and product are obtained from file name, date, time, and file size of Qualitas products. 
+\par Information on version number and product are obtained from file name, date, time, and file size of Open 386MAX products. 
 \par 
 \par The names of resident programs are shown with the name on the left, followed by:
 \par 
@@ -916,7 +916,7 @@ T style keyboard, two way communication between the keyboard and the computer al
 \par                           {\i Installed Memory}
 \par 
 \par Computer {\b RAM} (Random Access Memory) consists of chips installed on the computer's system board or on an add-in board.  There are several logical {\ul memory types}{\v H.T_Mem_Lsn_01}
-.  80386/486/++ machines may use software to allocate different types of memory.  The Qualitas MAX and BlueMAX products provide this support.
+.  80386/486/++ machines may use software to allocate different types of memory.  The Open 386MAX and BlueMAX products provide this support.
 \par 
 \par \pard\plain \s16 \f11\fs28\cf6 >>H.T_Hdw_Sum_B
 \par \pard\plain \f11 @P H.T_Hdw_Lsn_01 H.T_Hdw_BIOS
@@ -1062,7 +1062,7 @@ uilt into the PC by the manufacturer.
 \par 
 \par {\b Subject--------------------  Tutorial Topic------------------------}
 \par {\ul 386MAX.PRO file}{\v H.T_Cfg_PRO}              MAXIMIZE PROfile
-\par {\ul Qualitas MAX product}{\v H.Products}               About Qualitas Products
+\par {\ul Open 386MAX product}{\v H.Products}               About Qualitas Products
 \par {\ul Adapter memory}{\v H.T_Hdw_Sum_A}               Adapters
 \par {\ul Add-in board region}{\v H.T_Mem_Holes}          Holes in Memory
 \par {\ul ASQ distribution}{\v H.T_Register}             Registration and Distribution
@@ -1139,7 +1139,7 @@ uilt into the PC by the manufacturer.
 \par {\ul POST}{\v H.T_Mem_Holes}                         Holes in Memory
 \par {\ul PROMPT command}{\v H.T_Cfg_AUT}               AUTOEXEC.BAT File
 \par {\ul Qualitas information}{\v\ul H.T_Cfg_Qualit}         Qualitas Products{\ul 
-\par Qualitas products}{\v H.Products}            About Qualitas Products
+\par Open 386MAX products}{\v H.Products}            About Qualitas Products
 \par {\ul Qualitas trademarks}{\v H.T_Register}          Registration and Distribution
 \par {\ul RAM memory}{\v H.T_Mem_RAM}                   RAM Memory
 \par {\ul Real mode}{\v H.T_Mem_Lsn_03}                    Memory Management Concepts

@@ -27,20 +27,20 @@
 \par 
 \par {\b Would you like to enter a new subdirectory?}
 \par \pard\plain \s3\keepn \f4\fs28\cf6\lang1033 >>M.BadUpdSubdir
-\par \pard\plain \f4\lang1033 We did not detect working Qualitas MAX or BlueMAX files in:
+\par \pard\plain \f4\lang1033 We did not detect working Open 386MAX or BlueMAX files in:
 \par   #ARG1#
 \par 
-\par {\b Reenter another subdirectory or exit #PROGNAME# and install }{\b Qualitas MAX}{\b  or BlueMAX from the original disk before running #PROGNAME#.}
+\par {\b Reenter another subdirectory or exit #PROGNAME# and install }{\b Open 386MAX}{\b  or BlueMAX from the original disk before running #PROGNAME#.}
 \par \pard\plain \s3\keepn \f4\fs28\cf6\lang1033 >>M.DestDir
 \par \pard\plain \f4\lang1033 {\b Enter a directory}{\b  specification for the location of the program files after installation:}
 \par 
 \par 
 \par \pard\plain \s3\keepn \f4\fs28\cf6\lang1033 >>M.DOSHelp
-\par \pard\plain \f4\lang1033 #PROGNAME# has detected DOS 5.x on this system and can add help text for installed Qualitas products to the DOS help file.
+\par \pard\plain \f4\lang1033 #PROGNAME# has detected DOS 5.x on this system and can add help text for installed Open 386MAX products to the DOS help file.
 \par 
 \par {\b Would you like #PROGNAME# to add help text to the DOS help file?}{\b 
 \par }\pard\plain \s3\keepn \f4\fs28\cf6\lang1033 >>M.DOSPath
-\par \pard\plain \f4\lang1033 #PROGNAME# needs to know the location of your DOS directory so that it can add help text for Qualitas products.
+\par \pard\plain \f4\lang1033 #PROGNAME# needs to know the location of your DOS directory so that it can add help text for Open 386MAX products.
 \par 
 \par {\b Specify the drive and path of the DOS subdirectory:}{\b 
 \par }
@@ -65,7 +65,7 @@
 \par 
 \par {\b Would you like to run Maximize now?}
 \par \pard\plain \s3\keepn \f4\fs28\cf6\lang1033 >>M.NoInstall
-\par \pard\plain \f4\lang1033 #PROGNAME# has not detected hardware in this machine that will support a Qualitas product and cannot continue.  One of these is required:
+\par \pard\plain \f4\lang1033 #PROGNAME# has not detected hardware in this machine that will support a Open 386MAX product and cannot continue.  One of these is required:
 \par 
 \par   {\b\i *} a Chips & Technologies chipset; or
 \par   {\b\i *} hardware LIM 4.0 EMS support.

@@ -50,7 +50,7 @@ INSTALL 	equ	0	; INSTALL
 UPDATE		equ	1	; UPDATE
 
 if (ASYS EQ MAX) or (ASYS EQ MAXU)
-PRODUCTNAME	equ	'Qualitas MAX'
+PRODUCTNAME	equ	'Open 386MAX'
 elseif (ASYS EQ BLUEMAX) or (ASYS EQ BLUEMAXU)
 PRODUCTNAME	equ	'BlueMAX'
 elseif (ASYS EQ MOVEM) or (ASYS EQ MOVEMU)
@@ -97,7 +97,7 @@ endif		; BETA
 _ProgramName  db  ' ',PRODUCTNAME,' ',VERS_H,' ',0       ; " 386MAX 6 "
 
 	 public  _MsgLogoText
-MsgLogoText_1 db PRODUCTNAME,' ',VERS_H,'.',VERS_T,0
+MsgLogoText_1 db PRODUCTNAME,' ',VERS_H,'.',VERS_T,VERS_U,0
 MsgLogoText_2 db PRODTITLE,0
 MsgLogoText_3 db PROGNAME,0		; Balance leading space
 MsgLogoText_4 db 'Version ',PROGVERSION,0
@@ -119,9 +119,9 @@ _PrintName db	 ' ',ULCPROGNAME,0
 _HelpString label byte
 ifdef LANG_GR
 if (PROGTYPE eq UPDATE)
- db	'Erneuert vorhandene(s) Qualitas-Programm(e) mittels UPDATE-Diskette.',LF
+ db	'Erneuert vorhandene(s) Open 386MAX-Programm(e) mittels UPDATE-Diskette.',LF
 else
- db	'Installiert Qualitas-Programm(e) von Diskette auf Festplatte.',LF
+ db	'Installiert Open 386MAX-Programm(e) von Diskette auf Festplatte.',LF
 endif				; IF PROGTYPE eq UPDATE
  db	 LF
  db	 PROGNAME,' [Schalter]',LF
@@ -146,9 +146,9 @@ endif
  db	 '(C) Copyright 1987-96 Qualitas, Inc.   Alle Rechte vorbehalten.',LF,0
 else
 if (PROGTYPE eq UPDATE)
- db	'Update installed Qualitas product(s) from new floppy disk.',LF
+ db	'Update installed Open 386MAX product(s) from new floppy disk.',LF
 else
- db	'Install Qualitas product(s) from floppy to hard disk.',LF
+ db	'Install Open 386MAX product(s) from floppy to hard disk.',LF
 endif				; IF PROGTYPE eq UPDATE
  db	 LF
  db	 PROGNAME,' [switches]',LF

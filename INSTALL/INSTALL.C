@@ -218,9 +218,13 @@ REINSTALL_INVAL:
 	parse_config ();		// Parse CONFIG.SYS
 
 	if ( !security_crc ) {
-		get_userinfo ();	// Get the name and serial number
-		do_intmsg(MsgWrtReg);
-		do_encryptsrc ();	// Encrypt INSTALL
+		// Open 386MAX (GPL): no registration and no serial number.  The
+		// installed programs get the license text instead (logo); the
+		// distribution files are not written to.
+		*user_number = '\0';
+		security_pattern[0] = 0x01;	// # lines in message
+		strcpy (&security_pattern[1], "GNU General Public License version 3\r\n");
+		encrypt (security_pattern, SECURITY_LEN);
 	}
 	else				// Decrypt the serial #
 	{
@@ -744,8 +748,8 @@ typedef struct tagSaveTab {
 	int nbytes;	// 0 for string or bytes to pass to printf
 } SAVETAB;
 
-static char near *pszStr = "%s\n";
-static char near *pszCptr= "%s\n";
+static char near pszStr[] = "%s\n";	// arrays: told apart by address (OpenWatcom merges equal literals)
+static char near pszCptr[]= "%s\n";
 static char near *pszDec = "%u\n";
 static char near *pszLong = "%lu\n";
 static char near *pszNull = "(null)";
@@ -973,8 +977,9 @@ void create_restore (char *dir)
 		if (pt->fmt == pszCptr) psz = *((char **) pt->varaddr);
 		else			psz = pt->varaddr;
 
-		// Make sure we use (NULL) if it's empty
-		if (psz && !*psz) psz = pszNull;
+		// Make sure we use (NULL) if it's empty (or NULL: Microsoft C
+		// printed "(null)" for it, OpenWatcom prints nothing)
+		if (!psz || !*psz) psz = pszNull;
 		cfprintf (fout, pt->fmt, psz);
 		break;
 

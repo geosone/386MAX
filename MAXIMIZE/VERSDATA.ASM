@@ -61,7 +61,7 @@ endif	; if !MOVEM
 
 
 if (ASYS EQ MAX)
-PRODUCTNAME	equ	'Qualitas MAX'
+PRODUCTNAME	equ	'Open 386MAX'
 elseif (ASYS EQ BLUEMAX)
 PRODUCTNAME	equ	'BLUEMAX'
 elseif (ASYS EQ MOVEM)
@@ -86,7 +86,7 @@ endif		; BETA
 _Prodname db	 ' ',PRODUCTNAME,' ',VERS_H,' ',0       ; " 386MAX 6 "
 
 	 public  _MsgLogoText
-MsgLogoText_1 db PRODUCTNAME,' ',VERS_H,'.',VERS_T,0
+MsgLogoText_1 db PRODUCTNAME,' ',VERS_H,'.',VERS_T,VERS_U,0
 MsgLogoText_2 db MIZTITLE,0
 MsgLogoText_3 db 'MAXIMIZE',0
 MsgLogoText_4 db 'Version ',MIZVERSION,0
@@ -103,9 +103,9 @@ endif		; Far/near pointers
 ; Referenced in DOREBOOT.C
 	public	 _BatchHdr
 ifdef LANG_GR
-_BatchHdr db	 PRODUCTNAME,' ',VERS_H,'.',VERS_T,'      MAXIMIZE      Phase ?',0
+_BatchHdr db	 PRODUCTNAME,' ',VERS_H,'.',VERS_T,VERS_U,'      MAXIMIZE      Phase ?',0
 else
-_BatchHdr db	 PRODUCTNAME,' ',VERS_H,'.',VERS_T,'      MAXIMIZE      Phase ?',0
+_BatchHdr db	 PRODUCTNAME,' ',VERS_H,'.',VERS_T,VERS_U,'      MAXIMIZE      Phase ?',0
 endif		; ifdef LANG_GR
 
 ; Referenced in MAXIMIZE.C

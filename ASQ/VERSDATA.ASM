@@ -111,7 +111,8 @@ ifdef LANG_GR
  db	 '  /X                       autom. RÅckkehr zum DOS, geht nur nach /G oder /S',LF
  db	 LF
  db	 '%s ',ASQVERTEXT,', '
- db	 '(C) Copyright 1987-96 Qualitas, Inc.   Alle Rechte vorbehalten.',LF,0
+ db	 '(C) Copyright 1987-96 Qualitas, Inc.',LF
+ db	 '   Open 386MAX-Mitwirkende 2022-2026, GNU General Public License Version 3.',LF,0
 else
  db	LF
  db	'Provides system analysis and memory management training.',LF
@@ -137,7 +138,8 @@ else
  db	 '  /X                           Automatic exit to DOS, use after /G or /S only',LF
  db	 LF
  db	 '%s ',ASQVERTEXT,', '
- db	 '(C) Copyright 1987-96 Qualitas, Inc.   GNU General Public License version 3.',LF,0
+ db	 '(C) Copyright 1987-96 Qualitas, Inc.',LF
+ db	 '   Open 386MAX contributors 2022-2026, GNU General Public License version 3.',LF,0
 endif			; IFDEF LANG_??
 endif			; IFE SNAPSHOT
 	 end

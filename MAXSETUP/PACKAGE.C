@@ -595,7 +595,7 @@ void buildProduct (void)
 #endif
    word i,x,f,r,err;
    cls ();
-   printf ("Qualitas product packaging utility v%s\n\n",version);
+   printf ("Open 386MAX product packaging utility v%s\n\n",version);
 
    printf ("Packaging ");
    for (i=0;i<NumOfProds;++i)

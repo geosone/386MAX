@@ -354,7 +354,7 @@ char *pascal mkfname(register char *fname)
 		strins(ptr+2,"\\.");
 	}
 
-	while ((*fname) && (fname != NULL)) {
+	while ((fname != NULL) && (*fname)) {	// (test the pointer first)
 
 		// don't strip trailing \ in directory name
 		if ((ptr = strpbrk(fname,"/\\")) != NULL) {

@@ -677,7 +677,7 @@ mn counter is displayed.  The first number is the current line position of the c
 \par \pard\plain \f3\lang1033 @P H.Cfg_Sum H.Cfg_CMO
 \par \pard                  {\i Qualitas Product Information Display
 \par }\pard 
-\par \pard \fi-2\li2 The Qualitas Product Information displays information about necessary Qualitas program files, their sizes and file dates.  Information regarding resident programs is also listed for troubleshooting purposes.  
+\par \pard \fi-2\li2 The Qualitas Product Information displays information about necessary Open 386MAX program files, their sizes and file dates.  Information regarding resident programs is also listed for troubleshooting purposes.  
 \par \pard \fi-2\li2 
 \par \pard See the {\b Tutorial} for more information on this topic.
 \par \pard 

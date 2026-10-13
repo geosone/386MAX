@@ -339,7 +339,7 @@ char *pascal mkfname(register char *fname)
 		strins(ptr+2,"\\.");
 	}
 
-	while ((*fname) && (fname != NULL)) {
+	while ((fname != NULL) && (*fname)) {	// (test the pointer first)
 
 		// don't strip trailing \ in directory name
 		if ((ptr = strpbrk(fname,"/\\")) != NULL) {
@@ -702,9 +702,10 @@ int _cdecl toupper(register int c)
 
 	// PC-DOS 2 doesn't support this function!
 	if ((c >= 0x80) && (_osmajor > 2)) {
+		long cmf = country_info.case_map_func;	// (OpenWatcom: no struct fields in _asm)
 _asm {
 		mov	ax,c
-		call	far ptr country_info.case_map_func
+		call	dword ptr cmf
 		xor	ah,ah
 		mov	c,ax
 }

@@ -141,6 +141,7 @@ void process_exec (void)
    BYTE far *fpatch;
    int	foundrom;
    BYTE slotlcl;	// Local copy of slot
+   BYTE romcod, romseghi;	// Values for romcod_data/romseg_data (OpenWatcom)
    int adpresult;
 
    adp_parm_blk.slot = (char) slot; /* Setup ADP exec block */
@@ -218,6 +219,7 @@ void process_exec (void)
 	      * may get referenced with DS.
 	      */
 	      slotlcl = slot;	// Get slot # into a local variable
+	      /* OpenWatcom: no struct fields in _asm, see below */
 _asm	{
     mov bl, slotlcl;	// get slot #
     mov ax, 0xc401;	// put adapter in slot BL into setup mode
@@ -249,17 +251,19 @@ GotAddr:
     mov ax, foundrom	// get value from POS[0]
     mov cl, 4		// prepare to get 4 high bits
     shr ax, cl		// ROM seg = (AL*200h) + C000h
-    and al,not 1	// Mask off bit 0 - only bits 1-3 significant
-    mov romcod_data.patdata, al // value to blast into POS
+    and al,0xFE	// Mask off bit 0 - only bits 1-3 significant
+    mov romcod, al	// value to blast into POS
     shl ax, 1		// al *= 2
     add al, 0xc0;	// add c000h part
-    mov romseg_data.patdata, al // high byte of address
+    mov romseghi, al	// high byte of address
     mov foundrom, 1	// tell'em we found our boy
 AddrDone:
 };
 
 	/* Now blast the segment of the ROM into the ADP and we're done. */
 	if (foundrom) {
+	    romcod_data.patdata = romcod;
+	    romseg_data.patdata = romseghi;
 	    fpatch[romseg_data.patoff] = romseg_data.patdata;
 	    fpatch[romseg_dat2.patoff] = romseg_dat2.patdata;
 	    fpatch[romcod_data.patoff] = romcod_data.patdata;

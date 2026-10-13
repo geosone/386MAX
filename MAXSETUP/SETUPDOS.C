@@ -14,17 +14,20 @@ int main(int argc, char **argv)
 
 	// can't run SETUP / INSTALL from a Windows DOS box!
 // FIXME!
+{
+	unsigned uWinAX;	// (OpenWatcom: no jumps to C labels in _asm)
 _asm {
 	mov	ax, 160Ah
 	int	2Fh
-	cmp	ax, 0
-	jnz	NotDOSBox
+	mov	uWinAX, ax
 }
+	if (uWinAX == 0) {
 	printf("SETUP can't be run from a Windows DOS session.  Exit the DOS session\n");
 	printf("and run SETUP from Windows or DOS.\n");
 	_exit(1);
+	}
+}
 
-NotDOSBox:
 	// get name of setupdos.ovl (in same directory as MAXSETUP)
 	strcpy( szInstallName, argv[0] );
 	pchName = szInstallName + strlen( szInstallName );

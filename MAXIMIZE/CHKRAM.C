@@ -34,6 +34,10 @@ static long ram_end[25];
 
 /* Local functions */
 
+/* SHDMAP.ASM: 16KB blocks of C0000-EFFFF which the chipset maps to
+   write-protected shadow DRAM (bit 0 = C0000) */
+unsigned shd_protmap (void);
+
 /*********************************** CHKRAM ***********************************/
 
 void chkram (void)
@@ -58,6 +62,15 @@ void chkram (void)
 #define ENDHIGHDOS	((SysRom - 0xA000) / 256)
 #endif
 	if ((p = ramscan ()) != NULL) {
+		/* Open 386MAX:  shadow DRAM the BIOS doesn't use is write-
+		   protected; a chipset that ignores the protection (QEMU/KVM)
+		   makes the write test find it, but it is no adapter RAM */
+		unsigned shd = shd_protmap ();
+
+		for (ii = 0; ii < 12 * 4; ii++)
+			if (shd & (1 << (ii / 4)))
+				p[32 + ii] &= ~RAMTAB_RAM;	/* 32: index of C000 */
+
 		for (ii = 32,	// (0xC000 - 0xA000) / 256
 			jj = 0 ; (unsigned) ii < ENDHIGHDOS ; ii++) {
 			if (p[ii] & RAMTAB_RAM) {

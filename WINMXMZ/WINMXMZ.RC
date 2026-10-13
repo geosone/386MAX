@@ -68,7 +68,7 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,29,118,50,14
     PUSHBUTTON      "E&xit",IDCANCEL,99,118,50,14
     PUSHBUTTON      "&Help",IDC_HELP,169,118,50,14
-    CTEXT           "Welcome to Maximize, the automatic system configuration utility for Qualitas MAX!",
+    CTEXT           "Welcome to Maximize, the automatic system configuration utility for Open 386MAX!",
                     IDC_STATIC,44,10,161,25
     LTEXT           "Maximize searches your system startup files for resident software, and determines the most efficient way to load them into memory.  First time users can press Help at any time for more information about Maximize.",
                     IDC_STATIC,16,44,222,57
@@ -134,7 +134,7 @@ BEGIN
     PUSHBUTTON      "&Help",IDC_HELP,235,158,50,14
     LTEXT           "Checks for usable high DOS in the system BIOS",
                     IDC_STATIC,103,40,176,10
-    LTEXT           "Removes USE= statements in the F000-FFFF range from the Qualitas MAX profile",
+    LTEXT           "Removes USE= statements in the F000-FFFF range from the Open 386MAX profile",
                     IDC_STATIC,103,55,190,17
     LTEXT           "Runs test to check if VGA BIOS can be relocated",
                     IDC_STATIC,103,95,180,10
@@ -142,7 +142,7 @@ BEGIN
                     IDC_STATIC,103,130,189,20
     GROUPBOX        "ROMsearch",IDC_STATIC,18,25,285,49
     GROUPBOX        "VGASWAP",IDC_STATIC,18,80,285,45
-    LTEXT           "Removes VGASWAP from the Qualitas MAX profile",
+    LTEXT           "Removes VGASWAP from the Open 386MAX profile",
                     IDC_STATIC,103,110,192,10
 END
 
@@ -171,7 +171,7 @@ BEGIN
     PUSHBUTTON      "&Help",IDC_HELP,235,180,50,14
     LTEXT           "Checks for usable high DOS in the system BIOS",
                     IDC_STATIC,110,40,176,10
-    LTEXT           "Removes USE= statements in the F000-FFFF range from the Qualitas MAX profile",
+    LTEXT           "Removes USE= statements in the F000-FFFF range from the Open 386MAX profile",
                     IDC_STATIC,110,55,190,17
     LTEXT           "Runs test to check if VGA BIOS can be relocated",
                     IDC_STATIC,110,95,180,10
@@ -179,7 +179,7 @@ BEGIN
                     IDC_STATIC,110,130,189,20
     GROUPBOX        "ROMsearch",IDC_STATIC,18,25,285,49
     GROUPBOX        "VGASWAP",IDC_STATIC,18,80,285,45
-    LTEXT           "Removes VGASWAP from the Qualitas MAX profile",
+    LTEXT           "Removes VGASWAP from the Open 386MAX profile",
                     IDC_STATIC,110,110,188,10
     LTEXT           "Identifies and Maximizes any resident software found in DOSSTART.BAT in addition to system startup files.",
                     IDC_STATIC,110,150,189,18
