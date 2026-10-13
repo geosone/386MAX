@@ -172,7 +172,7 @@ typedef struct tagDefsym {
 	int iVal;			/* 0 or 1 (0 by default) */
 } DEFSYM;
 
-struct _slot slots[MAX_SLOTS];	/* Array of slot structures */
+GLOBAL struct _slot slots[MAX_SLOTS];	/* Array of slot structures */
 
 GLOBAL int adf_nstem			/* How many chars in adf_stem */
 #ifdef GLINIT

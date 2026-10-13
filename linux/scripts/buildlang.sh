@@ -15,6 +15,8 @@ ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 REL=$ROOT/release/$L
 mkdir -p "$REL/tree"
 rsync -a --delete --exclude /build/ --exclude /release/ --exclude /.git/ "$ROOT/" "$REL/tree/"
+# always a clean build: the makefiles know no header dependencies
+rm -rf "$REL/tree/build"
 mkdir -p "$REL/tree/build"
 [ -e "$ROOT/build/mfc" ] && ln -sfn "$ROOT/build/mfc" "$REL/tree/build/mfc"
 make -C "$REL/tree" MAXLANG=$L
