@@ -14,7 +14,7 @@ that existed only as binaries, and develops 386MAX further:
   reserved areas (AHCI, EBDA, ACPI) stay untouched, more than 256 MB RAM,
   ISA DMA above 16 MB
 - QEMM QPI port trapping API for SBEMU and VSBHDA
-- no serial numbers or registration; version 8.50, English and German
+- no serial numbers or registration; version 8.51, English and German
 
 Releases with floppy, USB and CD images:
 [Releases](https://github.com/geosone/386MAX/releases)

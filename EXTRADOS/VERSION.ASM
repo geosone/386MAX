@@ -1,4 +1,4 @@
-VERSION  equ	 850
+VERSION  equ	 851
 
 ;' $Header:   P:/PVCS/MAX/EXTRADOS/VERSION.ASV   1.1   29 Sep 1995 19:12:50   BOB  $
 ;

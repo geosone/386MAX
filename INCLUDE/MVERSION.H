@@ -1,6 +1,6 @@
 //' $Header:   P:/PVCS/MAX/INCLUDE/MVERSION.H_V   1.73   23 May 1997 13:36:00   BOB  $
 //
-// MVERSION.H - Version definitions for Max 8 (Open 386MAX 8.50)
+// MVERSION.H - Version definitions for Max 8 (Open 386MAX 8.51)
 // Included by component resource scripts.
 //
 // ------------------------------------------------------
@@ -25,8 +25,8 @@
 
 #define VER_MAJOR					8	// 1.xx.xxx.xxx
 #define VER_MAJOR_STR				"8"
-#define VER_MINOR					50	// x.0.xxx.xxx
-#define VER_MINOR_STR				"50"
+#define VER_MINOR					51	// x.0.xxx.xxx
+#define VER_MINOR_STR				"51"
 #define VER_BETA					4 // x.xx.001.xxx
 #define VER_BETA_STR				"004"
 // VER_MODULE and VER_MODULE_STR are defined in the component's resource script
