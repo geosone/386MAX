@@ -14,6 +14,6 @@
 
 #define VER_FILETYPE			VFT_APP
 #define VER_FILESUBTYPE 		VFT2_UNKNOWN
-#define VER_FILEDESCRIPTION_STR 	"Qualitas Toolbox"
+#define VER_FILEDESCRIPTION_STR 	"Open 386MAX Toolbox"
 #define VER_INTERNALNAME_STR		"Toolbox"
 #define VER_ORIGINALFILENAME_STR	"Toolbox.exe"
