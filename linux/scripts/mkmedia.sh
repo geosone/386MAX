@@ -20,7 +20,7 @@ ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 REL=$ROOT/release/$L
 PKG=${2:-$REL/package}
 lc=$(echo "$L" | tr A-Z a-z)
-ver=$(sed -n 's/^#define VER_MAJOR_STR[^"]*"\(.*\)"/\1/p' "$ROOT/INCLUDE/MVERSION.H").$(sed -n 's/^#define VER_MINOR_STR[^"]*"\(.*\)"/\1/p' "$ROOT/INCLUDE/MVERSION.H")
+ver=$(tr -d '\r' < "$ROOT/INCLUDE/MVERSION.H" | sed -n 's/^#define VER_MAJOR_STR[^"]*"\(.*\)"/\1/p').$(tr -d '\r' < "$ROOT/INCLUDE/MVERSION.H" | sed -n 's/^#define VER_MINOR_STR[^"]*"\(.*\)"/\1/p')
 base=$REL/open386max-$ver-$lc
 mkdir -p "$REL"
 rm -f "$base"-disk*.img "$base"-usb.img "$base".iso "$base".zip
