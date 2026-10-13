@@ -1,47 +1,28 @@
-
-/*---------------------------------------------------------------*/
-/*								 */
-/* The following section actually creates the version structure. */
-/* They are ignored if we are not being invoked by RC.		 */
-/*								 */
-/* VERSION.H must be included before including this file	 */
-/*								 */
-/* If VER_LEGALCOPYRIGHT_STR is not defined, it will be 	 */
-/* constructed using VER_LEGALCOPYRIGHT_YEARS, so at least one	 */
-/* these macros must be defined before including this file.	 */
-/*								 */
-/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR, and	 */
-/* VER_INTERNALNAME_STR must be defined before including this	 */
-/* file.							 */
-/*								 */
-/* If VER_FILEVERSION is not defined, VER_PRODUCTVERSION will be */
-/* used instead.  If VER_FILEVERSION_STR is not defined,	 */
-/* VER_PRODUCTVERSION_STR will be used instead. 		 */
-/*								 */
-/* If VER_ORIGINALFILENAME_STR is not defined, it is set to	 */
-/* the NULL string.						 */
-/*								 */
-/* If INTL is defined, then this is assumed to be an		 */
-/* an international build; two string blocks will be created,	 */
-/* (since all version resources must have English), and the	 */
-/* second one can be localized					 */
-/*								 */
-/*---------------------------------------------------------------*/
+/*
+ * COMMON.VER - VERSIONINFO resource of the Open 386MAX Windows programs
+ *
+ * Open 386MAX - GNU General Public License version 3.
+ *
+ * Included by the resource scripts (directly or through MVERSION.H) after
+ * the VER_* names are defined: VER_PRODUCTVERSION(_STR), VER_FILEFLAGSMASK,
+ * VER_FILEFLAGS, VER_FILEOS, VER_FILETYPE, VER_FILESUBTYPE,
+ * VER_COMPANYNAME_STR, VER_FILEDESCRIPTION_STR, VER_INTERNALNAME_STR,
+ * VER_LEGALCOPYRIGHT_STR, VER_PRODUCTNAME_STR; optional VER_FILEVERSION(_STR)
+ * (default: the product version) and VER_ORIGINALFILENAME_STR (default:
+ * empty).  Seen by the resource compiler only.
+ */
 
 #ifdef RC_INVOKED
 
 #ifndef VER_LEGALCOPYRIGHT_STR
-#define VER_LEGALCOPYRIGHT_STR "Copyright \251 Microsoft Corp. ", VER_LEGALCOPYRIGHT_YEARS, "\0"
+#error VER_LEGALCOPYRIGHT_STR not defined
 #endif
-
 #ifndef VER_FILEVERSION
 #define VER_FILEVERSION VER_PRODUCTVERSION
 #endif
-
 #ifndef VER_FILEVERSION_STR
 #define VER_FILEVERSION_STR VER_PRODUCTVERSION_STR
 #endif
-
 #ifndef VER_ORIGINALFILENAME_STR
 #define VER_ORIGINALFILENAME_STR "\0"
 #endif
@@ -57,7 +38,7 @@ FILESUBTYPE    VER_FILESUBTYPE
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-	BLOCK "040904E4"
+	BLOCK "040904E4"		/* U.S. English, Windows ANSI */
 	BEGIN
 	    VALUE "CompanyName",     VER_COMPANYNAME_STR, "\0"
 	    VALUE "FileDescription", VER_FILEDESCRIPTION_STR, "\0"
@@ -68,29 +49,12 @@ BEGIN
 	    VALUE "ProductName",     VER_PRODUCTNAME_STR, "\0"
 	    VALUE "ProductVersion",  VER_PRODUCTVERSION_STR, "\0"
 	END
-
-#ifdef INTL
-	BLOCK "040904E4"
-	BEGIN
-	    VALUE "CompanyName",     VER_COMPANYNAME_STR, "\0"
-	    VALUE "FileDescription", VER_FILEDESCRIPTION_STR, "\0"
-	    VALUE "FileVersion",     VER_FILEVERSION_STR, "\0"
-	    VALUE "InternalName",    VER_INTERNALNAME_STR, "\0"
-	    VALUE "LegalCopyright",  VER_LEGALCOPYRIGHT_STR, "\0"
-	    VALUE "OriginalFilename",VER_ORIGINALFILENAME_STR, "\0"
-	    VALUE "ProductName",     VER_PRODUCTNAME_STR, "\0"
-	    VALUE "ProductVersion",  VER_PRODUCTVERSION_STR, "\0"
-	END
-#endif
     END
 
     BLOCK "VarFileInfo"
     BEGIN
-	/* the following line should be extended for localized versions */
 	VALUE "Translation", 0x0409, 0x04E4
     END
 END
 
 #endif
-
-
