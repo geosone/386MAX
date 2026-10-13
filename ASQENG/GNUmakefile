@@ -1,6 +1,5 @@
 # LENGINER.LIB, the system analysis engine of ASQ, MAXIMIZE and INSTALL,
-# large model (GNU make, see linux/mk/dos.mk; MAKEFILE is the original
-# NMAKE file).  Microsoft C 7 is replaced by OpenWatcom.
+# large model (GNU make, see linux/mk/dos.mk).  Microsoft C 7 is replaced by OpenWatcom.
 PROJ     := ASQENG
 ROOT     := $(abspath ..)
 SRCDIRS  := .
@@ -16,7 +15,5 @@ LENGINER.LIB_OBJS := ADF.OBJ BIOSID.OBJ CFG_INFO.OBJ CPUTEXT.OBJ ENGINE.OBJ GLIS
 	QTAS_MAC.OBJ READSYS.OBJ SYSBUF.OBJ SYSINFO.OBJ TESTMEM.OBJ TIMER.OBJ WRITSYS.OBJ \
 	XMSINFO.OBJ FLEXROMS.OBJ BUSINFO.OBJ
 
-# no original objects of the C build in the tree
-NOORIGOBJ := 1
 
 include $(ROOT)/linux/mk/dos.mk

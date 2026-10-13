@@ -1,7 +1,6 @@
 # DOSMAX32.DLL, the Windows 95 shell extension (DOSMAX property sheet of
 # DOS programs), 32-bit side of the Universal Thunk to DOSMAX16.DLL
-# (GNU make, see linux/mk/win.mk; DOSMAX32.MAK is the original NMAKE build
-# with Visual C++ 2 and win32.mak)
+# (GNU make, see linux/mk/win.mk)
 PROJ     := DOSMAX32
 ROOT     := $(abspath ..)
 TARGET   := win32

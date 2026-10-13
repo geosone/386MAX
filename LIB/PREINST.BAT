@@ -1,2 +1,0 @@
-REM  This file created by RSETUP
-copy D:\SOURCE\MAX\LIB\AUTOEXEC.SAV C:\AUTOEXEC.BAT

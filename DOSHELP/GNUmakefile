@@ -1,8 +1,7 @@
-# DOS help files (GNU make; MAKEFILE/MAXHELP.MAK is the original NMAKE
-# build with Microsoft HELPMAKE).  linux/tools/qhelp.py builds the QuickHelp
+# DOS help files (GNU make).  linux/tools/qhelp.py builds the QuickHelp
 # databases from the Word RTF sources (*.RUS, German *.RGR; the \'xx table
 # of HMAKEL.C) and the QuickHelp markup sources (*.AUS/*.AGR), with the
-# widths of MAXHELP.MAK, and concatenates them like the original build.
+# widths of the original build (MAXHELP.MAK), and concatenates them like it.
 #   make [MAXLANG=US|GR] (like the other projects)
 ROOT    := $(abspath ..)
 BINDIR  := $(ROOT)/build/bin

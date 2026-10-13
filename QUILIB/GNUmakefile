@@ -1,6 +1,5 @@
 # LQUILIBR.LIB, the user interface library of ASQ, MAXIMIZE and INSTALL,
-# large model, and QLOGO.OVL (GNU make, see linux/mk/dos.mk; MAKEFILE is
-# the original NMAKE file).  Microsoft C 7 is replaced by OpenWatcom.
+# large model, and QLOGO.OVL (GNU make, see linux/mk/dos.mk).  Microsoft C 7 is replaced by OpenWatcom.
 PROJ     := QUILIB
 ROOT     := $(abspath ..)
 SRCDIRS  := .
@@ -31,8 +30,6 @@ LQUILIBR.LIB_OBJS := ARGSTR.OBJ BCD_NUM.OBJ BIOSCRC.OBJ BLIST.OBJ BOOTDRV.OBJ BO
 QLOGO.OVL_OBJS := QLOGO.OBJ
 QLOGO.OVL_COM  := 1
 
-# no original objects of the C build in the tree
-NOORIGOBJ := 1
 
 include $(ROOT)/linux/mk/dos.mk
 

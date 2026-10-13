@@ -1,10 +1,9 @@
 # QMT.EXE (memory tester shipped with 386MAX, OEM=QMT) and RAMEXAM.EXE
-# (full RAMexam, OEM=RET) (GNU make, see linux/mk/dos.mk; MAKEFILE is the
-# original NMAKE file).  Without OEM= both are built.
+# (full RAMexam, OEM=RET) (GNU make, see linux/mk/dos.mk).  Without OEM= both are built.
 ROOT     := $(abspath ..)
 
 ifeq ($(OEM),)
-TARGETS := all clean check masmref cmp cmplink origlink
+TARGETS := all clean
 .PHONY: $(TARGETS)
 $(TARGETS):
 	$(MAKE) OEM=QMT $@
@@ -20,14 +19,11 @@ EMPTYINC := DIRNTRY.INC
 ifeq ($(OEM),QMT)
 PRODNAME := QMT
 VERSOBJ  := VERSRET.OBJ
-QMT.EXE_MAP  := ../LIB/QMT.MAP
-QMT.EXE_ORIG := ../LIB/QMT.EXE
-# RET/ holds the objects of the RAMEXAM build
-NOORIGOBJ := 1
+QMT.EXE_MAP  := QMT.MAP
 else
 PRODNAME := RAMEXAM
 VERSOBJ  := VERSION.OBJ
-RAMEXAM.EXE_MAP := RET/RAMEXAM.MAP
+RAMEXAM.EXE_MAP := RAMEXAM.MAP
 endif
 PROGS    := $(PRODNAME).EXE
 
@@ -41,11 +37,6 @@ $(PRODNAME).EXE_OBJS := MEM_MAIN.OBJ MEM_CMD.OBJ MEM_EPM.OBJ MEM_FALT.OBJ MEM_FC
 # file, which WRAPPER (linux/tools/wrapper.py, a port of WRAPPER.C) turns
 # into the word-wrapped source of MEM_HTX3.OBJ.
 HTXLANG  := $(if $(filter GR,$(MAXLANG)),AGR,AUS)
-# Masm 5.10A rejects "call near ptr PGROUP:x" in MEM_EPM; the original
-# object of the RAMEXAM build is the reference there
-ifeq ($(OEM),RET)
-MEM_EPM.OBJ_REF := RET/MEM_EPM.OBJ
-endif
 MEM_HTX3.OBJ_SRC := $(ROOT)/build/$(PROJ)/MEM_HTX2.AS2
 
 include $(ROOT)/linux/mk/dos.mk

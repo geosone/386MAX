@@ -1,5 +1,4 @@
-# QPIFEDIT.EXE, the PIF editor (GNU make, see linux/mk/win.mk; MAKEFILE is
-# the original NMAKE build with Microsoft C 8).  The DOS stub qpifstub.exe
+# QPIFEDIT.EXE, the PIF editor (GNU make, see linux/mk/win.mk).  The DOS stub qpifstub.exe
 # is prebuilt.
 PROJ     := QPIFEDIT
 ROOT     := $(abspath ..)

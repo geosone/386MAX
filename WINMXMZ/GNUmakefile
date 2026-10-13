@@ -1,5 +1,4 @@
-# WINMAXIM.EXE, Windows start of MAXIMIZE (GNU make, see linux/mk/win.mk;
-# MAKEFILE/WINMXMZ.MAK is the original NMAKE build with Visual C++ 1.5 and
+# WINMAXIM.EXE, Windows start of MAXIMIZE (GNU make, see linux/mk/win.mk.5 and
 # MFC 2.5).  Needs build/mfc (linux/mfc), QUILIB and STATUTIL.  The DOS stub
 # WINLNCH.EXE is built by winlnch.mk.
 PROJ     := WINMXMZ

@@ -1,5 +1,5 @@
 # STRIPMGR.EXE, removes other memory managers from CONFIG.SYS etc. (GNU
-# make, see linux/mk/dos.mk; MAKEFILE is the original NMAKE file).
+# make, see linux/mk/dos.mk).
 # Microsoft C is replaced by OpenWatcom.
 PROJ     := STRIPMGR
 ROOT     := $(abspath ..)
@@ -18,7 +18,5 @@ STRIPMGR.EXE_STACK := 6144
 # Microsoft LINK without /NOI: names match regardless of case
 STRIPMGR.EXE_LINKOPTS := option nocaseexact
 
-# the C objects in RET/ come from Microsoft C
-NOORIGOBJ := 1
 
 include $(ROOT)/linux/mk/dos.mk

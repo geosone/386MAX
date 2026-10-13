@@ -1,5 +1,4 @@
-# QPOPUP.EXE (GNU make, see linux/mk/win.mk; MAKEFILE is the original
-# NMAKE build with Microsoft C 8).  The DOS stub qpopstub.exe is prebuilt.
+# QPOPUP.EXE (GNU make, see linux/mk/win.mk).  The DOS stub qpopstub.exe is prebuilt.
 PROJ     := QPOPUP
 ROOT     := $(abspath ..)
 CMODEL   := s

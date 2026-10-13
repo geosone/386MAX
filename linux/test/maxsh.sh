@@ -2,7 +2,7 @@
 # The MAX shell (MAX.EXE) in QEMU: boots DOS with 386MAX.SYS from C:\MAX
 # (a copy of build/bin), starts MAX.EXE and sends KEYS (QEMU sendkey names,
 # space separated; "shot" takes a screen shot, "wait<n>" sleeps n seconds).
-#   linux/test/maxsh.sh            MAXEXE=LIB/MAX.EXE (original), NOMAX=1, MAXOPTS=,
+#   linux/test/maxsh.sh            MAXEXE=<file> (e.g. the original), NOMAX=1, MAXOPTS=,
 #                                  CMD= (instead of MAX.EXE), PKG=1 (package in C:\INSTALL),
 #                                  START=seconds, KEYS="..."
 # Output (build/test-maxsh/): shot<n>.png, final.png

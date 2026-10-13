@@ -1,9 +1,9 @@
-# Windows help files MAXHELP.HLP and SETUP.HLP (GNU make; MAKEHELP.BAT and
-# MAKESHLP.BAT are the original build with the Microsoft Help Compiler).
-# linux/tools/whc.py compiles the help projects; the steps of MAKEHELP.BAT
-# are done the same way in build/MAXHELP/<lang>: the [WINDOWS], [CONFIG]
-# and [MAP] sections of MAXHELP.H?? / SETUP.H?? (GETSECT), the help map of
-# WINMXMZ's resource identifiers (MAKEHLP2.BAT, MAKEHM), the project files
+# Windows help files MAXHELP.HLP and SETUP.HLP (GNU make).
+# linux/tools/whc.py compiles the help projects; the steps of the original
+# build (Microsoft Help Compiler) are done the same way in
+# build/MAXHELP/<lang>: the [WINDOWS], [CONFIG] and [MAP] sections of
+# MAXHELP.H?? / SETUP.H?? (GETSECT), the help map of WINMXMZ's resource
+# identifiers (MAKEHM), the project files
 # _MAXHELP.SRC / _SETUP.SRC; sources *.RUS (German *.RGR), bitmaps in
 # BITMAPS.
 #   make [MAXLANG=US|GR] (like the other projects)

@@ -1,5 +1,5 @@
 # BATPROC.EXE, the batch file processor used by MAXIMIZE (GNU make, see
-# linux/mk/dos.mk; MAKEFILE is the original NMAKE file).  Microsoft C is
+# linux/mk/dos.mk).  Microsoft C is
 # replaced by OpenWatcom.
 PROJ     := BATPROC
 ROOT     := $(abspath ..)
@@ -19,7 +19,5 @@ BATPROC.EXE_STACK := 4096
 # assembler modules are /mu, the C modules mixed case)
 BATPROC.EXE_LINKOPTS := option nocaseexact
 
-# the C objects in RET/ come from Microsoft C
-NOORIGOBJ := 1
 
 include $(ROOT)/linux/mk/dos.mk

@@ -1,6 +1,5 @@
 # DOSMAX16.DLL (16-bit side of the Universal Thunk to DOSMAX.DLL) and
-# SETEWV.EXE (GNU make, see linux/mk/win.mk; DOSMAX16.MAK is the original
-# NMAKE build with Microsoft C 8 and MASM)
+# SETEWV.EXE (GNU make, see linux/mk/win.mk)
 PROJ     := DOSMAX16
 ROOT     := $(abspath ..)
 CMODEL   := s

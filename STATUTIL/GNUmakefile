@@ -1,6 +1,5 @@
 # STATUTIL: utility libraries of the 386MAX Windows programs (GNU make, see
-# linux/mk/win.mk; MAKEFILE/STATUTIL.MAK is the original NMAKE build with
-# Visual C++ 1.5, here only its Windows 3.1 large model variant):
+# linux/mk/win.mk.5, here only its Windows 3.1 large model variant):
 #   LSTUTIL.LIB  general functions
 #   LSTUMFC.LIB  MFC dialogs and helpers (needs build/mfc, see linux/mfc)
 PROJ     := STATUTIL

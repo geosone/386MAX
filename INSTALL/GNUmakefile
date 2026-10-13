@@ -1,7 +1,6 @@
-# SETUPDOS.EXE, the DOS installer (GNU make, see linux/mk/dos.mk; MAKEFILE
-# is the original NMAKE file, which built MAXIB\MAXIB.EXE).  Microsoft C is
-# replaced by OpenWatcom; PKWARE's IMPLODE.LIB and TEXT/CRC32.OBJ by
-# EXPLODE.C.  The archives are made by linux/tools/qpack.py.
+# SETUPDOS.EXE, the DOS installer (GNU make, see linux/mk/dos.mk; the
+# original build called it MAXIB.EXE).  OpenWatcom instead of Microsoft C;
+# EXPLODE.C instead of PKWARE's IMPLODE.LIB and CRC32.OBJ.  The archives are made by linux/tools/qpack.py.
 PROJ     := INSTALL
 ROOT     := $(abspath ..)
 SRCDIRS  := . ../MAXIMIZE ../ASQENG ../386MAX ../ASQ
@@ -23,7 +22,5 @@ SETUPDOS.EXE_STACK := 8192
 PROS := DRVE.PRO FILES.PRO INPRINT.PRO INSTALL.PRO MISC.PRO SCRN.PRO \
 	SECURITY.PRO SERIALNO.PRO MXZ_ADF.PRO EXPLODE.PRO INS_ADF.PRO
 
-# no original objects of the C build in the tree
-NOORIGOBJ := 1
 
 include $(ROOT)/linux/mk/dos.mk

@@ -25,8 +25,8 @@
 #   PRE         AUTOEXEC.BAT commands before Windows (| separated, output
 #               > AUX), e.g. a TSR to test under Windows
 #   FILES       more files to copy to C:\MAX (space separated)
-#   ORIGDLL=1   the original CTL3DV2.DLL / SFTTABS.DLL of TEXT/ instead of ours
-#               (or a list of the ones to take from TEXT/, e.g. ORIGDLL=SFTTABS.DLL)
+#   ORIGDLL=dir CTL3DV2.DLL / SFTTABS.DLL from dir (e.g. the original ones)
+#               instead of ours
 #
 # Output (build/win311test/): screen.png (screen-<t>.png), serial.log
 set -uo pipefail
@@ -78,17 +78,16 @@ if [ "${SETUPPKG:-0}" = 1 ]; then
     mmd -i "$P" ::/INSTALL 2>/dev/null
     for f in "$ROOT"/build/package/*; do [ -f "$f" ] && mcopy -o -i "$P" "$f" ::/INSTALL/; done
 fi
-# what SETUP puts into WINDOWS\SYSTEM (redistributable Microsoft DLL)
-# (our builds of them unless ORIGDLL=1)
+# what SETUP puts into WINDOWS\SYSTEM: our CTL3DV2.DLL / SFTTABS.DLL, or
+# the originals from ORIGDLL=<directory> (Windows takes a DLL from the
+# program's directory first, and the original CTL3DV2.DLL refuses to run
+# from there)
 for f in CTL3DV2.DLL SFTTABS.DLL; do
-    src=$ROOT/TEXT/$f
-    case " ${ORIGDLL:-0} " in
-    *" 1 "*|*" $f "*)
-        # Windows takes a DLL from the program's directory first (and the
-        # original CTL3DV2.DLL refuses to run from there)
-        [ -f "$OUT/c/MAX/$f" ] && mdel -i "$P" ::/MAX/$f;;
-    *)  [ -f "$ROOT/build/bin/$f" ] && src=$ROOT/build/bin/$f;;
-    esac
+    src=$ROOT/build/bin/$f
+    if [ -n "${ORIGDLL:-}" ] && [ -f "$ORIGDLL/$f" ]; then
+        src=$ORIGDLL/$f
+        [ -f "$OUT/c/MAX/$f" ] && mdel -i "$P" ::/MAX/$f
+    fi
     mcopy -o -i "$P" "$src" ::/WINDOWS/SYSTEM/
 done
 if [ "$MM" = 386max ]; then     # Windows needs the VxD in SYSTEM.INI

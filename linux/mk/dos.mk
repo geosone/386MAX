@@ -18,7 +18,7 @@
 #   <prog>_LIBS   libraries linked to a program (paths), with C programs the
 #                 OpenWatcom run time is added
 #   ML6OBJS       objects the original build assembled with ML 6 (MASM 6):
-#                 JWasm without -Zm; their reference is the object in RET/
+#                 JWasm -Zm6 instead of -Zm
 #   <obj>_DEFS    symbols defined for one module
 #   SRCDIRS       directories searched for sources (relative to the project)
 #   ASMINC        include directories in the order Masm searched them
@@ -36,22 +36,10 @@
 #   <obj>_SRC     source when it is not <obj base>.ASM (optional; an
 #                 absolute path for a source made during the build)
 #   GENERATED     files copied into build/$(PROJ): DEST=SOURCE (optional)
-#   <prog>_ORIG   original binary for "make check" (default: RET/<prog>)
-#   NOORIGOBJ     1: RET/ holds no original objects of this build (origlink)
-#   NOMASM        1: Masm 5.10A can't assemble this project; masmref takes
-#                 the original objects (ORIGDIRS) as references
-#   ORIGDIRS      directories with the original objects (default: RET COMN)
-#   <obj>_REF     reference object for a module Masm 5.10A cannot assemble
-#                 (e.g. the original object in RET/), used by masmref
 #   EMPTYINC      include files made by Qualitas build tools that hold only
 #                 comments (e.g. DIRNTRY.INC): created with a comment line
 #
-# Targets: all (default), clean, check (compare with the original
-# binaries in RET/), masmref (Masm 5.10 reference objects, needs MASM_EXE
-# and DOSBox), cmp (compare the objects with those references), cmplink
-# (link the Masm references the same way and compare the programs),
-# origlink (link the original objects of RET/ and COMN/ and compare with
-# the original programs: checks JWlink against Microsoft LINK).
+# Targets: all (default), clean.
 
 ROOT    ?= $(abspath ..)
 LX      := $(ROOT)/linux
@@ -64,7 +52,6 @@ OUT     := $(ROOT)/build/$(PROJ)
 # a variant build (make PROJ=386MAX-cpd ...) keeps its programs in $(OUT);
 # PROJ=DIR/NAME (a second program of DIR) installs into build/bin
 BINDIR  := $(if $(filter $(notdir $(CURDIR)),$(firstword $(subst /, ,$(PROJ)))),$(ROOT)/build/bin,$(OUT)/bin)
-MASMREF := $(ROOT)/build/masm/$(PROJ)
 
 SRCDIR  := $(notdir $(CURDIR))
 CASEMAP ?= mu
@@ -84,19 +71,17 @@ comma := ,
 empty :=
 space := $(empty) $(empty)
 
-ORIGDIRS ?= RET COMN
-origfile = $(or $($(1)_PREBUILT),$(firstword $(foreach d,$(ORIGDIRS),$(shell ls $(d)/* 2>/dev/null | grep -i "^$(d)/$(1)$$"))))
 srcof = $(if $(filter /%,$($(1)_SRC)),$($(1)_SRC),$(firstword $(wildcard $(foreach x,$(or $($(1)_SRC),$(basename $(1)).ASM $(basename $(1)).C $(basename $(1)).c),$(addsuffix /$(x),$(SRCDIRS))))))
 isc = $(filter %.C %.c,$(call srcof,$(1)))
 defsof = $(if $(filter %.OPT,$(1)),-DOPTIM)
 
-.PHONY: all clean check masmref cmp cmplink origlink
+.PHONY: all clean
 .SUFFIXES:
 .DELETE_ON_ERROR:
 
 all: $(addprefix $(BINDIR)/,$(PROGS)) $(addprefix $(OUT)/,$(LIBS))
 
-$(OUT) $(BINDIR) $(MASMREF):
+$(OUT) $(BINDIR):
 	mkdir -p $@
 
 define GENRULE
@@ -189,11 +174,11 @@ $(OUT)/$(1): $(addprefix $(OUT)/,$($(1)_OBJS))
 endef
 $(foreach l,$(LIBS),$(eval $(call LIBRULE,$(l))))
 
-# link; Microsoft LINK's segment order comes from its map in RET/
+# link; Microsoft LINK's segment order comes from its map (<prog>_MAP)
 # $(call LINKCMD,program,directory of the objects)
 LINKCMD = cd $(2) && $(JWLINK) format $(or $($(1)_FORMAT),dos $(if $(or $(filter %.COM,$(1)),$($(1)_COM)),com)) name $(1)$(if $($(1)_BIN),.EXE) \
 	    option quiet option map=$(1).MAP $(if $($(1)_FORMAT),,option stack=0) option nofarcalls $($(1)_LINKOPTS) \
-	    $(if $($(1)_MAP),@$(OUT)/$(1).ORD) file $(subst $(space),$(comma),$(strip $($(1)_OBJS))) > $(1).log \
+	    $(if $($(1)_MAP),@$(1).ORD) file $(subst $(space),$(comma),$(strip $($(1)_OBJS))) > $(1).log \
 	    || { cat $(1).log; exit 1; } \
 	    $(if $($(1)_BIN),&& $(PYTHON) $(LX)/tools/exe2bin.py $(1).EXE $(1))
 
@@ -202,7 +187,7 @@ LINKCMD = cd $(2) && $(JWLINK) format $(or $($(1)_FORMAT),dos $(if $(or $(filter
 CLINKCMD = cd $(2) && $(JWLINK) format dos name $(1) option quiet option map=$(1).MAP option nofarcalls option redefsok option packcode=65530 \
 	    libpath $(WATCOM)/lib286/dos libpath $(WATCOM)/lib286 libpath $(OUT)/msclib \
 	    $(if $($(1)_STACK),option stack=$($(1)_STACK)) \
-	    $(if $($(1)_MAP),@$(OUT)/$(1).ORD) $($(1)_LINKOPTS) \
+	    $(if $($(1)_MAP),@$(1).ORD) $($(1)_LINKOPTS) \
 	    file $(subst $(space),$(comma),$(strip $($(1)_OBJS) $(OWOBJS))) \
 	    $(if $($(1)_LIBS),library $(subst $(space),$(comma),$(strip $($(1)_LIBS)))) > $(1).log \
 	    || { cat $(1).log; exit 1; }
@@ -223,77 +208,3 @@ $(foreach p,$(PROGS),$(eval $(call LINKRULE,$(p))))
 clean:
 	rm -rf $(OUT) $(addprefix $(BINDIR)/,$(PROGS))
 
-# compare with the binaries of the original build (they were built from the
-# sources before the GPL release changed some texts, so small differences
-# in message strings are expected)
-check: all
-	@for pr in $(foreach p,$(PROGS),$(p):$($(p)_ORIG)); do p=$${pr%%:*}; ref=$${pr#*:}; \
-	    [ -n "$$ref" ] || ref=$$(ls RET/* 2>/dev/null | grep -i "/$$p$$" | head -1); \
-	    if [ -z "$$ref" ]; then echo "$$p: no original in RET/"; continue; fi; \
-	    case $$p in \
-	    *.COM|$(foreach p,$(PROGS),$(if $($(p)_BIN),$(p)|))__) if cmp -s $$ref $(OUT)/$$p; then echo "$$p: identical to $$ref"; \
-	           else echo "$$p: $$(cmp -l $$ref $(OUT)/$$p 2>/dev/null | wc -l) bytes differ from $$ref (size $$(stat -c %s $$ref) / $$(stat -c %s $(OUT)/$$p))"; fi ;; \
-	    *.VXD) echo "$$p vs $$ref:"; $(PYTHON) $(LX)/tools/lecmp.py $$ref $(OUT)/$$p | sed 's/^/    /' ;; \
-	    *) echo "$$p vs $$ref:"; $(PYTHON) $(LX)/tools/mzcmp.py $$ref $(OUT)/$$p | sed 's/^/    /' ;; \
-	    esac; \
-	done
-
-# Masm 5.10 reference objects of the current sources (Masm is not part of
-# this tree; only used to verify the JWasm build)
-ifneq ($(NOMASM),)
-masmref: | $(MASMREF)
-	$(foreach o,$(ALLOBJS),cp $(call origfile,$(o)) $(MASMREF)/$(o);)
-else
-masmref: $(GENFILES) | $(MASMREF)
-	MASMCASE=/$(subst mx,Mx,$(CASEMAP)) $(LX)/scripts/masmref.sh $(SRCDIR) $(PROJ) "$(ASMINC)" "$(addprefix /D,$(DEFS))" \
-	    $(foreach o,$(filter-out $(ML6OBJS),$(ASMOBJS)),$(call srcof,$(o))=$(o)=$(if $(call defsof,$(o)),/DOPTIM)$(addprefix /D,$($(o)_DEFS)))
-	$(foreach o,$(ALLOBJS),$(if $(or $($(o)_REF),$(filter $(o),$(ML6OBJS)),$($(o)_PREBUILT)),cp $(or $($(o)_REF),$($(o)_PREBUILT),$(call origfile,$(o))) $(MASMREF)/$(o);))
-endif
-
-cmp: $(addprefix $(OUT)/,$(ASMOBJS))
-	@ok=0; bad=0; for o in $(ASMOBJS); do \
-	    ref=$(MASMREF)/$$o; \
-	    if [ ! -f $$ref ]; then echo "$$o: no reference (make masmref)"; bad=$$((bad+1)); continue; fi; \
-	    if $(PYTHON) $(LX)/tools/omf.py cmp $$ref $(OUT)/$$o > $(OUT)/$$o.cmp 2>&1; then ok=$$((ok+1)); \
-	    else echo "$$o: $$(grep -v '^identical' $(OUT)/$$o.cmp | head -3 | tr '\n' ' ')"; bad=$$((bad+1)); fi; \
-	done; echo "$(PROJ): identical $$ok, different $$bad"
-
-# link the Masm reference objects (LIDATA expanded for JWlink) and compare
-# the programs with the JWasm build
-cmplink: all
-	@missing=$$(for o in $(ALLOBJS); do [ -f $(MASMREF)/$$o ] || echo $$o; done); \
-	if [ -n "$$missing" ]; then echo "$(PROJ): no reference for" $$missing "- links not compared"; exit 0; fi; \
-	rm -rf $(MASMREF)/link; mkdir -p $(MASMREF)/link; \
-	for o in $(ALLOBJS); do $(PYTHON) $(LX)/tools/omf.py expand $(MASMREF)/$$o $(MASMREF)/link/$$o > /dev/null \
-	    || cp $(MASMREF)/$$o $(MASMREF)/link/; done; \
-	$(foreach p,$(PROGS),( $(call LINKCMD,$(p),$(MASMREF)/link) ) || exit 1;) \
-	for p in $(PROGS); do \
-	    case $$p in \
-	    *.COM|$(foreach p,$(PROGS),$(if $($(p)_BIN),$(p)|))__) cmp -s $(MASMREF)/link/$$p $(OUT)/$$p && echo "$$p: identical" || echo "$$p: DIFFERENT" ;; \
-	    *.VXD) $(PYTHON) $(LX)/tools/lecmp.py $(MASMREF)/link/$$p $(OUT)/$$p | tail -1 | sed "s|^|$$p: |" ;; \
-	    *) $(PYTHON) $(LX)/tools/mzcmp.py $(MASMREF)/link/$$p $(OUT)/$$p | grep -q 'image bytes differing: 0' \
-	       && echo "$$p: image identical" || echo "$$p: DIFFERENT" ;; \
-	    esac; done
-
-# link the original 1998 objects (RET/, COMN/) like the programs and compare
-# with the original binaries: checks JWlink against Microsoft LINK
-ORIGLINK := $(ROOT)/build/origlink/$(PROJ)
-ifneq ($(NOORIGOBJ),)
-origlink:
-	@echo "$(PROJ): no original objects in RET/ for this build"
-else
-origlink: | $(OUT)
-	@rm -rf $(ORIGLINK); mkdir -p $(ORIGLINK)
-	@$(foreach p,$(PROGS),$(if $($(p)_MAP),$(PYTHON) $(LX)/tools/map2lnk.py $($(p)_MAP) > $(OUT)/$(p).ORD;))
-	@$(foreach o,$(ALLOBJS),$(if $(call origfile,$(o)),$(PYTHON) $(LX)/tools/omf.py expand $(call origfile,$(o)) $(ORIGLINK)/$(o) > /dev/null || cp $(call origfile,$(o)) $(ORIGLINK)/$(o);,echo "$(PROJ): no original object $(o)";))
-	@$(foreach p,$(PROGS),( $(call LINKCMD,$(p),$(ORIGLINK)) ) || exit 1;) \
-	for pr in $(foreach p,$(PROGS),$(p):$($(p)_ORIG)); do p=$${pr%%:*}; ref=$${pr#*:}; \
-	    [ -n "$$ref" ] || ref=$$(ls RET/* 2>/dev/null | grep -i "/$$p$$" | head -1); \
-	    [ -n "$$ref" ] || { echo "$$p: no original program"; continue; }; \
-	    case $$p in \
-	    *.COM|$(foreach p,$(PROGS),$(if $($(p)_BIN),$(p)|))__) cmp -s $$ref $(ORIGLINK)/$$p && echo "$$p: identical to $$ref" \
-	       || echo "$$p: $$(cmp -l $$ref $(ORIGLINK)/$$p | wc -l) bytes differ from $$ref" ;; \
-	    *.VXD) $(PYTHON) $(LX)/tools/lecmp.py $$ref $(ORIGLINK)/$$p | tail -1 | sed "s|^|$$p vs $$ref: |" ;; \
-	    *) $(PYTHON) $(LX)/tools/mzcmp.py $$ref $(ORIGLINK)/$$p | grep -E 'differing|relocs' | tr '\n' ' ' | sed "s|^|$$p vs $$ref: |"; echo ;; \
-	    esac; done
-endif

@@ -1,7 +1,7 @@
 # MAX.EXE, the MAX shell (GNU make, see linux/mk/dos.mk).  The source of
 # the original was not released; QMAIN.C, UTILINFO.C, UPDDISK.C,
 # QSHPRINT.C, ASQINFO.C, QSHTEXT.H and VERSDATA.ASM are reconstructed from
-# the original MAX.EXE (with LIB/MAX.MAP and LIB/MAX.SSF) and the sibling
+# the original MAX.EXE (with its map and Nu-Mega symbol file) and the sibling
 # sources of ASQ.  OpenWatcom.
 PROJ     := QSHELL
 ROOT     := $(abspath ..)
@@ -18,7 +18,5 @@ MAX.EXE_OBJS  := QMAIN.OBJ UTILINFO.OBJ UPDDISK.OBJ ABORT.OBJ QSHPRINT.OBJ ASQIN
 MAX.EXE_LIBS  := $(ROOT)/build/QUILIB/LQUILIBR.LIB $(ROOT)/build/HELPENG/LHELP.LIB
 MAX.EXE_STACK := 9000
 
-# no original objects of the C build in the tree
-NOORIGOBJ := 1
 
 include $(ROOT)/linux/mk/dos.mk

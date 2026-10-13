@@ -1,6 +1,5 @@
 # SETUP.EXE, the Windows setup of Qualitas MAX (GNU make, see
-# linux/mk/win.mk; MAKEFILE/SETUP.MAK is the original NMAKE build with
-# Microsoft C 8).  Its DOS stub (SETUPDOS.EXE) and CLEAN.EXE (an RCDATA
+# linux/mk/win.mk).  Its DOS stub (SETUPDOS.EXE) and CLEAN.EXE (an RCDATA
 # resource, made with linux/tools/bin2rc.py instead of BIN2RC.EXE) are
 # built by setupdos.mk and clean.mk.  PKWARE's IMPLODE.LIB is replaced by
 # INSTALL/EXPLODE.C.

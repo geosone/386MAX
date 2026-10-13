@@ -9,6 +9,5 @@ PROGS    := SETUPDOS.EXE
 
 SETUPDOS.EXE_OBJS := SETUPDOS.OBJ
 
-NOORIGOBJ := 1
 
 include $(ROOT)/linux/mk/dos.mk

@@ -1,6 +1,5 @@
-# TOOLBOX.EXE, the Qualitas MAX Toolbox (GNU make, see linux/mk/win.mk) and
-# EVAP.EXE (DOS, see evap.mk).  MAKEFILE/MAXCTRL.MAK is the original NMAKE
-# build with Microsoft C 8.  SFTTABS (tab control): ../SFTTABS.
+# TOOLBOX.EXE, the Open 386MAX Toolbox (GNU make, see linux/mk/win.mk) and
+# EVAP.EXE (DOS, see evap.mk).  SFTTABS (tab control): ../SFTTABS.
 PROJ     := MAXCTRL
 ROOT     := $(abspath ..)
 CMODEL   := l

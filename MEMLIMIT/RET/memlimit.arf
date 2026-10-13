@@ -1,5 +1,0 @@
-		ret\memlimit.OBJ	ret\VERSION.OBJ
-		ret\memlimit.exe
-		ret\memlimit.map
-		/map /line /nod
-		NUL.def

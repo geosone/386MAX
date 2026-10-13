@@ -9,6 +9,5 @@ PROGS    := CLEAN.EXE
 
 CLEAN.EXE_OBJS := CLEAN.OBJ
 
-NOORIGOBJ := 1
 
 include $(ROOT)/linux/mk/dos.mk

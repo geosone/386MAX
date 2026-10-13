@@ -1,5 +1,4 @@
-# MAXMETER.EXE, the Windows memory meter (GNU make, see linux/mk/win.mk;
-# MAKEFILE/MAXMETER.MAK is the original NMAKE build with Microsoft C 8)
+# MAXMETER.EXE, the Windows memory meter (GNU make, see linux/mk/win.mk)
 PROJ     := MAXMETER
 ROOT     := $(abspath ..)
 CMODEL   := s

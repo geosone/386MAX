@@ -1,5 +1,4 @@
-# MAXIMIZE.EXE (GNU make, see linux/mk/dos.mk; MAKEFILE is the original
-# NMAKE file).  Microsoft C is replaced by OpenWatcom, the .PRO prototype
+# MAXIMIZE.EXE (GNU make, see linux/mk/dos.mk).  Microsoft C is replaced by OpenWatcom, the .PRO prototype
 # files ("cl /Zg") are made by linux/tools/protogen.py.  WRCONFIG.C and
 # WRFILES3.C were missing from the tree and are reconstructed from REB/.
 PROJ     := MAXIMIZE
@@ -33,7 +32,5 @@ PROS := BROWSE.PRO CHKRAM.PRO COPYFILE.PRO \
 	PASS2.PRO PASS3.PRO PROCCFG1.PRO PROFILE.PRO READCNFG.PRO READMXMZ.PRO \
 	REBOOT.PRO REORDER.PRO SCREENS.PRO UTIL.PRO WRCONFIG.PRO WRFILES3.PRO
 
-# no original objects of the C build in the tree
-NOORIGOBJ := 1
 
 include $(ROOT)/linux/mk/dos.mk

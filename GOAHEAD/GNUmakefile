@@ -1,6 +1,5 @@
 # GOAHEAD.DRV (installable driver) and GOAHEAD.EXE (GNU make, see
-# linux/mk/win.mk; MAKEFILE is the original NMAKE build with Microsoft C 8
-# and MASM)
+# linux/mk/win.mk)
 PROJ     := GOAHEAD
 ROOT     := $(abspath ..)
 CMODEL   := s

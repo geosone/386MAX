@@ -1,5 +1,5 @@
 # 386MAX.VXD, the Windows 3.x/9x virtual device (GNU make, see
-# linux/mk/dos.mk; MAKEFILE is the original NMAKE file).  Default OEM BCF
+# linux/mk/dos.mk).  Default OEM BCF
 # like the original makefile (the original objects are in BCF/).  LINK386
 # is replaced by JWlink (format windows vxd), the segments and the export
 # come from 386MAX.DEF.  LOADHI, INSTINIT and INSTSWAP are objects without
@@ -12,12 +12,6 @@ ASMINC   := . ../INC ../386MAX ../INCLUDE
 GENERATED := QMAX_OEM.INC=../386MAX/QMAX@$(OEM).OEM
 CASEMAP  := ml
 DEFS     := OEM_$(OEM) @OEMTEXT='386MAX' @OEMEXT='VXD' @DEBUG @HARPO @DOSMAX @ZMAX @VGASWAP
-ORIGDIRS := BCF
-# Masm 5.10A lacks the flat model of the DDK's Masm 5.10B: the references
-# are the original objects in BCF/ (built from the sources before the GPL
-# texts; the sources of that commit assemble to identical objects apart
-# from the intra-segment fixups Masm 5.10B adds)
-NOMASM   := 1
 PROGS    := 386MAX.VXD
 
 386MAX.VXD_OBJS := VMAX.OBJ VMAX_API.OBJ VMAX_DBG.OBJ VMAX_FNS.OBJ VMAX_HRP.OBJ \
@@ -25,7 +19,6 @@ PROGS    := 386MAX.VXD
 	VMAX_UPD.OBJ VMAX_VDD.OBJ VMAXZMAX.OBJ LOADHI.OBJ INSTINIT.OBJ INSTSWAP.OBJ \
 	VERSRET.OBJ VMAX_VER.OBJ
 386MAX.VXD_FORMAT := windows vxd
-386MAX.VXD_ORIG   := BCF/386MAX.VXD
 386MAX.VXD_LINKOPTS := \
 	segment _LTEXT PRELOAD NONDISCARDABLE \
 	segment _LDATA PRELOAD NONDISCARDABLE \

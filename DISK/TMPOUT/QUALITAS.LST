@@ -1,7 +1,0 @@
-: This file removes the utilities added by SETUP
-: Lines to always strip
-*
-	!QMT
-	!QCACHE
-
-

@@ -1,6 +1,5 @@
 # MAXEDIT.EXE, the Windows editor for the 386MAX profile and CONFIG.SYS
-# (GNU make, see linux/mk/win.mk; MAKEFILE/MAXEDIT.MAK is the original
-# NMAKE build with Microsoft C 8)
+# (GNU make, see linux/mk/win.mk)
 PROJ     := MAXEDIT
 ROOT     := $(abspath ..)
 CMODEL   := s

@@ -31,7 +31,7 @@ printf 'FILES=40\nSHELL=A:\\COMMAND.COM A:\\ /P\n' | crlf > "$OUT/CONFIG.SYS"
     echo 'QEXIT'
 } | crlf > "$OUT/AUTOEXEC.BAT"
 mcopy -o -i "$OUT/boot.img" "$OUT/CONFIG.SYS" "$OUT/AUTOEXEC.BAT" "$OUT/QEXIT.COM" \
-      "$ASQEXE" "$ROOT/LIB/ASQ.HLP" ::/ || exit 1
+      "$ASQEXE" "$ROOT/build/bin/asq.hlp" ::/ || exit 1
 
 # QEXIT ends QEMU; the screen dump is for the case that ASQ hangs
 { sleep "${TIMEOUT:-120}"; echo "screendump $OUT/screen.ppm"; sleep 1; echo quit; } |

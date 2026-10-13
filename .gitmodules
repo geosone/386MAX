@@ -1,0 +1,10 @@
+[submodule "linux/jwasm"]
+	path = linux/jwasm
+	url = https://github.com/geosone/JWasm.git
+	branch = 386max
+	ignore = dirty
+[submodule "linux/jwlink"]
+	path = linux/jwlink
+	url = https://github.com/geosone/jwlink.git
+	branch = 386max
+	ignore = dirty
