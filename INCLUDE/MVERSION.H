@@ -1,6 +1,6 @@
 //' $Header:   P:/PVCS/MAX/INCLUDE/MVERSION.H_V   1.73   23 May 1997 13:36:00   BOB  $
 //
-// MVERSION.H - Version definitions for Max 8 (Open 386MAX 8.51)
+// MVERSION.H - Version definitions for Max 8 (Open 386MAX)
 // Included by component resource scripts.
 //
 // ------------------------------------------------------
@@ -23,10 +23,17 @@
 #error VER_MODULE_STR not defined
 #endif
 
-#define VER_MAJOR					8	// 1.xx.xxx.xxx
-#define VER_MAJOR_STR				"8"
-#define VER_MINOR					51	// x.0.xxx.xxx
-#define VER_MINOR_STR				"51"
+// Version from the file VERSION (linux/mk/version.mk passes it to the
+// compiler and the resource compiler)
+#ifndef O386_VER_MAJOR
+#error O386_VER_MAJOR not defined (see linux/mk/version.mk)
+#endif
+#define O386_STR2(x)			#x
+#define O386_STR(x)				O386_STR2(x)
+#define VER_MAJOR					O386_VER_MAJOR	// 1.xx.xxx.xxx
+#define VER_MAJOR_STR				O386_STR(O386_VER_MAJOR)
+#define VER_MINOR					O386_VER_MINOR	// x.0.xxx.xxx
+#define VER_MINOR_STR				O386_STR(O386_VER_MINOR_S)
 #define VER_BETA					4 // x.xx.001.xxx
 #define VER_BETA_STR				"004"
 // VER_MODULE and VER_MODULE_STR are defined in the component's resource script

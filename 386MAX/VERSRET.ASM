@@ -1,4 +1,4 @@
-VERSION  equ	 851
+VERSION  equ	 @VER_MAJOR*100+@VER_MINOR		; from the file VERSION (linux/mk/version.mk)
 VERSLTR  equ	 <>
 
 ;' $Header:   P:/PVCS/MAX/386MAX/VERSRET.ASV   1.5   06 Nov 1996 15:42:26   BOB  $

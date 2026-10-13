@@ -43,6 +43,7 @@
 
 ROOT    ?= $(abspath ..)
 LX      := $(ROOT)/linux
+include $(LX)/mk/version.mk
 JWASM   ?= $(LX)/bin/jwasm
 JWLINK  ?= $(LX)/bin/jwlink
 PYTHON  ?= python3
@@ -56,9 +57,9 @@ BINDIR  := $(if $(filter $(notdir $(CURDIR)),$(firstword $(subst /, ,$(PROJ)))),
 SRCDIR  := $(notdir $(CURDIR))
 CASEMAP ?= mu
 JWCASE  := $(if $(filter ml,$(CASEMAP)),-Cp,$(if $(filter mx,$(CASEMAP)),-Cx,-Cu))
-AFLAGS  := -Zm $(JWCASE) -c -q -W1 -DLANG_$(MAXLANG) $(foreach d,$(DEFS),"-D$(d)") -I$(OUT) $(addprefix -I,$(ASMINC))
+AFLAGS  := -Zm $(JWCASE) -c -q -W1 -DLANG_$(MAXLANG) $(VERDEFS_ASM) $(foreach d,$(DEFS),"-D$(d)") -I$(OUT) $(addprefix -I,$(ASMINC))
 # ML 6: /Cu /Sp63 /W1 (-Zm6: ML 6.0 operand sizes, see linux/jwasm)
-AFLAGS6 := -Zm6 $(JWCASE) -c -q -W1 -DLANG_$(MAXLANG) $(foreach d,$(DEFS),"-D$(d)") -I$(OUT) $(addprefix -I,$(ASMINC))
+AFLAGS6 := -Zm6 $(JWCASE) -c -q -W1 -DLANG_$(MAXLANG) $(VERDEFS_ASM) $(foreach d,$(DEFS),"-D$(d)") -I$(OUT) $(addprefix -I,$(ASMINC))
 
 ALLOBJS := $(sort $(foreach p,$(PROGS) $(LIBS),$($(p)_OBJS)))
 GENFILES := $(foreach g,$(GENERATED),$(OUT)/$(firstword $(subst =, ,$(g))))
@@ -102,7 +103,7 @@ ASMOBJS := $(foreach o,$(ALLOBJS),$(if $($(o)_PREBUILT),,$(if $(call isc,$(o)),,
 COBJS   := $(foreach o,$(ALLOBJS),$(if $(call isc,$(o)),$(o)))
 
 define OBJRULE
-$(OUT)/$(1): $(call srcof,$(1)) $(INCDEPS) $(GENFILES) $(JWASM) | $(OUT)
+$(OUT)/$(1): $(call srcof,$(1)) $(INCDEPS) $(GENFILES) $(JWASM) $(VERSION_FILE) | $(OUT)
 	$(JWASM) $(if $(filter $(1),$(ML6OBJS)),$(AFLAGS6),$(AFLAGS)) $(call defsof,$(1)) $(addprefix -D,$($(1)_DEFS)) -Fl=$(OUT)/$(subst .,_,$(1)).LST -Fw$(OUT)/$(1).err -Fo$$@ $$< > $(OUT)/$(1).log || { cat $(OUT)/$(1).log; exit 1; }
 endef
 $(foreach o,$(ASMOBJS),$(eval $(call OBJRULE,$(o))))
@@ -121,7 +122,7 @@ WLIB    := $(OWBIN)/wlib
 CINCDIR := $(OUT)/cinc
 # CDEBUGINC: include directory searched first (debug headers)
 CFLAGS  := -bt=dos -m$(CMODEL) -ecc -ei -j -zp$(CPACK) -r -s -zq -os -fr -fi=$(LX)/mk/owcompat.h \
-	-DLANG_$(MAXLANG) $(foreach d,$(CDEFS),"-D$(d)") $(if $(CDEBUGINC),-i=$(CDEBUGINC)) -i=$(CINCDIR) -i=$(OUT)/pro $(addprefix -i=,$(ASMINC)) -i=$(WATCOM)/h
+	-DLANG_$(MAXLANG) $(VERDEFS_C) $(foreach d,$(CDEFS),"-D$(d)") $(if $(CDEBUGINC),-i=$(CDEBUGINC)) -i=$(CINCDIR) -i=$(OUT)/pro $(addprefix -i=,$(ASMINC)) -i=$(WATCOM)/h
 export WATCOM
 
 CINCSRCS = $(sort $(foreach o,$(COBJS),$(call srcof,$(o))) $(foreach p,$(PROS),$(call srcof,$(basename $(p)).OBJ)))
@@ -143,7 +144,7 @@ endef
 $(foreach f,$(PROS),$(eval $(call PRORULE,$(f))))
 
 define COBJRULE
-$(OUT)/$(1): $(call srcof,$(1)) $(INCDEPS) $(wildcard $(addsuffix /*.H,$(ASMINC))) $(CINCDIR)/.done $(LX)/mk/owcompat.h $(PROFILES)
+$(OUT)/$(1): $(call srcof,$(1)) $(INCDEPS) $(wildcard $(addsuffix /*.H,$(ASMINC))) $(CINCDIR)/.done $(LX)/mk/owcompat.h $(PROFILES) $(VERSION_FILE)
 	$(WCC) $(CFLAGS) $(foreach d,$($(1)_DEFS),"-D$(d)") -fo=$$@ $$< > $(OUT)/$(1).log 2>&1 || { cat $(OUT)/$(1).log; exit 1; }
 endef
 $(foreach o,$(COBJS),$(eval $(call COBJRULE,$(o))))

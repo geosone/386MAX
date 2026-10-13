@@ -32,6 +32,9 @@ make MAXLANG=GR              # German
 python3 linux/tools/mkpkg.py build/package .   # installation package
 ```
 
+The version number is in one place, the file `VERSION` (e.g. `8.51`); the
+build passes it to all programs, resources and the release media.
+
 `linux/jwasm` and `linux/jwlink` are git submodules (branch `386max` of
 [geosone/JWasm](https://github.com/geosone/JWasm) and
 [geosone/jwlink](https://github.com/geosone/jwlink)): JWasm with MASM 5.1

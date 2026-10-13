@@ -50,6 +50,7 @@
 
 ROOT    ?= $(abspath ..)
 LX      := $(ROOT)/linux
+include $(LX)/mk/version.mk
 PYTHON  ?= python3
 WATCOM  ?= /opt/watcom
 export WATCOM
@@ -102,7 +103,7 @@ INCDIRS += $(MFCOUT)/include $(LX)/mk/owwin16
 CPPFLAGS_MFC := -zf
 CFLAGS  := $(filter-out -ecc,$(CFLAGS))
 endif
-CFLAGS  += -fr -fi=$(LX)/mk/owwin.h -i=$(LX)/mk -dLANG_$(MAXLANG) $(foreach d,$(CDEFS),-d$(d)) -i=$(CINCDIR) \
+CFLAGS  += -fr -fi=$(LX)/mk/owwin.h -i=$(LX)/mk -dLANG_$(MAXLANG) $(VERDEFS_C) $(foreach d,$(CDEFS),-d$(d)) -i=$(CINCDIR) \
            $(foreach d,$(INCDIRS) $(OWINC),-i=$(d)) $(CFLAGS_EXTRA)
 
 ALLOBJS := $(sort $(foreach p,$(PROGS) $(LIBRARIES),$($(p)_OBJS)))
@@ -140,8 +141,8 @@ $(CINCDIR)/.done: $(MAKEFILE_LIST) $(foreach o,$(ALLOBJS),$(call srcof,$(o))) $(
 	touch $@
 
 define OBJRULE
-$(OUT)/$(1): $(call srcof,$(1)) $(CINCDIR)/.done $(LX)/mk/owwin.h $(if $(MFC),$(LX)/mk/owmfc.h $(MFCLIB)) | $(OUT)
-	$$(if $$(filter %.ASM,$$<),$(JWASM) -q -Zm -Cu -c -DLANG_$(MAXLANG) $(addprefix -D,$(ASMDEFS)) -Fo$$@ $$(foreach d,$(INCDIRS),-I$$(d)) $$<,\
+$(OUT)/$(1): $(call srcof,$(1)) $(CINCDIR)/.done $(VERSION_FILE) $(LX)/mk/owwin.h $(if $(MFC),$(LX)/mk/owmfc.h $(MFCLIB)) | $(OUT)
+	$$(if $$(filter %.ASM,$$<),$(JWASM) -q -Zm -Cu -c -DLANG_$(MAXLANG) $(VERDEFS_ASM) $(addprefix -D,$(ASMDEFS)) -Fo$$@ $$(foreach d,$(INCDIRS),-I$$(d)) $$<,\
 	  $$(if $$(filter %.CPP %.cpp,$$<),$(CC_CPP) $(CPPFLAGS_MFC),$(CC_C)) $(CFLAGS) $$($(1)_CFLAGS) -fo=$$@ $$<)
 endef
 $(foreach o,$(ALLOBJS),$(eval $(call OBJRULE,$(o))))
@@ -185,10 +186,10 @@ define PROGRULE
 # several .res files that are concatenated (as the original makefiles did;
 # -zm: Microsoft format, OpenWatcom's own has a file header; resfix.py
 # repairs the 16-bit format only)
-$(OUT)/$(1).res: $($(1)_RC) $(CINCDIR)/.done $(LX)/tools/rcprep.py $(LX)/tools/resfix.py | $(OUT)
+$(OUT)/$(1).res: $($(1)_RC) $(CINCDIR)/.done $(VERSION_FILE) $(LX)/tools/rcprep.py $(LX)/tools/resfix.py | $(OUT)
 	rm -f $$@
 	for r in $($(1)_RC); do b=$$$$(basename $$$$r); \
-	  (cd $(CINCDIR) && $(WRC) -o -q $(RCFLAGS) -dLANG_$(MAXLANG) $(foreach d,$(CDEFS),-d$(d)) \
+	  (cd $(CINCDIR) && $(WRC) -o -q $(RCFLAGS) -dLANG_$(MAXLANG) $(VERDEFS_C) $(foreach d,$(CDEFS),-d$(d)) \
 	    -i=$(CINCDIR) $(foreach d,$(abspath $(INCDIRS)) $(OWINC),-i=$(d)) -fo=$$$$b.i $(CURDIR)/$$$$r) && \
 	  $(PYTHON) $(LX)/tools/rcprep.py $(CINCDIR)/$$$$b.i $(CINCDIR)/$$$$b.rcp && \
 	  (cd $(CINCDIR) && $(WRC) -r -q -zm $(RCFLAGS) -i=$(CINCDIR) -fo=$$@.part $$$$b.rcp) && \

@@ -1,4 +1,4 @@
-VERSION equ	851
+VERSION equ	@VER_MAJOR*100+@VER_MINOR		; from the file VERSION (linux/mk/version.mk)
 
 ;' $Header:   P:/PVCS/MAX/QMT/VERSION.ASV   1.0   05 Jun 1998 14:03:28   BOB  $
 
