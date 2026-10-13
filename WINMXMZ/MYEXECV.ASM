@@ -42,7 +42,11 @@ __HIDATA ends			; End __HIDATA segment
 __HICODE segment use16 byte public '__prog' ; Start __HICODE segment
 __HICODE ends			; End __HICODE segment
 
-__HISTAK segment use16 dword public 'stack' ; Start __HISTAK segment
+; Class '__histak' (originally 'stack'): OpenWatcom's wlink moves class
+; STACK to the end of the program, behind __HIZEND - the high copy (up to
+; EndHigh) then had no stack, HighProc's SP pointed behind the copied block
+; (Windows 98: into video memory).
+__HISTAK segment use16 dword public '__histak' ; Start __HISTAK segment
 	assume	ds:__HIGROUP
 
 	public	HighStack,HighStackEnd

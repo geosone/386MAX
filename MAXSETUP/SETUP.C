@@ -864,6 +864,7 @@ Multiconfig:
 	UINT uNewFSize;
 	void FAR *lpNewPtr = NULL;
 	VS_FIXEDFILEINFO FAR * lpNewFFI = NULL;
+	BOOL bNewer;
 
 	uError = SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
@@ -890,6 +891,15 @@ Multiconfig:
 	    }
 	}
 
+	    // if no destination file or if src file newer...  (decided before
+	    // the version buffers are freed: lpCurFFI/lpNewFFI point into them;
+	    // both pointers checked - Windows 98 has its own CTL3DV2.DLL)
+	bNewer = ( dwCurSize == NULL ) ||
+	     ( lpCurFFI && lpNewFFI &&
+	       (( lpNewFFI->dwFileVersionMS > lpCurFFI->dwFileVersionMS ) ||
+	        (( lpNewFFI->dwFileVersionMS == lpCurFFI->dwFileVersionMS ) &&
+	         ( lpNewFFI->dwFileVersionLS > lpCurFFI->dwFileVersionLS ))));
+
 	if ( lpCurPtr != NULL ) {
 	    _ffree( lpCurPtr );
 	}
@@ -897,12 +907,7 @@ Multiconfig:
 	if ( lpNewPtr != NULL ) {
 	    _ffree( lpNewPtr );
 	}
-	    // if no destination file or if src file newer...
-	if ( ( dwCurSize == NULL ) ||
-	     (( lpCurFFI && lpNewFFI ) &&
-	      ( lpNewFFI->dwFileVersionMS > lpCurFFI->dwFileVersionMS ) ||
-	      (( lpNewFFI->dwFileVersionMS == lpCurFFI->dwFileVersionMS ) &&
-	       ( lpNewFFI->dwFileVersionLS > lpCurFFI->dwFileVersionLS )))) {
+	if ( bNewer ) {
 
 	    dwStatus = VerInstallFile( 0, "ctl3dv2.dll", "ctl3dv2.dll", szDest, szWindowsSystemDir, szWindowsSystemDir, szTemp, &n );
 
