@@ -19,6 +19,8 @@
 #   <prog>_RC     resource script (optional)
 #   <prog>_DEF    module definition file (translated by def2wlink.py)
 #   <prog>_STUB   DOS stub program instead of the one the DEF file names
+#   <prog>_STUBSRC source of the DOS stub (MASM 6 syntax): assembled with
+#                 JWasm and linked with jwlink here (sets <prog>_STUB)
 #   <prog>_LIBS   libraries (OpenWatcom names, e.g. commdlg ctl3dv2, or paths)
 #   <prog>_LINKOPTS further wlink directives (win16: the stack is 8 KB unless
 #                 the DEF file or these set it; wlink's own default is none.
@@ -59,6 +61,7 @@ WPP386  := $(OWBIN)/wpp386
 WRC     := $(OWBIN)/wrc
 WLINK   := $(OWBIN)/wlink
 JWASM   ?= $(LX)/bin/jwasm
+JWLINK  ?= $(LX)/bin/jwlink
 MAXLANG ?= US
 
 OUT     := $(ROOT)/build/$(PROJ)
@@ -166,6 +169,15 @@ endif
 $(OUT)/OWHINST.OBJ: $(LX)/mk/owhinst.c | $(OUT)
 	$(CC_C) $(filter-out -dWinMain=% -d_hInstance=%,$(CFLAGS)) -fo=$@ $<
 
+# DOS stubs from source (<prog>_STUBSRC)
+define STUBRULE
+$(1)_STUB := $(OUT)/$(basename $(notdir $($(1)_STUBSRC))).EXE
+$(OUT)/$(basename $(notdir $($(1)_STUBSRC))).EXE: $($(1)_STUBSRC) | $(OUT)
+	$(JWASM) -q -c -DLANG_$(MAXLANG) $$(foreach d,$(INCDIRS),-I$$(d)) -Fo$$(@:.EXE=.OBJ) $$<
+	cd $(OUT) && $(JWLINK) format dos name $$(notdir $$@) option quiet file $$(notdir $$(@:.EXE=.OBJ))
+endef
+$(foreach p,$(PROGS),$(if $($(p)_STUBSRC),$(eval $(call STUBRULE,$(p)))))
+
 define PROGRULE
 # resources: preprocessed by wrc -o, string literals merged (rcprep.py),
 # compiled by wrc in the directory with
@@ -187,7 +199,7 @@ $(OUT)/$(1).res: $($(1)_RC) $(CINCDIR)/.done $(LX)/tools/rcprep.py $(LX)/tools/r
 $(OUT)/$(1).lnk: $($(1)_DEF) $($(1)_STUB) $(LX)/tools/def2wlink.py $(if $(filter win32,$(TARGET)),$(addprefix $(OUT)/,$($(1)_OBJS))) | $(OUT)
 	$(PYTHON) $(LX)/tools/def2wlink.py $(if $($(1)_STUB),--stub=$($(1)_STUB)) $$< $(TARGET) $(if $(filter win32,$(TARGET)),$(addprefix $(OUT)/,$($(1)_OBJS))) > $$@
 
-$(OUT)/$(1): $(addprefix $(OUT)/,$($(1)_OBJS) $(MSCOBJS) $(if $(filter $(1),$(MSHINST)),OWHINST.OBJ)) $(MFCLIB) $(if $(MSCOBJS),$(OUT)/msclib/.done) $(if $($(1)_RC),$(OUT)/$(1).res) $(if $($(1)_DEF),$(OUT)/$(1).lnk)
+$(OUT)/$(1): $(filter %.LIB %.lib,$($(1)_LIBS)) $(addprefix $(OUT)/,$($(1)_OBJS) $(MSCOBJS) $(if $(filter $(1),$(MSHINST)),OWHINST.OBJ)) $(MFCLIB) $(if $(MSCOBJS),$(OUT)/msclib/.done) $(if $($(1)_RC),$(OUT)/$(1).res) $(if $($(1)_DEF),$(OUT)/$(1).lnk)
 	cd $(OUT) && $(or $($(1)_LINKER),$(WLINK)) option quiet \
 	  $$(if $$(shell grep -q '^# kind dll' $(OUT)/$(1).lnk 2>/dev/null && echo dll),\
 	    $(if $(filter win32,$(TARGET)),format windows nt dll,format windows dll),\

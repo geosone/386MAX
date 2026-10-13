@@ -1,0 +1,21 @@
+# Import library PIFMGR.LIB of PIFMGR.DLL (Windows 95), made with wlib:
+# ++name.module..ordinal
+++WEP.PIFMGR..1
+++OpenProperties.PIFMGR..2
+++GetProperties.PIFMGR..3
+++SetProperties.PIFMGR..4
+++EditProperties.PIFMGR..5
+++FlushProperties.PIFMGR..6
+++EnumProperties.PIFMGR..7
+++AssociateProperties.PIFMGR..8
+++CloseProperties.PIFMGR..9
+++LoadPropertyLib.PIFMGR..10
+++EnumPropertyLibs.PIFMGR..11
+++FreePropertyLib.PIFMGR..12
+++AddPropertySheet.PIFMGR..13
+++RemovePropertySheet.PIFMGR..14
+++LoadPropertySheets.PIFMGR..15
+++EnumPropertySheets.PIFMGR..16
+++FreePropertySheets.PIFMGR..17
+++CreateStartupProperties.PIFMGR..20
+++DeleteStartupProperties.PIFMGR..21
