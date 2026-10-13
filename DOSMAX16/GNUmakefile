@@ -1,0 +1,26 @@
+# DOSMAX16.DLL (16-bit side of the Universal Thunk to DOSMAX.DLL) and
+# SETEWV.EXE (GNU make, see linux/mk/win.mk; DOSMAX16.MAK is the original
+# NMAKE build with Microsoft C 8 and MASM)
+PROJ     := DOSMAX16
+ROOT     := $(abspath ..)
+CMODEL   := s
+INCDIRS  := . ../INCLUDE ../INC
+CDEFS    := STRICT
+WINPROLOG := -zW
+ASMDEFS  := DEBUG=0
+PROGS    := DOSMAX16.DLL SETEWV.EXE
+
+DOSMAX16.OBJ_CFLAGS := -zu -bd
+DOSMAX16.DLL_OBJS := DOSMAX16.OBJ
+DOSMAX16.DLL_DEF  := DOSMAX16.DEF
+DOSMAX16.DLL_LIBS := $(ROOT)/TEXT/PIFMGR.LIB
+DOSMAX16.DLL_LINKOPTS := file $(WATCOM)/lib286/win/libentry.obj
+
+SETEWV.EXE_OBJS := SETEWV.OBJ
+SETEWV.EXE_DEF  := SETEWV.DEF
+SETEWV.EXE_LIBS := ver
+SETEWV.EXE_FIRST  := $(ROOT)/TEXT/NOCRT0.OBJ
+SETEWV.EXE_LINKER := $(ROOT)/linux/bin/jwlink
+SETEWV.EXE_LINKOPTS := option stack=5120
+
+include $(ROOT)/linux/mk/win.mk

@@ -1,0 +1,14 @@
+# 386DISK.SYS (GNU make, see linux/mk/dos.mk; MAKEFILE is the original
+# NMAKE file)
+PROJ     := 386DISK
+ROOT     := $(abspath ..)
+SRCDIRS  := . ../386MAX
+ASMINC   := . ../INC ../386MAX
+GENERATED := QDSK_OEM.INC=QDSK@RET.OEM
+PROGS    := 386DISK.SYS
+
+386DISK.SYS_OBJS := QDISK.OBJ QDISK_IN.OBJ VERSRET.OBJ
+386DISK.SYS_MAP  := RET/386DISK.map
+386DISK.SYS_BIN  := 1
+
+include $(ROOT)/linux/mk/dos.mk

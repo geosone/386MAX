@@ -1,0 +1,12 @@
+# GNU make build (see GNUmakefile)
+/build/
+/linux/bin/
+/linux/build/
+/linux/jwasm/build/
+/linux/jwlink/**/GccUnixR/
+__pycache__/
+/release/
+# Microsoft MEM.EXE (Windows 98 SE), for linux/test/run.sh: provide it yourself
+/linux/tools/MEM.EXE
+/linux/jwasm/*.o
+/linux/jwlink/**/*.o

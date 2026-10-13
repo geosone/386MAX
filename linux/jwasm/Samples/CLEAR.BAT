@@ -1,0 +1,13 @@
+@echo off
+del DOS\*.exe
+del DOS\*.com
+del elf32\*.o
+del elf32\Linux5
+del elf64\*.o
+del OS2\*.obj
+del Win16\*.obj
+del Win32\*.obj
+del Win32\*.exe
+del Win64\*.obj
+del Win64\*.exe
+del *.obj
