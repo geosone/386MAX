@@ -624,3 +624,55 @@ void Hardware_Firmware(HANDLE info)
 	blank(info);
 	firm_acpi(info);
 }
+
+/*------------------------------------------------------------------------*/
+/* For the equipment summary						  */
+/*------------------------------------------------------------------------*/
+
+/* CPUID brand name without (R), (TM), "CPU", "Processor" and clock
+ * ("Intel Core i7-8700K"), at most max-1 characters; NULL if none */
+char *cpu_shortname(char *out, int max)
+{
+	static const char *drop[] = { "(R)", "(r)", "(TM)", "(tm)", " CPU",
+				      " Processor", " processor", NULL };
+	char buf[49], *p;
+	int i, n;
+
+	if (!(MOD.flags & MOD_CPUID) || !*MOD.szBrand) return NULL;
+	strcpy(buf, MOD.szBrand);
+	if ((p = strchr(buf, '@')) != NULL) *p = '\0';	/* "@ 3.70GHz" */
+	for (i = 0; drop[i]; i++)
+		while ((p = strstr(buf, drop[i])) != NULL)
+			memmove(p, p + strlen(drop[i]), strlen(p + strlen(drop[i])) + 1);
+	/* single blanks, none at the ends */
+	for (p = buf, n = 0; *p; p++)
+		if (*p != ' ' || (n && out[n - 1] != ' '))
+			if (n < max - 1) out[n++] = *p;
+	while (n && out[n - 1] == ' ') n--;
+	out[n] = '\0';
+	return n ? out : NULL;
+}
+
+/* "family,model,stepping vendor" with the extended CPUID values; NULL if
+ * no CPUID */
+char *cpu_fms(char *out)
+{
+	WORD fam, model;
+
+	if (!(MOD.flags & MOD_CPUID) || !MOD.dwSig) return NULL;
+	fam = (WORD)(MOD.dwSig >> 8) & 0xF;
+	model = (WORD)(MOD.dwSig >> 4) & 0xF;
+	if (fam == 0xF) fam += (WORD)(MOD.dwSig >> 20) & 0xFF;
+	if (fam == 6 || fam >= 0xF) model |= ((WORD)(MOD.dwSig >> 16) & 0xF) << 4;
+	sprintf(out, "%d,%x,%x %.12s", fam, model, (WORD)MOD.dwSig & 0xF,
+		MOD.szVendor);
+	return out;
+}
+
+/* Computer type for a 64-bit capable processor, NULL otherwise */
+char *pc_class(void)
+{
+	if ((MOD.flags & MOD_CPUID) && (MOD.dwFeat[2] & (1UL << 29)))
+		return L("64-bit PC (x86-64)", "64-Bit-PC (x86-64)");
+	return NULL;
+}

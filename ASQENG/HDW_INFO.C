@@ -21,6 +21,7 @@
 #include <video.h>		/* Video functions */
 
 #include "info.h"               /* Internal info functions */
+#include "hdw_info.h"           /* Hardware info functions */
 #include "sysinfo.h"            /* System info structures / functions */
 
 #define HDW_INFO_C
@@ -192,6 +193,8 @@ void Hardware_Summary(HANDLE info)	  /* Control structure */
 			classname = MSG3070;
 		else if (SysInfo->flags.xt)
 			classname = MSG3071;
+		else if (SysInfo->flags.at && pc_class())
+			classname = pc_class();
 		else if (SysInfo->flags.at) {
 			if (SysInfo->cpu.cpu_type == CPU_80386 ||
 			    SysInfo->cpu.cpu_type == CPU_80386SX ) {
@@ -271,7 +274,9 @@ void Hardware_Summary(HANDLE info)	  /* Control structure */
 	{
 		char temp[ 80 ];
 
-		strcpy( temp, cpu_textof( &SysInfo->cpu ) );
+		/* CPUID brand name if there is one (MODREPT.C) */
+		if (!cpu_shortname(temp, 25))
+			strcpy( temp, cpu_textof( &SysInfo->cpu ) );
 		if (SysInfo->cpu.vir_flag) {
 			strcat(temp," ");
 			strcat(temp,MSG3246);
@@ -282,6 +287,7 @@ void Hardware_Summary(HANDLE info)	  /* Control structure */
 
 		char szFMS[ 40 ];
 
+		if (!cpu_fms(szFMS))
 		sprintf( szFMS, "%d,%x,%x %.12s", (WORD)SysInfo->cpu.family,
 				(WORD)SysInfo->cpu.model,
 				(WORD)SysInfo->cpu.stepping,

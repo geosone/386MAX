@@ -22,3 +22,6 @@ void Hardware_CMOS_Detail(HANDLE hinfo);
 void Memory_BIOS_Map(HANDLE info);
 void Hardware_PCI(HANDLE info);
 void Hardware_Firmware(HANDLE info);
+char *cpu_shortname(char *out, int max);
+char *cpu_fms(char *out);
+char *pc_class(void);

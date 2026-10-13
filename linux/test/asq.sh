@@ -12,6 +12,7 @@
 #            QEMU monitor inputs follow after START seconds (default 40),
 #            space separated: sendkey names, "shot" (screen shot shot<n>.png),
 #            "wait<n>" (n seconds)
+#   QEMU     emulator (default qemu-system-i386)
 #   MACHINE, MEMSIZE, QEMU_EXTRA  QEMU machine (pc), memory in MB (32) and more
 #            arguments (default -nic none)
 #   SNAP     snapshot file copied to A:\SNAP.ASQ (e.g. for ASQARGS="/S A:\SNAP.ASQ")
@@ -57,7 +58,7 @@ n=0
     done
   else sleep "${TIMEOUT:-120}"; fi
   echo "screendump $OUT/screen.ppm"; sleep 1; echo quit; } |
-qemu-system-i386 -machine ${MACHINE:-pc} -m ${MEMSIZE:-32} -display none -vga std -monitor stdio \
+${QEMU:-qemu-system-i386} -machine ${MACHINE:-pc} -m ${MEMSIZE:-32} -display none -vga std -monitor stdio \
     -drive if=floppy,format=raw,file="$OUT/boot.img" -boot a ${QEMU_EXTRA:--nic none} \
     -serial file:"$OUT/serial.log" \
     -device isa-debug-exit,iobase=0x501,iosize=0x02 >/dev/null 2>&1
