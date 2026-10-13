@@ -538,6 +538,34 @@ char	 *buffer;
 } // End of profile_add
 #endif
 
+/******************************** NOT_MSDOS *********************************/
+// TRUE on the DR-DOS kernels (Enhanced DR-DOS, SvarDOS) and FreeDOS:
+// INT 21h AX=4452h answers 10xxh, AX=33FFh returns the FreeDOS kernel name
+static int not_msdos (void)
+{
+  int other = 0;
+
+  { _asm {
+	mov	ax,0x4452
+	stc
+	int	0x21
+	jc	short NOTDR
+	and	ax,0xFF00
+	cmp	ax,0x1000
+	jne	short NOTDR
+	mov	other,1
+NOTDR:
+	mov	ax,0x33FF
+	xor	dx,dx
+	int	0x21
+	or	dx,dx
+	jz	short NOTFD
+	mov	other,1
+NOTFD:
+  } }
+  return (other);
+} // not_msdos ()
+
 /******************************** CHECK_SHELL_SUB ***************************/
 // Process lines for check_shell()
 int	check_shell_sub (CFGTEXT *p)
@@ -551,6 +579,10 @@ int	check_shell_sub (CFGTEXT *p)
 
   if (	!stricmp (keyword_part (p), "shell") &&
 	!stricmp (fname_part (p), "command.com")) {
+
+	// The reload path is for MS-DOS' COMMAND.COM; SvarDOS' shell (SvarCOM)
+	// rejects it ("Invalid parameter"): not on the DR-DOS/FreeDOS kernels
+	if (not_msdos ()) return (0);
 
 	// Check for COMSPEC reload path specified
 	strncpy (buff, p->text, sizeof(buff)-1);

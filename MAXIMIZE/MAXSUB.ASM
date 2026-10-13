@@ -616,7 +616,56 @@ endif
 REBOOT_NOPROB:
 	 cli			; Disallow interrupts
 
+; In real mode (after 386MAX's GOREAL, or without 386MAX): a jump to the
+; BIOS start leaves the A20 line switched on, which MS-DOS 7 (Windows 9x)
+; reports at the next start as "A20 hardware error".  So switch A20 off
+; and reset the processor through the keyboard controller (the warm boot
+; flag 1234h stays, the CMOS shutdown status is cleared); the jump is the
+; fallback.  In V86 mode 386MAX does
+; the reboot itself.
+.286p
+	 smsw	 ax		; Machine status word
+	 test	 al,1		; Protected/V86 mode?
+	 jnz	 short REBOOT_JMP ; Yes, leave it to the jump
+
+	 in	 al,92h		; System control port A
+	 and	 al,not 03h	; A20 off, no fast reset
+	 out	 92h,al
+
+	 call	 KBC_WAIT	; Keyboard controller ready?
+	 mov	 al,0D1h	; Write output port
+	 out	 64h,al
+	 call	 KBC_WAIT
+	 mov	 al,0DDh	; A20 off, no reset
+	 out	 60h,al
+	 call	 KBC_WAIT
+
+	 mov	 al,8Fh		; CMOS shutdown status (NMI off): 0 =
+	 out	 70h,al		; normal start.  386MAX may have left 5
+	 xor	 al,al		; or 0Ah, the BIOS would then jump to the
+	 out	 71h,al		; (stale) address at 40:67 after the reset
+	 mov	 al,0Dh		; NMI on again, read CMOS register 0Dh
+	 out	 70h,al
+	 in	 al,71h
+
+	 mov	 al,0FEh	; Pulse the reset line
+	 out	 64h,al
+	 mov	 cx,0		; Give it time
+@@:
+	 loop	 @B
+.8086
+REBOOT_JMP:
 	 jmp	 REBOOT 	; Reboot the system
+
+KBC_WAIT:
+	 push	 cx
+	 mov	 cx,0
+@@:
+	 in	 al,64h		; Status
+	 test	 al,02h		; Input buffer full?
+	 loopnz  @B
+	 pop	 cx
+	 retn			; near (we are inside a far PPROC)
 
 	 assume  ds:nothing,es:nothing,ss:nothing
 

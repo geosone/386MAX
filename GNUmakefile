@@ -68,7 +68,7 @@ MAXCTRL: SFTTABS
 # the Windows 3.11 test image in build/win311 and the MFC sources in
 # build/mfc survive (a long unattended install, the Visual C++ CD)
 clean:
-	find build -mindepth 1 -maxdepth 1 ! -name win311 ! -name mfc -exec rm -rf {} + 2>/dev/null || true
+	find build -mindepth 1 -maxdepth 1 ! -name win311 ! -name dosdisk ! -name mfc -exec rm -rf {} + 2>/dev/null || true
 	$(MAKE) -C linux/mfc clean
 
 distclean:

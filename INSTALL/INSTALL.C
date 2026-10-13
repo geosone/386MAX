@@ -698,7 +698,7 @@ void _cdecl abortprep(int flag)
 #pragma optimize("leg",off)
 void breakpt(int callswat)
 {
-  if (callswat) _asm int 1;
+  if (callswat) { _asm int 1 }
 }
 #pragma optimize("",on)
 

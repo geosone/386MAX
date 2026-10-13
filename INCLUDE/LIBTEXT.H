@@ -744,7 +744,7 @@ GLOBAL BUTTON YesNoButtons[ NUMYESNOBUTTONS ]
 #ifdef GLINIT
 #ifdef LANG_GR
 = {	/*	Returns (JN) MUST be upper case */
-   { { 0, 0  }, 12, "Ja",         { 'j', 'N', KEY_ALTJ, 0 }, 'J', TRUE,   TRUE, 0, 1, FG_BLUE | BG_GRAY, FALSE },
+   { { 0, 0  }, 12, "Ja",         { 'j', 'J', KEY_ALTJ, 0 }, 'J', TRUE,   TRUE, 0, 1, FG_BLUE | BG_GRAY, FALSE },
    { { 0, 0  }, 12, "Nein",       { 'n', 'N', KEY_ALTN, 0 }, 'N', FALSE, TRUE,  0, 1, FG_BLUE | BG_GRAY, FALSE }
 }
 #else

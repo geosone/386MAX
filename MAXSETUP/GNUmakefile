@@ -41,3 +41,10 @@ dos-clean:
 	$(MAKE) -f setupdos.mk clean
 	$(MAKE) -f clean.mk clean
 .PHONY: dos-clean
+
+# splash bitmap with the version (linux/tools/splashgen.py)
+$(OUT)/SETUP.EXE.res: $(CINCDIR)/qmax.bmp
+$(CINCDIR)/qmax.bmp: $(ROOT)/INCLUDE/SPLASH.PNG $(VERSION_FILE) $(ROOT)/linux/tools/splashgen.py $(CINCDIR)/.done
+	rm -f $@ $(CINCDIR)/QMAX.BMP
+	$(PYTHON) $(ROOT)/linux/tools/splashgen.py bmp $< $(VERSION_FILE) $@
+	ln -sf qmax.bmp $(CINCDIR)/QMAX.BMP

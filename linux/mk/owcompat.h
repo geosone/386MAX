@@ -76,6 +76,14 @@ enum boolean { OWC_BOOLEAN };
 extern int owc_fputs(const char *s, FILE *fp);
 #define fputs(s, f) owc_fputs(s, f)
 
+/* strtok as in Microsoft C: a string without tokens moves the saved
+ * position to its end.  OpenWatcom's strtok leaves the position of the
+ * previous string there; the sources call strtok(NULL, ...) after an empty
+ * line (e.g. a comment cut off), which then wrote NULs into stale memory
+ * (SETUP find_pro: overwrote its own return address on the stack) */
+extern char *owc_strtok(char *s, const char *delim);
+#define strtok(s, d) owc_strtok((s), (d))
+
 /* callbacks: cdecl functions of the program, called by the library */
 typedef int (__cdecl *owc_cmpfn)(const void *, const void *);
 typedef void (__cdecl *owc_sigfn)(int);

@@ -811,7 +811,7 @@ void setOptions(int argc, char **argv)
 		if (isdigit(*opt)) {
 			Pass = *opt - '0';
 			if (Pass < 1) Pass = 1;
-			if (maxcfg.BREAK == Pass) _asm int 1;
+			if (maxcfg.BREAK == Pass) { _asm int 1 }
 			skip = 1;
 			continue;
 		} /* End IF */
@@ -1185,7 +1185,7 @@ void Cfg_BREAK( char *arg )
 {
 	int n = atoi( arg );
 	maxcfg.BREAK = n;
-	if (!n) _asm int 1;
+	if (!n) { _asm int 1 }
 }
 
 struct _CfgAction {
@@ -1323,45 +1323,40 @@ void parse_maxcfg (void)
   } /* CfgFile opened */
 
 #ifdef HARPO
-  /* Check for DR DOS.	If active, turn on NOHARPO. */
+  /* Check for DR DOS (also Novell DOS, OpenDOS, Enhanced DR-DOS, SvarDOS)
+   * and the FreeDOS kernel.  If so, turn on NOHARPO: ExtraDOS knows only
+   * the internals of MS-DOS.  INT 21h AX=4452h answers with a DR DOS
+   * version code 10xxh whatever version AH=30h reports; AX=33FFh returns
+   * the kernel name in DX:AX on FreeDOS (MS-DOS: AL=FFh, DX unchanged). */
   /* (OpenWatcom: no jumps from _asm to C labels) */
   {
-  int drdos = 0;
+  int drdos = 0, freedos = 0;
 
   _asm {
-	mov	 ah,0x30;	/* Get DOS version */
-	int	 0x21;		/* AH=minor, AL=major */
-	cmp	 ax,0x1F03;	/* Izit DR DOS? */
-	je	 short DRDOS;	/* Maybe so... */
-
-	cmp	 ax,0x0006;	/* Izit Novell DOS 7? */
-	jne	 short NOTDR; /* Jump if not */
-
-DRDOS:
 	mov	 ax,0x4452;	/* DR DOS detection call */
 	stc			/* CF=0 on return */
 	int	 0x21;		/* AX = DR DOS version code */
-	jc	 short NOTDR; /* Jump if call failed */
+	jc	 short NOTDR;	/* Jump if call failed */
 
-	and	 ax,0xFFF0;	/* Get high order 12 bits */
-	cmp	 ax,0x1060;	/* Izit a DR DOS version? */
-				/* 1060h	3.40 */
-				/* 1063h	3.41 */
-				/* 1065h	5.0 */
-				/* 1066h	6.0 */
-	je	 short DRDOS2;	/* Jump if so */
+	and	 ax,0xFF00;	/* 1060h 3.40 ... 1072h 7.x */
+	cmp	 ax,0x1000;	/* Izit a DR DOS version? */
+	jne	 short NOTDR;	/* Jump if not */
 
-	cmp	 ax,0x1070;	/* Izit Novell DOS 7? */
-	jne	 short NOTDR; /* Jump if not DR DOS */
-
-DRDOS2:
 	mov	 drdos,1;
 NOTDR:
+	mov	 ax,0x33FF;	/* FreeDOS: kernel version string */
+	xor	 dx,dx;
+	int	 0x21;
+	or	 dx,dx;		/* DX:AX -> string on FreeDOS */
+	jz	 short NOTFD;
+	mov	 freedos,1;
+NOTFD:
   }
   if (drdos) {
 	maxcfg.noharpo = 1; /* Disable HARPO support */
 	maxcfg.drdos = 1;
   }
+  if (freedos) maxcfg.noharpo = 1;
   }
 #endif /* ifdef HARPO */
 

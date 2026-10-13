@@ -2,9 +2,11 @@
  * its register convention (__watcall), the 386MAX sources pass cdecl
  * functions (compiled with -ecc like Microsoft C). */
 #include <stdlib.h>
+#include <string.h>
 #include <signal.h>
 #include <dos.h>
 #undef qsort
+#undef strtok
 #undef fputs
 #undef signal
 #undef _harderr
@@ -104,3 +106,22 @@ int owc_fputs(const char *s, FILE *fp)
     return( fputs( s, fp ) == EOF ? EOF : 0 );
 }
 
+
+/* strtok with the behaviour of Microsoft C (owcompat.h) */
+char *owc_strtok(char *s, const char *delim)
+{
+    static char *next;
+    char *t;
+
+    if( s == NULL ) s = next;
+    if( s == NULL ) return( NULL );
+    s += strspn( s, delim );
+    if( *s == '\0' ) {
+        next = s;
+        return( NULL );
+    }
+    t = s + strcspn( s, delim );
+    if( *t != '\0' ) *t++ = '\0';
+    next = t;
+    return( s );
+}

@@ -877,6 +877,134 @@ void	 check_swapfile (void)
 } // check_swapfile ()
 #endif // if not MOVEM
 
+
+/* Insert line text after line p (or at the top if p is NULL) */
+static void insert_cfg_after(CFGTEXT *p, char *text)
+{
+	CFGTEXT *n = get_mem(sizeof(CFGTEXT));
+
+	n->ltype = (p ? p : CfgSys)->ltype;
+	n->Owner = (p ? p : CfgSys)->Owner;
+	n->text = str_mem(text);
+	if (p) {
+		n->prev = p;
+		n->next = p->next;
+		if (p->next) p->next->prev = n;
+		p->next = n;
+	} else {
+		n->prev = NULL;
+		n->next = CfgSys;
+		CfgSys->prev = n;
+		CfgSys = n;
+	}
+}
+
+/* MS-DOS 7 or later (Windows 9x DOS)?  The DR-DOS kernels (Enhanced
+ * DR-DOS, SvarDOS) and FreeDOS report version 7 too, but know no NOAUTO and
+ * load no HIMEM.SYS by themselves.  DR-DOS: INT 21h AX=4452h answers 10xxh;
+ * FreeDOS: AX=33FFh returns the kernel name in DX:AX. */
+static int is_msdos7(void)
+{
+	int other = 0;
+
+	if (_osmajor < 7) return FALSE;
+	{ _asm {
+		mov	ax,0x4452
+		stc
+		int	0x21
+		jc	short NOTDR
+		and	ax,0xFF00
+		cmp	ax,0x1000
+		jne	short NOTDR
+		mov	other,1
+	NOTDR:
+		mov	ax,0x33FF
+		xor	dx,dx
+		int	0x21
+		or	dx,dx
+		jz	short NOTFD
+		mov	other,1
+	NOTFD:
+	} }
+	return !other;
+}
+
+/* DOS= in CONFIG.SYS (returns TRUE if changed):
+ * - DOS=...UMB...: DOS would take all UMBs from 386MAX's XMS and leave
+ *   nothing for 386LOAD and MAXIMIZE, so UMB is removed;
+ * - MS-DOS 7 and later (the DOS of Windows 9x) load HIMEM.SYS by themselves
+ *   whenever DOS cannot use the HMA (e.g. during MAXIMIZE), which stops the
+ *   system next to 386MAX with "A20 hardware error": NOAUTO is added (DOS=
+ *   HIGH,NOAUTO if there is no DOS= line; not in a MultiConfig CONFIG.SYS,
+ *   whose first line is a [section]).  NOAUTO also stops the automatic
+ *   IFSHLP.SYS of Windows 9x, so windir\IFSHLP.SYS (if there) is loaded by
+ *   a DEVICE= line after 386MAX.SYS. */
+static int fix_dos_line(const char *windir)
+{
+	CFGTEXT *p, *maxline = NULL;
+	int found = FALSE, changed = FALSE, multi = FALSE, noauto = FALSE;
+	int ifshlp = FALSE, dos7 = is_msdos7();
+
+	for (p = CfgSys; p; p = p->next) {
+		char *t = p->text, *v, out[128], tok[32], low[128];
+		int no, lchanged = FALSE, lnoauto = FALSE;
+
+		while (*t == ' ' || *t == '\t') t++;
+		if (*t == '[') multi = TRUE;
+		strncpy(low, t, sizeof(low) - 1);
+		low[sizeof(low) - 1] = '\0';
+		strlwr(low);
+		if (strstr(low, "ifshlp.sys")) ifshlp = TRUE;
+		if (strstr(low, "386max.sys") && !maxline) maxline = p;
+		if (strnicmp(t, "dos", 3)) continue;
+		for (v = t + 3; *v == ' ' || *v == '\t'; v++) ;
+		if (*v != '=') continue;
+		found = TRUE;
+		/* copy the values without UMB */
+		sprintf(out, "%.*s", (int)(v + 1 - p->text), p->text);
+		for (v++, no = 0; *v && *v != '\n' && *v != '\r'; ) {
+			int k = 0;
+
+			while (*v == ' ' || *v == '\t' || *v == ',') v++;
+			while (*v && !strchr(" \t,\r\n", *v) && k < 31) tok[k++] = *v++;
+			tok[k] = '\0';
+			if (!k) break;
+			if (!stricmp(tok, "UMB")) { lchanged = TRUE; continue; }
+			if (!stricmp(tok, "NOAUTO")) lnoauto = TRUE;
+			if (no++) strcat(out, ",");
+			strcat(out, tok);
+		}
+		if (dos7 && !lnoauto) {
+			strcat(out, no++ ? ",NOAUTO" : "HIGH,NOAUTO");
+			lchanged = TRUE;
+			noauto = TRUE;
+		}
+		if (lchanged) {
+			if (!no) strcat(out, "HIGH");
+			strcat(out, "\n");
+			p->text = str_mem(out);
+			changed = TRUE;
+		}
+	}
+	if (!found && dos7 && !multi && CfgSys) {
+		insert_cfg_after(NULL, "DOS=HIGH,NOAUTO\n");
+		changed = noauto = TRUE;
+	}
+	/* NOAUTO: Windows 9x needs IFSHLP.SYS */
+	if (noauto && !ifshlp && windir && *windir) {
+		char path[128], line[160];
+
+		sprintf(path, "%s%sIFSHLP.SYS", windir,
+			windir[strlen(windir) - 1] == '\\' ? "" : "\\");
+		if (!access(path, 0)) {
+			sprintf(line, "DEVICE=%s\n", path);
+			insert_cfg_after(maxline, line);
+			changed = TRUE;
+		}
+	}
+	return changed;
+}
+
 //**************************** EDIT_CONFIG ************************************
 void	 edit_config ( void )
 {
@@ -977,6 +1105,14 @@ CFGTEXT *n, *p, *inspoint;
 		LastLine = n;
 	  } // Add to end
 	} // Didn't find a Stacks statement
+
+	// DOS=HIGH without UMB (see fix_dos_line)
+	{
+	  char windir[128];
+
+	  if (!locate_winfles (windir)) sprintf (windir, "%c:\\WINDOWS", boot_drive);
+	  (void) fix_dos_line (windir);
+	}
 
 	// Set global flags if SMARTDRV found
 	(void) walk_cfg (CfgSys, chk_smartdrv_sub);

@@ -29,3 +29,10 @@ clean: winlnch-clean
 winlnch-clean:
 	$(MAKE) -f winlnch.mk clean
 .PHONY: FORCE winlnch-clean
+
+# splash bitmap with the version (linux/tools/splashgen.py)
+$(OUT)/WINMAXIM.EXE.res: $(CINCDIR)/qmax.bmp
+$(CINCDIR)/qmax.bmp: $(ROOT)/INCLUDE/SPLASH.PNG $(VERSION_FILE) $(ROOT)/linux/tools/splashgen.py $(CINCDIR)/.done
+	rm -f $@ $(CINCDIR)/QMAX.BMP
+	$(PYTHON) $(ROOT)/linux/tools/splashgen.py bmp $< $(VERSION_FILE) $@
+	ln -sf qmax.bmp $(CINCDIR)/QMAX.BMP

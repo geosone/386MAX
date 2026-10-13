@@ -480,17 +480,17 @@ GOT_API_ENTRY_POINT:			; (OpenWatcom: label in the same _asm block)
 	MessageBox(NULL, szStr2, szStr1, MB_ICONEXCLAMATION);
     }
 
-    if (VxD) _asm {
+    if (VxD) { _asm {
 	mov	ax,VMAX_GetVer	; Get 386MAX.VXD version #
 	call	VxD		; Call the VxD
 	mov	wVxDVer,ax	; Save the version #
-    }
+    } }
 
-    if (VxD) _asm {
+    if (VxD) { _asm {
 	mov	ax,VMAX_GetSwatVer
 	call	VxD
 	mov	wSwatVer,ax	; Save SWAT version or 0
-    }
+    } }
 
 // Check for presence of ASQ.EXE in QMAX.INI.  Add it if missing.
     {
@@ -634,7 +634,7 @@ BAD_LSL:			// (OpenWatcom: label in the same _asm block)
 		    WORD	wVMInfo;
 		    WORD	fVMInfo;
 
-		    if (VxD && wSwatVer && fDebug) _asm int 1;
+		    if (VxD && wSwatVer && fDebug) { _asm int 1 }
 
 		    _asm {	// SHELL_GetVMInfo
 			mov	ax,VMAX_GetVMInfo
@@ -719,12 +719,12 @@ BAD_LSL:			// (OpenWatcom: label in the same _asm block)
 			STR_PROFILE	// Profile filename
 			);
 
-		if (n) _asm {
+		if (n) { _asm {
 		    mov ax,VMAX_SignalSemaphore
 		    OSP
 		    mov bx,word ptr VM_Handle
 		    call	VxD
-		}
+		} }
 
 // Note that lpPERVMCB is made invalid by the VxD call.
 // The VxD has zeroed any segment registers that contained it.
@@ -870,7 +870,7 @@ NO_INTERCEPTS:
 
 // Register with the VxD
 // FIXME the VxD returns AX = 0 if successful
-    if (VxD) _asm {
+    if (VxD) { _asm {
 	mov	bx,word ptr lpfnVxDCallback+0	; ES:BX ==> VxDCallback
 	mov	es,word ptr lpfnVxDCallback+2	; ...
 
@@ -878,7 +878,7 @@ NO_INTERCEPTS:
 
 	mov	ax,VMAX_RegisterCallback
 	call	VxD		; Call the VxD
-    }
+    } }
 
     if (hGbl) GlobalFree(hGbl);
 
@@ -900,10 +900,10 @@ NO_INTERCEPTS:
 
 BOOL UnRegisterWithVxD(void)
 {
-    if (VxD) _asm {
+    if (VxD) { _asm {
 	mov	ax,VMAX_UnregisterCallback
 	call	VxD
-    }
+    } }
 
     return (0);
 }
@@ -951,7 +951,7 @@ WORD CALLBACK _export VxDCallback(WORD wParam, DWORD VM_Handle)
 
 BOOL Main_OnCreate(HWND hWnd, CREATESTRUCT FAR * lpCreateStruct)
 {
-    if (VxD && wSwatVer && fDebug) _asm int 1;
+    if (VxD && wSwatVer && fDebug) { _asm int 1 }
 
     lpfnVxDCallback = MakeProcInstance((FARPROC) VxDCallback, hInst);
 
@@ -1149,13 +1149,13 @@ void ModeSw_OnCommand(HWND hWnd, UINT id, HWND hWndCtl, WORD codeNotify)
 		RemoveProp(hWnd, szQPopup);
 		EndDialog(hWnd, id);
 
-		if (VxD) _asm {
+		if (VxD) { _asm {
 		    mov ax,VMAX_IgnoreModeSwitch
 		    OSP
 		    mov bx,word ptr VM_Handle
 		    call	VxD
 		    mov rc,ax
-		}
+		} }
 
 		SetFocus(hWndOldAp);
 	    }
@@ -1232,7 +1232,7 @@ BOOL ModeSw_OnInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
     PPERPOPUP	pPerPopup = (PPERPOPUP) LocalLock(hPerPopup);
 
     pPerPopup->lpPERVMCB = lpPERVMCB;
-    if (VxD && wSwatVer && fDebug) _asm int 1;
+    if (VxD && wSwatVer && fDebug) { _asm int 1 }
     pPerPopup->hWndOldAp = hWndOldAp;
 
     SetDlgItemText(hWnd, IDT_NAME, lpPERVMCB->lpszFilename);
@@ -1663,12 +1663,12 @@ HVM WINAPI GetSysVMHandle(void)
 {
     HVM 	VM_Handle = NULL;
 
-    if (VxD) _asm {
+    if (VxD) { _asm {
 	mov	ax,VMAX_GetSysVMHandle ; ... into EBX
 	call	VxD		; Call the VxD
 	OSP
 	mov	word ptr VM_Handle,bx
-    }
+    } }
 
     return (VM_Handle);
 }
@@ -1742,7 +1742,7 @@ HWND WINAPI GetWinOldApHWNDFromVMHandle(HVM VM_Handle)
     WORD	wSysVMOff[3] = {0x9C, 0xA8, 0x68};
     WORD	wVMOff[3]    = {0xF0, 0xFC, 0xBC};
 
-    if (VxD && wSwatVer && fDebug) _asm int 1;
+    if (VxD && wSwatVer && fDebug) { _asm int 1 }
 
     // Get Windows version # and swap to comparison order
     wWinVer = SwapLoBytes(LOWORD(GetVersion()));
