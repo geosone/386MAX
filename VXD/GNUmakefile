@@ -2,8 +2,8 @@
 # linux/mk/dos.mk).  Default OEM BCF
 # like the original makefile (the original objects are in BCF/).  LINK386
 # is replaced by JWlink (format windows vxd), the segments and the export
-# come from 386MAX.DEF.  LOADHI, INSTINIT and INSTSWAP are objects without
-# source in TEXT/.
+# come from 386MAX.DEF.  LOADHI.ASM is the device frame (it replaces the
+# binary-only LoadHi objects of the original).
 PROJ     := VXD
 ROOT     := $(abspath ..)
 OEM      ?= BCF
@@ -16,7 +16,7 @@ PROGS    := 386MAX.VXD
 
 386MAX.VXD_OBJS := VMAX.OBJ VMAX_API.OBJ VMAX_DBG.OBJ VMAX_FNS.OBJ VMAX_HRP.OBJ \
 	VMAX_I0E.OBJ VMAX_LHI.OBJ VMAX_MSG.OBJ VMAX_NFG.OBJ VMAX_RMI.OBJ VMAX_SVM.OBJ \
-	VMAX_UPD.OBJ VMAX_VDD.OBJ VMAXZMAX.OBJ LOADHI.OBJ INSTINIT.OBJ INSTSWAP.OBJ \
+	VMAX_UPD.OBJ VMAX_VDD.OBJ VMAXZMAX.OBJ LOADHI.OBJ \
 	VERSRET.OBJ VMAX_VER.OBJ
 386MAX.VXD_FORMAT := windows vxd
 386MAX.VXD_LINKOPTS := \
@@ -27,9 +27,5 @@ PROGS    := 386MAX.VXD
 	segment _TEXT NONDISCARDABLE \
 	segment _DATA NONDISCARDABLE \
 	export LoadHi_DDB.1
-
-LOADHI.OBJ_PREBUILT   := ../TEXT/LOADHI.OBJ
-INSTINIT.OBJ_PREBUILT := ../TEXT/INSTINIT.OBJ
-INSTSWAP.OBJ_PREBUILT := ../TEXT/INSTSWAP.OBJ
 
 include $(ROOT)/linux/mk/dos.mk

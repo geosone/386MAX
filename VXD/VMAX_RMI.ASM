@@ -4053,11 +4053,24 @@ an entirely new package.
 
 ; Check the version # for the proper range (5.10 - x.xx)
 
-	 cmp	 QMAX_VER,VERS_HTU	; Izit QMAX.SYS x.xx?
-	 ja	 short RMO_BADVER	; Error if higher than expected
+	 REGSAVE <ax,dx>	; Save registers
+
+; QMAX_VER is BCD, VERS_HTU binary (8.50 = 832h): make it BCD
+
+	 mov	 ax,VERS_HTU	; AH = major, AL = minor version #
+	 mov	 dl,ah		; Save major version #
+	 aam			; AH = tens, AL = units of minor
+	 shl	 ah,4		; Tens to the high-order nibble
+	 or	 al,ah		; AL = minor version # in BCD
+	 mov	 ah,dl		; AX = our version # in BCD
+
+	 cmp	 QMAX_VER,ax	; Izit QMAX.SYS x.xx?
+
+	 REGREST <dx,ax>	; Restore (flags unchanged)
+	 ja	 RMO_BADVER	; Error if higher than expected
 
 	 cmp	 QMAX_VER,510h	; Izit QMAX.SYS 5.10 or later?
-	 jb	 short RMO_BADVER ; Not this time
+	 jb	 RMO_BADVER	; Not this time
 @@:
 	 push	 es		; Save
 
