@@ -1545,29 +1545,29 @@ NO_ADDENDA:
 #pragma optimize("",on)
 
 /******************* DO_NATIVE_HIGH() ***************************/
-// DR DOS (Novell DOS, Enhanced DR-DOS, SvarDOS) and the FreeDOS kernel
-// put FILES, BUFFERS, FCBS, LASTDRIVE and STACKS into upper memory
-// themselves, which is what ExtraDOS does on MS-DOS (it knows only the
+// The DR DOS kernels (Novell DOS, Enhanced DR-DOS, SvarDOS) put FILES,
+// BUFFERS, FCBS, LASTDRIVE and STACKS into upper memory themselves, taking
+// it from XMS, which is what ExtraDOS does on MS-DOS (it knows only the
 // MS-DOS internals).  Phase I turns these statements of the active
-// configuration into the kernel's HIGH variants and adds DOSDATA=UMB
-// (DR DOS: also DDSCS=HIGH,UMB), after the 386MAX line: the kernel uses
-// the UMBs 386MAX provides.
+// configuration into the kernel's HI variants and adds DOSDATA=UMB and
+// DDSCS=HIGH,UMB after the 386MAX line.  (The FreeDOS kernel has such
+// variants too, but uses them only with DOS=UMB, which takes all UMBs
+// and leaves none for 386LOAD: not done there.)
 #pragma optimize("leg",off)
 void do_native_high( void )
 {
  static struct {
-	char *low, *fdos, *drdos;	// FreeDOS / DR DOS high variant
+	char *low, *high;
  } kw[] = {
-	{"FILES",     "FILESHIGH",     "HIFILES"},
-	{"BUFFERS",   "BUFFERSHIGH",   "HIBUFFERS"},
-	{"FCBS",      NULL,	       "HIFCBS"},   // FreeDOS: DOSDATA=UMB
-	{"LASTDRIVE", "LASTDRIVEHIGH", "HILASTDRIVE"},
-	{"STACKS",    "STACKSHIGH",    "HISTACKS"},
+	{"FILES",     "HIFILES"},
+	{"BUFFERS",   "HIBUFFERS"},
+	{"FCBS",      "HIFCBS"},
+	{"LASTDRIVE", "HILASTDRIVE"},
+	{"STACKS",    "HISTACKS"},
  };
- static char *add_fdos[] = { "DOSDATA=UMB", NULL };
- static char *add_drdos[] = { "DOSDATA=UMB", "DDSCS=HIGH,UMB", NULL };
+ static char *add[] = { "DOSDATA=UMB", "DDSCS=HIGH,UMB", NULL };
  DSPTEXT *n, *maxline = NULL, *a;
- char buff[256], *hi, **add;
+ char buff[256], *hi;
  int i, lead, len, found[2];
 
  found[0] = found[1] = 0;	// DOSDATA=, DDSCS= present
@@ -1586,8 +1586,8 @@ void do_native_high( void )
 	for (i = 0; i < sizeof (kw) / sizeof (kw[0]); i++) {
 	  if (len != (int) strlen (kw[i].low) ||
 	      _strnicmp (n->text + lead, kw[i].low, len)) continue;
-	  hi = maxcfg.drdos ? kw[i].drdos : kw[i].fdos;
-	  if (!hi || strlen (n->text) + strlen (hi) >= sizeof (buff)) break;
+	  hi = kw[i].high;
+	  if (strlen (n->text) + strlen (hi) >= sizeof (buff)) break;
 	  sprintf (buff, "%.*s%s%s", lead, n->text, hi, n->text + lead + len);
 	  free_mem (n->text);
 	  n->text = str_mem (buff);
@@ -1599,7 +1599,6 @@ void do_native_high( void )
  if (!maxline) return;		// No 386MAX: no UMBs
 
  // New statements after DEVICE=386MAX.SYS (same section)
- add = maxcfg.drdos ? add_drdos : add_fdos;
  for (i = 0; add[i]; i++) {
 	if (found[i]) continue;
 	a = get_mem (sizeof (DSPTEXT));

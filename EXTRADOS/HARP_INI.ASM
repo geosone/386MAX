@@ -426,13 +426,13 @@ endif				; IFDEF LANG_GR
 	 public  MSG_NATIVE
 MSG_NATIVE   label byte
 ifdef LANG_GR
-	     db  '  Nicht n',94h,'tig: dieser DOS-Kern verlagert FILES, BUFFERS, LASTDRIVE und',CR,LF
-	     db  '  STACKS selbst in den HiDOS-Speicher (MAXIMIZE tr',84h,'gt HIFILES= bzw.',CR,LF
-	     db  '  FILESHIGH= usw. und DOSDATA=UMB ein).'
+	     db  '  Nicht m',94h,'glich und nicht n',94h,'tig: dieser DOS-Kern verlagert FILES,',CR,LF
+	     db  '  BUFFERS, LASTDRIVE und STACKS selbst in den HiDOS-Speicher',CR,LF
+	     db  '  (DR-DOS: HIFILES= usw., von MAXIMIZE eingetragen; FreeDOS: FILESHIGH= usw.).'
 else
-	     db  '  Not needed: this DOS kernel moves FILES, BUFFERS, LASTDRIVE and STACKS',CR,LF
-	     db  '  into high DOS memory itself (MAXIMIZE sets HIFILES= or FILESHIGH= etc.',CR,LF
-	     db  '  and DOSDATA=UMB).'
+	     db  '  Not possible and not needed: this DOS kernel moves FILES, BUFFERS,',CR,LF
+	     db  '  LASTDRIVE and STACKS into high DOS memory itself (DR DOS: HIFILES= etc.,',CR,LF
+	     db  '  set by MAXIMIZE; FreeDOS: FILESHIGH= etc.).'
 endif				; IFDEF LANG_GR
 	     db  CR,LF,EOS
 

@@ -1354,9 +1354,11 @@ NOTDR:
 	mov	 freedos,1;
 NOTFD:
   }
-  /* These kernels put FILES, BUFFERS, FCBS, LASTDRIVE and STACKS into
-   * upper memory themselves (do_native_high); NOHARPO turns that off too */
-  if ((drdos || freedos) && !maxcfg.noharpo) maxcfg.nativehigh = 1;
+  /* The DR DOS kernels put FILES, BUFFERS, FCBS, LASTDRIVE and STACKS
+   * into upper memory themselves, taking it from XMS (do_native_high);
+   * NOHARPO turns that off too.  The FreeDOS kernel does so only with
+   * DOS=UMB, which takes all UMBs and leaves none for 386LOAD. */
+  if (drdos && !maxcfg.noharpo) maxcfg.nativehigh = 1;
   if (drdos) {
 	maxcfg.noharpo = 1; /* Disable HARPO support */
 	maxcfg.drdos = 1;
