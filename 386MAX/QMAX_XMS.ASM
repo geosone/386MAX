@@ -3180,6 +3180,25 @@ endif				; IF @OEM_WIN3
 	 cmp	 AGROUP:[esi+4].VDISK_VEND,'K' ; Check for signature
 	 jne	 short CHECK_VDISK_LOST ; Jump if no signature
 
+; A VDISK also points INT 19h to its header ('VDISK' at offset 12h in the
+; INT 19h segment).  Without that the signature at 1MB is stale: memory
+; keeps it across a warm boot, e.g. the dummy VDISK the FreeDOS kernel
+; writes into the HMA (it would make us refuse all A20 calls).
+
+	 push	 eax		; Save for a moment
+
+	 movzx	 eax,word ptr AGROUP:[19h*4+2] ; Get INT 19h segment
+	 shl	 eax,4-0	; Convert from paras to bytes
+
+	 cmp	 dword ptr AGROUP:[eax+12h],'SIDV' ; Check for signature
+	 jne	 short @F	; Jump if no signature (note ZF=0)
+
+	 cmp	 byte ptr AGROUP:[eax+12h+4],'K' ; Check for signature
+@@:
+	 pop	 eax		; Restore
+
+	 jne	 short CHECK_VDISK_LOST ; Jump if stale
+
 	 test	 LCL_FLAG,@LCL_QEXT ; Is the new-style QEXT.SYS present?
 	 jz	 short @F	; Jump if not
 

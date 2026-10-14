@@ -6011,6 +6011,30 @@ Check on preceding extended memory usage.
 	 cmp	 [bp+4].VDISK_VEND,'K' ; Check for signature
 	 jne	 short CHECK_PRVEXT_EXIT ; No signature
 
+; A VDISK also points INT 19h to its header ('VDISK' at offset 12h in the
+; INT 19h segment).  Without that the signature at 1MB is stale: memory
+; keeps it across a warm boot, e.g. the dummy VDISK the FreeDOS kernel
+; writes into the HMA (we'd keep the HMA from DOS).
+
+	 push	 ds		; Save for a moment
+
+	 xor	 ax,ax		; Address the interrupt vectors
+	 mov	 ds,ax
+	 assume  ds:nothing	; Tell the assembler about it
+
+	 mov	 ds,ds:[19h*4+2] ; Get INT 19h segment
+	 assume  ds:nothing	; Tell the assembler about it
+
+	 cmp	 dword ptr ds:[12h],'SIDV' ; Check for signature
+	 jne	 short @F	; Jump if no signature (note ZF=0)
+
+	 cmp	 byte ptr ds:[12h+4],'K' ; Check for signature
+@@:
+	 pop	 ds		; Restore
+	 assume  ds:PGROUP	; Tell the assembler about it
+
+	 jne	 short CHECK_PRVEXT_EXIT ; Stale signature
+
 	 movzx	 eax,[bp].VDISK_NEXT ; Get kilobytes of usage
 
 	 sub	 eax,1024	; Less first megabyte
