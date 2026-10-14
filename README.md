@@ -14,7 +14,12 @@ that existed only as binaries, and develops 386MAX further:
   reserved areas (AHCI, EBDA, ACPI) stay untouched, more than 256 MB RAM,
   ISA DMA above 16 MB
 - QEMM QPI port trapping API for SBEMU and VSBHDA
-- no serial numbers or registration; version 8.52, English and German
+- no serial numbers or registration; version 8.53, English and German
+
+Tested in QEMU with complete installation and MAXIMIZE runs (DOS and
+Windows SETUP, all three MAXIMIZE passes): MS-DOS 6.22, MS-DOS 7.1,
+Enhanced DR-DOS, SvarDOS, Windows for Workgroups 3.11 and Windows 98 SE
+(linux/test: maxdos.sh, win311.sh, win98.sh).
 
 Releases with floppy, USB and CD images:
 [Releases](https://github.com/geosone/386MAX/releases)
