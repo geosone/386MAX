@@ -12,7 +12,7 @@
 #   MM=himem    HIMEM.SYS only (default)
 #   MM=386max   386MAX.SYS + 386MAX.VXD from build/bin
 #   KEYS        QEMU monitor sendkey commands (| separated) sent after
-#               TIMEOUT1 seconds, e.g. "ret|alt-f4"
+#               TIMEOUT1 seconds, e.g. "ret|alt-f4"; wait<n>: n seconds pause
 #   TIMEOUT     seconds until the (last) screenshot (default 120)
 #   SHOTS       further screenshot times in seconds (space separated, before
 #               KEYS)
@@ -112,6 +112,7 @@ T=${TIMEOUT:-120}
         sleep $(( ${TIMEOUT1:-60} - t )); t=${TIMEOUT1:-60}
         n=0
         for k in $(echo "$KEYS" | tr '|' ' '); do
+            case $k in wait[0-9]*) sleep ${k#wait}; t=$((t + ${k#wait})); continue ;; esac
             n=$((n + 1))
             [ "${KEYSHOTS:-0}" = 1 ] && { echo "screendump $OUT/key-$n.ppm"; sleep 1; }
             echo "sendkey $k"; sleep 2; t=$((t + 2 + ${KEYSHOTS:-0}))
