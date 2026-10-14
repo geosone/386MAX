@@ -14,7 +14,7 @@ that existed only as binaries, and develops 386MAX further:
   reserved areas (AHCI, EBDA, ACPI) stay untouched, more than 256 MB RAM,
   ISA DMA above 16 MB
 - QEMM QPI port trapping API for SBEMU and VSBHDA
-- no serial numbers or registration; version 8.55, English and German
+- no serial numbers or registration; version 8.56, English and German
 
 Tested in QEMU with complete installation and MAXIMIZE runs (DOS and
 Windows SETUP, all three MAXIMIZE passes): MS-DOS 6.22, MS-DOS 7.1,
