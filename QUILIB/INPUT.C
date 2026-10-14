@@ -91,7 +91,9 @@ int get_input(			/* Test for / get one input event */
 		result = input_key(event);
 		if (result) break;
 		now = clock();
-		elapsed = now - then;
+		/* In ms: Microsoft C counted 1000 clock ticks per second,
+		 * OpenWatcom counts CLOCKS_PER_SEC (100) */
+		elapsed = (now - then) * (1000L / CLOCKS_PER_SEC);
 		if (TimeoutInput && elapsed > TimeoutDelay) {
 		  event->key = TimeoutKey;	/* Key to return */
 		  event->flag = 0;		/* No shift states */
