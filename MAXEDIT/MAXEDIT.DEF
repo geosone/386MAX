@@ -1,26 +1,19 @@
+; module-definition file for MAXEDIT (wxWindows 1.68E, Open 386MAX 9)
+; no CODE line: wlink packs the code segments only without one
+
 NAME	     MAXEDIT
 
-DESCRIPTION  'Qualitas MAXEDIT .INI editor  Copyright 1995 Rex Conn for Qualitas Inc.'
+DESCRIPTION  'MAXedit, Open 386MAX'
 
 EXETYPE      WINDOWS
 
-STUB	     'WINSTUB.EXE'
-
-CODE	     PRELOAD MOVEABLE DISCARDABLE
 DATA	     PRELOAD MOVEABLE MULTIPLE
 
-HEAPSIZE     2048
-STACKSIZE    8192
-
-SEGMENTS
-    _TEXT    PRELOAD	MOVABLE DISCARDABLE
+HEAPSIZE     8192
+STACKSIZE    16384
 
 EXPORTS
-	MPFrameWndProc
-	MPMDIChildWndProc
 	AboutDlgProc
 	FindDlgProc
 	PrintDlgProc
 	AbortProc
-
-

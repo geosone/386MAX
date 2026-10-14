@@ -9,6 +9,41 @@
 
 #include "maxedit.h"
 
+// MAXedit 9 (wxWindows 1.68E): wx.rc, with the MDI frame's window menu in
+// MAXedit's language and with its commands (wxWindows handles 4001-4004)
+#define wxWindowMenu wxWindowMenuDefault
+#include "wx.rc"
+#undef wxWindowMenu
+wxWindowMenu MENU DISCARDABLE
+BEGIN
+    POPUP "&Fenster"
+    BEGIN
+        MENUITEM "&Nebeneinander",                IDM_WINDOWTILE
+        MENUITEM "‹ber&lappend",                IDM_WINDOWCASCADE
+        MENUITEM "&Symbole anordnen",                IDM_WINDOWICONS
+        MENUITEM "&Alle schlieﬂen",                IDM_WINDOWCLOSEALL
+    END
+END
+
+// icons by name (wxIcon) and the toolbar bitmaps (from the T*.ICO, made
+// by linux/tools/ico2bmp.py)
+MEFRAME    ICON  "maxedit.ico"
+MECHILD    ICON  "meicon.ico"
+TBNEW_BMP BITMAP "tbnew.bmp"
+TBOPEN_BMP BITMAP "tbopen.bmp"
+TBSAVE_BMP BITMAP "tbsave.bmp"
+TBPRINT_BMP BITMAP "tbprint.bmp"
+TBUNDO_BMP BITMAP "tbundo.bmp"
+TBCUT_BMP BITMAP "tbcut.bmp"
+TBCOPY_BMP BITMAP "tbcopy.bmp"
+TBPASTE_BMP BITMAP "tbpaste.bmp"
+TBCASC_BMP BITMAP "tbcasc.bmp"
+TBTILE_BMP BITMAP "tbtile.bmp"
+TBINI_BMP BITMAP "tbini.bmp"
+TBEXIT_BMP BITMAP "tbexit.bmp"
+TBHELP_BMP BITMAP "tbhelp.bmp"
+
+
 //
 // Icon
 //

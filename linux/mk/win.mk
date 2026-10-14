@@ -155,10 +155,17 @@ $(MFCLIB):
 endif
 ifeq ($(WX),1)
 ifeq ($(WXSTATIC),1)
-$(WXLIB):
+$(WXLIB): wxlib-force
+	@:
+.PHONY: wxlib-force
+wxlib-force:
 	$(MAKE) -C $(WXDIR) lib
 else
-$(WXLIB) $(WXMAIN) $(WXDLL):
+# always asked: wxWindows' makefile knows when its DLL is out of date
+$(WXLIB) $(WXMAIN) $(WXDLL): wxdll-force
+	@:
+.PHONY: wxdll-force
+wxdll-force:
 	$(MAKE) -C $(WXDIR) dll
 all: $(BINDIR)/WX.DLL
 $(BINDIR)/WX.DLL: $(WXDLL) | $(BINDIR)
