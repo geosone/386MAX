@@ -4,8 +4,8 @@
 #   linux/scripts/buildlang.sh US|GR
 #
 # The sources are mirrored into release/<LANG>/tree (without build/ and
-# release/) and built there with MAXLANG=<LANG>; the MFC library of
-# build/mfc is shared.  The installation package goes to
+# release/) and built there with MAXLANG=<LANG>.  The installation package
+# goes to
 # release/<LANG>/package (linux/tools/mkpkg.py), the media are made by
 # linux/scripts/mkmedia.sh.
 set -euo pipefail
@@ -18,6 +18,5 @@ rsync -a --delete --exclude /build/ --exclude /release/ --exclude /.git/ "$ROOT/
 # always a clean build: the makefiles know no header dependencies
 rm -rf "$REL/tree/build"
 mkdir -p "$REL/tree/build"
-[ -e "$ROOT/build/mfc" ] && ln -sfn "$ROOT/build/mfc" "$REL/tree/build/mfc"
 make -C "$REL/tree" MAXLANG=$L
 python3 "$ROOT/linux/tools/mkpkg.py" "$REL/package" "$REL/tree"

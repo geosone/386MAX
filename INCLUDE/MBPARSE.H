@@ -40,6 +40,9 @@ void set_mbs_callback (int (*callback) (BYTE, char *));
  *	LINE is the actual line data, including leading and/or trailing spaces
 ***/
 
+#ifdef __WATCOMC__		/* int-sized as in QUILIB (-ei), also for the */
+#pragma enum int		/* wxWindows programs (WINMAXIM) */
+#endif
 typedef enum {
 	ID_BUFFERS = 'B',
 	ID_DEVICE = 'D',
@@ -57,6 +60,9 @@ typedef enum {
 	ID_SUBMENU = 'U',
 	ID_FCBS = 'X'
 } CFGID;
+#ifdef __WATCOMC__
+#pragma enum pop
+#endif
 
 /***
  * Parse CONFIG.SYS on the specified drive for menu items only.

@@ -1,64 +1,41 @@
-// $Header:   P:/PVCS/MAX/WINMXMZ/SUMMARY.CPV   1.10   23 May 1996 13:43:20   HENRY  $
+// SUMMARY.CPP - Maximize summary dialog (Open 386MAX 9, wxWindows 1.68E)
 //
-// summary.cpp - implementation of Maximize summary dialog class
+// Same contents as the MFC version (Henry Groover, Qualitas 1995-96):
+// what Maximize moved into high DOS memory and what stayed low, from
+// MAXIMIZE.INI [Summary].
 //
+// Copyright (C) 1995-96 Qualitas, Inc.  GNU General Public License version 3.
+// Open 386MAX contributors 2022-2026.
 
-#include "stdafx.h"
+#include "wx.h"
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <io.h>
+
 #include "winmxmz.h"
-#include "summary.h"
 #include "mxdlgs.h"
+#include "summary.h"
 #include "messages.h"
 
-#include <statmfc.h>
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char BASED_CODE THIS_FILE[] = __FILE__;
-#endif
+#define AddHigh(s) ::SendDlgItemMessage( m_hWnd, IDC_HIGHLIST, LB_ADDSTRING, 0, (LPARAM)(LPCSTR)(s) )
+#define AddLow(s)  ::SendDlgItemMessage( m_hWnd, IDC_LOWLIST, LB_ADDSTRING, 0, (LPARAM)(LPCSTR)(s) )
 
 /////////////////////////////////////////////////////////////////////////////
 // CSummary dialog
 
-
-CSummary::CSummary(int nKBLowFree, CWnd* pParent /*=NULL*/)
-	: CDialog(CSummary::IDD, pParent)
+CSummary::CSummary(int nKBLowFree) : MxDialog(IDD_SUMMARY)
 {
-	//{{AFX_DATA_INIT(CSummary)
-	m_csTotalFreeHigh = "";
-	m_csTotalFreeLow = "";
-	m_csTotalUsedHigh = "";
-	//}}AFX_DATA_INIT
-
 	m_nKBLowFree = nKBLowFree;
 }
 
-void CSummary::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CSummary)
-	DDX_Control(pDX, IDC_LOWLIST, m_lbLowList);
-	DDX_Control(pDX, IDC_HIGHLIST, m_lbHighList);
-	DDX_Text(pDX, IDC_TOTALFREEHIGH, m_csTotalFreeHigh);
-	DDX_Text(pDX, IDC_TOTALFREELOW, m_csTotalFreeLow);
-	DDX_Text(pDX, IDC_TOTALUSEDHIGH, m_csTotalUsedHigh);
-	//}}AFX_DATA_MAP
-}
-
-BEGIN_MESSAGE_MAP(CSummary, CDialog)
-	//{{AFX_MSG_MAP(CSummary)
-	ON_BN_CLICKED(IDC_REVERT, OnRevert)
-	ON_BN_CLICKED(IDC_HELP, OnHelp)
-	ON_WM_CLOSE()
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-
-CString CSummary::GetPString( LPCSTR lpEntry, LPCSTR lpDefault ) {
-	return AfxGetApp()->GetProfileString( INIS_SUMMARY, lpEntry, lpDefault );
+void CSummary::GetPString( LPCSTR lpEntry, LPCSTR lpDefault, char *pszBuff, int nSize ) {
+	ProfileString( INIS_SUMMARY, lpEntry, lpDefault, pszBuff, nSize );
 }
 
 int CSummary::GetPInt( LPCSTR lpEntry, int nDefault ) {
-	return AfxGetApp()->GetProfileInt( INIS_SUMMARY, lpEntry, nDefault );
+	return ProfileInt( INIS_SUMMARY, lpEntry, nDefault );
 }
 
 // Remove lines n through m (origin:1) from a text file.  File will be
@@ -177,14 +154,12 @@ BOOL CSummary::OnInitDialog()
 	int nHighRegs, n, nReg, nHigh, nLow, nAddTab;
 	unsigned long dwSize;
 	long lTotal;
-	CString cs;
+	char szCs[ 256 ];
 
-	CDialog::OnInitDialog();
+	MxDialog::OnInitDialog();
 
-	THEAPP->m_hwndDlg = m_hWnd;
 
 	// Center ourselves
-	CenterDialog( this );
 
 	// Set up for string formatting
 	char szThousand[ 16 ];
@@ -219,16 +194,16 @@ BOOL CSummary::OnInitDialog()
 	// How many tabs needed for each numeric length
 	static int nTabs[ 10 ] = { 6, 5, 4, 4, 3, 2, 1, 1, 1, 1 };
 
-	m_lbHighList.SetTabStops( 6, nTabList );
-	m_lbLowList.SetTabStops( 6, nTabList );
+	::SendDlgItemMessage( m_hWnd, IDC_HIGHLIST, LB_SETTABSTOPS, 6, (LPARAM)(int FAR *)nTabList );
+	::SendDlgItemMessage( m_hWnd, IDC_LOWLIST, LB_SETTABSTOPS, 6, (LPARAM)(int FAR *)nTabList );
 
 	// Remove line from startup batch file
-	cs = GetPString( INI_REMOVELINE, "0," );
+	GetPString( INI_REMOVELINE, "0,", szCs, sizeof( szCs ) );
 
 	// Save for diagnostics
-	AfxGetApp()->WriteProfileString( INIS_LASTACT, INI_REMOVELINE, cs );
+	WriteProfileStr( INIS_LASTACT, INI_REMOVELINE, szCs );
 
-	psz = strtok( (LPSTR)(LPCSTR)cs, " \t,\r\n" );
+	psz = strtok( szCs, " \t,\r\n" );
 	if (psz) {
 
 		n = atoi( psz );
@@ -242,19 +217,19 @@ BOOL CSummary::OnInitDialog()
 			RemoveLineN( psz, n, n, "REM winmaxim~" );
 
 			// Now clobber the instruction in the INI file
-			AfxGetApp()->WriteProfileString( INIS_SUMMARY, INI_REMOVELINE, "0," );
+			WriteProfileStr( INIS_SUMMARY, INI_REMOVELINE, "0," );
 
 		} // Line number is valid and there's a filename
 
 	} // Got line number token
 
 	// Remove lines from start of CONFIG.SYS
-	cs = GetPString( INI_REMOVEMENU, "0," );
+	GetPString( INI_REMOVEMENU, "0,", szCs, sizeof( szCs ) );
 
 	// Save for diagnostics
-	AfxGetApp()->WriteProfileString( INIS_LASTACT, INI_REMOVELINE, cs );
+	WriteProfileStr( INIS_LASTACT, INI_REMOVELINE, szCs );
 
-	psz = strtok( (LPSTR)(LPCSTR)cs, " \t,\r\n" );
+	psz = strtok( szCs, " \t,\r\n" );
 	if (psz) {
 
 		n = atoi( psz );
@@ -266,7 +241,7 @@ BOOL CSummary::OnInitDialog()
 			RemoveLineN( psz, 1, n, NULL );
 
 			// Clobber the INI file entry
-			AfxGetApp()->WriteProfileString( INIS_SUMMARY, INI_REMOVEMENU, "0," );
+			WriteProfileStr( INIS_SUMMARY, INI_REMOVEMENU, "0," );
 
 		} // Got a valid number of lines and a filename
 
@@ -287,27 +262,27 @@ BOOL CSummary::OnInitDialog()
 	} // For all high DOS regions
 
 	wsprintf( szTemp, FMT_MOVED, (n = GetPInt( INI_HIGHPARAS, 0 )) / 64 );
-	m_csTotalUsedHigh = szTemp;
+	::SetDlgItemText( m_hWnd, IDC_TOTALUSEDHIGH, szTemp );
 
 	wsprintf( szTemp, FMT_REMAIN, (wHighTotal - n) / 64 );
-	m_csTotalFreeHigh = szTemp;
+	::SetDlgItemText( m_hWnd, IDC_TOTALFREEHIGH, szTemp );
 
 	sprintf( szTemp, FMT_FREE, m_nKBLowFree );
-	m_csTotalFreeLow = szTemp;
+	::SetDlgItemText( m_hWnd, IDC_TOTALFREELOW, szTemp );
 
 	nHigh = GetPInt( INI_NHIGH, 0 );
 	nLow = GetPInt( INI_NLOW, 0 );
 
-	m_lbHighList.AddString( DLGMSG_NAMEBYTES );
-	m_lbHighList.AddString( "" );
+	AddHigh( DLGMSG_NAMEBYTES );
+	AddHigh( "" );
 
-	// Now add high programs to m_csHighList
+	// Now add high programs to the high list
 	lTotal = 0L;
 	for (n = 0; n <= nHigh; n++) {
 
 		if (n == nHigh) {
 
-			m_lbHighList.AddString( "" );
+			AddHigh( "" );
 			strcpy( szTemp, DLGMSG_TOTAL );
 			FmtNum( szThousand[ 0 ], lTotal, szNum );
 
@@ -315,11 +290,11 @@ BOOL CSummary::OnInitDialog()
 		else {
 
 			sprintf( szEntry, INI_HIGHSEGTEMPLATE, n );
-			cs = GetPString( szEntry, "" );
-			if (cs.IsEmpty()) continue;
+			GetPString( szEntry, "", szCs, sizeof( szCs ) );
+			if (!szCs[ 0 ]) continue;
 
 			// This is supposed to be a no-no...
-			psz = strtok( (LPSTR)(LPCSTR)cs, ", \t\r\n" );
+			psz = strtok( szCs, ", \t\r\n" );
 			if (!psz) continue; // No size
 
 			dwSize = atol( psz );
@@ -353,35 +328,35 @@ BOOL CSummary::OnInitDialog()
 		strncpy( psz, "\t\t\t\t\t\t\t", nAddTab );
 		sprintf( &psz[ nAddTab ], "%s", szNum );
 
-		m_lbHighList.AddString( szTemp );
+		AddHigh( szTemp );
 
 	} // for all high programs
 
 	if (nLow > 0) {
 
-		m_lbLowList.AddString( DLGMSG_NAMEBYTES );
-		m_lbLowList.AddString( "" );
+		AddLow( DLGMSG_NAMEBYTES );
+		AddLow( "" );
 
 	}
 	else {
 
-		m_lbLowList.AddString( "" );
-		m_lbLowList.AddString( DLGMSG_NOLOW1 );
-		m_lbLowList.AddString( DLGMSG_NOLOW2 );
-		m_lbLowList.AddString( DLGMSG_NOLOW3 );
+		AddLow( "" );
+		AddLow( DLGMSG_NOLOW1 );
+		AddLow( DLGMSG_NOLOW2 );
+		AddLow( DLGMSG_NOLOW3 );
 #ifdef DLGMSG_NOLOW4
-		m_lbLowList.AddString( DLGMSG_NOLOW4 );
+		AddLow( DLGMSG_NOLOW4 );
 #endif
 
 	}
 
-	// Add low programs to m_lbLowDos
+	// Add low programs to the low list
 	lTotal = 0L;
 	for (n = 0; n <= nLow; n++) {
 
 		if (n == nLow) {
 
-			m_lbLowList.AddString( "" );
+			AddLow( "" );
 
 			strcpy( szTemp, DLGMSG_TOTAL );
 			FmtNum( szThousand[ 0 ], lTotal, szNum );
@@ -390,11 +365,11 @@ BOOL CSummary::OnInitDialog()
 		else {
 
 			sprintf( szEntry, "Loseg%d", n );
-			cs = GetPString( szEntry, "" );
-			if (cs.IsEmpty()) continue;
+			GetPString( szEntry, "", szCs, sizeof( szCs ) );
+			if (!szCs[ 0 ]) continue;
 
 			// This is supposed to be a no-no...
-			psz = strtok( (LPSTR)(LPCSTR)cs, ", \t\r\n" );
+			psz = strtok( szCs, ", \t\r\n" );
 			if (!psz) continue; // No size
 
 			dwSize = atol( psz );
@@ -428,44 +403,28 @@ BOOL CSummary::OnInitDialog()
 		strncpy( psz, "\t\t\t\t\t\t\t", nAddTab );
 		sprintf( &psz[ nAddTab ], "%s", szNum );
 
-		m_lbLowList.AddString( szTemp );
+		AddLow( szTemp );
 
 	} // for all low programs
 
 	// Set ourselves up for forced switching from blue screen
-	THEAPP->m_CWndSummary = this;
 
 	// Finally, update the dialog with variables
-	UpdateData( FALSE );
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
-void CSummary::OnRevert()
+BOOL CSummary::OnCommand(int id, int notify)
 {
-	EndDialog( IDC_REVERT );
-}
-
-void CSummary::OnHelp()
-{
-	THEAPP->WinHelp( HID_BASE_RESOURCE+IDD );
+	if (id == IDC_REVERT && notify == BN_CLICKED) {
+		EndDialog( IDC_REVERT );
+		return TRUE;
+	}
+	return MxDialog::OnCommand(id, notify);
 }
 
 void CSummary::OnOK()
 {
-	// Void the switching pointer
-	THEAPP->m_CWndSummary = NULL;
-
-	// Shut down help
-	THEAPP->WinHelp( 0L, HELP_QUIT );
-
-	CDialog::OnOK();
-}
-
-void CSummary::OnClose()
-{
-	// Void the switching pointer
-	THEAPP->m_CWndSummary = NULL;
-
-	CDialog::OnClose();
+	MxWinHelp( 0L, HELP_QUIT );
+	EndDialog( IDOK );
 }

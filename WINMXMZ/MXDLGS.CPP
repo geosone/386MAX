@@ -1,42 +1,137 @@
-// $Header:   P:/PVCS/MAX/WINMXMZ/MXDLGS.CPV   1.10   23 May 1996 13:43:12   HENRY  $
+// MXDLGS.CPP - WINMAXIM dialogs on wxWindows 1.68E (Open 386MAX 9)
 //
-// mxdlgs.cpp - Implementation of Maximize dialogs
+// Same dialogs and behaviour as the MFC version (Henry Groover, Qualitas
+// 1995-96): the DIALOG resources of WINMXMZ.RC / .GR with MxDialog in
+// place of CDialog, plus the splash screen and the blue background
+// (formerly STATUTIL's SPLASH.CPP, BLUESCR.CPP, CENTDLG.CPP).
 //
+// Copyright (C) 1995-96 Qualitas, Inc.  GNU General Public License version 3.
+// Open 386MAX contributors 2022-2026.
 
-#include "stdafx.h"
-#include "winmxmz.h"
-#include "mxdlgs.h"
+#include "wx.h"
+#include <windows.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <commfunc.h>
 #include <mbparse.h>
 #include <mxhelpid.h>
+#include <statres.h>
+#include "winmxmz.h"
+#include "mxdlgs.h"
 
-#include <statmfc.h>
+/////////////////////////////////////////////////////////////////////////////
+// MxDialog
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char BASED_CODE THIS_FILE[] = __FILE__;
-#endif
+Bool MxDialogBox::OnNativeCommand(int id, int notify)
+{
+	return m_pDlg->OnCommand(id, notify);
+}
+
+// system menu Close / Alt+F4: as Cancel
+Bool MxDialogBox::OnClose(void)
+{
+	m_pDlg->OnCancel();
+	return FALSE;
+}
+
+MxDialog::MxDialog(int nID)
+{
+	m_nID = nID;
+	m_hWnd = NULL;
+	m_pBox = NULL;
+	m_nResult = IDCANCEL;
+	m_bEnded = FALSE;
+}
+
+int MxDialog::DoModal(wxWindow *pParent)
+{
+	m_pBox = new MxDialogBox(this);
+	if (!m_pBox->LoadNativeDialog( pParent, (char *)MAKEINTRESOURCE( m_nID ), TRUE)) {
+		delete m_pBox;
+		m_pBox = NULL;
+		return -1;
+	}
+	m_hWnd = m_pBox->GetHWND();
+	m_bEnded = FALSE;
+	m_nResult = IDCANCEL;
+	// (Windows has set the focus to the first control after WM_INITDIALOG)
+	OnInitDialog();
+	if (!m_bEnded) {
+		m_pBox->Show(TRUE);		// returns after EndDialog
+	}
+	if (g_hwndDlg == m_hWnd) g_hwndDlg = NULL;
+	delete m_pBox;
+	m_pBox = NULL;
+	m_hWnd = NULL;
+	return m_nResult;
+}
+
+void MxDialog::EndDialog(int nResult)
+{
+	m_nResult = nResult;
+	m_bEnded = TRUE;
+	if (m_pBox && m_pBox->IsShown()) m_pBox->Show(FALSE);
+}
+
+BOOL MxDialog::OnInitDialog(void)
+{
+	g_hwndDlg = m_hWnd;
+	DataExchange(FALSE);
+	CenterDialog(m_hWnd);
+	return TRUE;
+}
+
+BOOL MxDialog::OnCommand(int id, int notify)
+{
+	if (notify != BN_CLICKED) return FALSE;
+	switch (id) {
+	case IDOK:	OnOK(); return TRUE;
+	case IDCANCEL:	OnCancel(); return TRUE;
+	case IDC_HELP:	OnHelp(); return TRUE;
+	}
+	return FALSE;
+}
+
+void MxDialog::OnOK(void)
+{
+	DataExchange(TRUE);
+	EndDialog(IDOK);
+}
+
+void MxDialog::OnCancel(void)
+{
+	// Shut down help
+	MxWinHelp(0L, HELP_QUIT);
+	EndDialog(IDCANCEL);
+}
+
+void MxDialog::OnHelp(void)
+{
+	MxWinHelp(HID_BASE_RESOURCE + m_nID);
+}
+
+void CenterDialog(HWND hWnd)
+{
+	RECT rc;
+	::GetWindowRect(hWnd, &rc);
+	int cx = rc.right - rc.left, cy = rc.bottom - rc.top;
+	::MoveWindow(hWnd, (::GetSystemMetrics(SM_CXSCREEN) - cx) / 2,
+			(::GetSystemMetrics(SM_CYSCREEN) - cy) / 2, cx, cy, TRUE);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // CCustomOpts dialog
 
-
-CCustomOpts::CCustomOpts(CWnd* pParent /*=NULL*/, int nID /*=CCustomOpts::IDD*/)
-	: CDialog(nID, pParent)
+CCustomOpts::CCustomOpts(int nID) : MxDialog(nID)
 {
-	//{{AFX_DATA_INIT(CCustomOpts)
 	m_bExtraDOS = FALSE;
 	m_bROMSrch = FALSE;
 	m_bVGASwap = FALSE;
 	m_bDisROMSrch = FALSE;
 	m_bDisVGASwap = FALSE;
-	//}}AFX_DATA_INIT
-
 	m_bDOSStart = FALSE;
-
-	m_csMaxPro = "";
-
+	m_szMaxPro[ 0 ] = '\0';
 	m_bHasVGASwap = FALSE;
 	m_bHasUseHigh = FALSE;
 	m_bAutoStrip = FALSE;
@@ -45,531 +140,294 @@ CCustomOpts::CCustomOpts(CWnd* pParent /*=NULL*/, int nID /*=CCustomOpts::IDD*/)
 	m_bROMSrchEna = TRUE;
 }
 
-void CCustomOpts::DoDataExchange(CDataExchange* pDX)
+void CCustomOpts::DataExchange(BOOL bSave)
 {
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CCustomOpts)
-	DDX_Control(pDX, IDC_VGASWAP, m_btnVGASwap);
-	DDX_Control(pDX, IDC_ROMSRCH, m_btnROMSrch);
-	DDX_Control(pDX, IDC_DISVGASWAP, m_btnDisVGASwap);
-	DDX_Control(pDX, IDC_DISROMSRCH, m_btnDisROMSrch);
-	DDX_Check(pDX, IDC_EXTRADOS, m_bExtraDOS);
-	DDX_Check(pDX, IDC_ROMSRCH, m_bROMSrch);
-	DDX_Check(pDX, IDC_VGASWAP, m_bVGASwap);
-	DDX_Check(pDX, IDC_DISROMSRCH, m_bDisROMSrch);
-	DDX_Check(pDX, IDC_DISVGASWAP, m_bDisVGASwap);
-	//}}AFX_DATA_MAP
-
-	if (m_bWin95) {
-		DDX_Control(pDX, IDC_DOSSTART, m_btnDOSStart);
-		DDX_Check(pDX, IDC_DOSSTART, m_bDOSStart);
-	} // Handle additional option
-}
-
-BEGIN_MESSAGE_MAP(CCustomOpts, CDialog)
-	//{{AFX_MSG_MAP(CCustomOpts)
-	ON_BN_CLICKED(IDC_HELP, OnHelp)
-	ON_BN_CLICKED(IDC_BACK, OnBack)
-	ON_BN_CLICKED(IDC_DISROMSRCH, OnDisromsrch)
-	ON_BN_CLICKED(IDC_DISVGASWAP, OnDisvgaswap)
-	ON_BN_CLICKED(IDC_ROMSRCH, OnRomsrch)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// CCustomOpts message handlers
-
-void CCustomOpts::OnBack()
-{
-	UpdateData( TRUE );
-	EndDialog( IDC_BACK );
-}
-
-void CCustomOpts::OnHelp()
-{
-	THEAPP->WinHelp( HID_BASE_RESOURCE+IDD );
-}
-
-void CCustomOpts::OnDisromsrch()
-{
-	// Get new setting
-	UpdateData( TRUE );
-
-	// If removing high DOS statements, clear and disable "Run ROMSRCH"
-	// otherwise enable it.
-	if (m_bDisROMSrch) {
-		m_btnROMSrch.SetCheck( 0 ); // Clear it
-		m_btnROMSrch.EnableWindow( FALSE ); // Disable it
-	} // Going from off (not removing) to on (removing)
+	if (bSave) {
+		m_bExtraDOS = GetCheck( IDC_EXTRADOS );
+		m_bROMSrch = GetCheck( IDC_ROMSRCH );
+		m_bVGASwap = GetCheck( IDC_VGASWAP );
+		m_bDisROMSrch = GetCheck( IDC_DISROMSRCH );
+		m_bDisVGASwap = GetCheck( IDC_DISVGASWAP );
+		if (m_bWin95) m_bDOSStart = GetCheck( IDC_DOSSTART );
+	}
 	else {
-		m_btnROMSrch.EnableWindow( TRUE );
-	} // Re-enabling "Run ROMSRCH"
-
-	m_bAutoStrip = FALSE;
-
-}
-
-void CCustomOpts::OnDisvgaswap()
-{
-	// Get current setting
-	UpdateData( TRUE );
-
-	// If removing VGASwap, clear and disable "Enable VGASwap" otherwise
-	// enable it.
-	if (m_bDisVGASwap) {
-		m_btnVGASwap.SetCheck( 0 ); // Clear it
-		m_btnVGASwap.EnableWindow( FALSE ); // Disable it
-	} // Going from off to on
-	else {
-		m_btnVGASwap.EnableWindow( TRUE );
-	} // Re-enabling
+		SetCheck( IDC_EXTRADOS, m_bExtraDOS );
+		SetCheck( IDC_ROMSRCH, m_bROMSrch );
+		SetCheck( IDC_VGASWAP, m_bVGASwap );
+		SetCheck( IDC_DISROMSRCH, m_bDisROMSrch );
+		SetCheck( IDC_DISVGASWAP, m_bDisVGASwap );
+		if (m_bWin95) SetCheck( IDC_DOSSTART, m_bDOSStart );
+	}
 }
 
 BOOL CCustomOpts::OnInitDialog()
 {
-	CDialog::OnInitDialog();
-
-	THEAPP->m_hwndDlg = m_hWnd;
-
-	// Disable the remove buttons unless there's something to remove
-	if (m_bROMSrchEna) {
-		m_btnDisROMSrch.EnableWindow( m_bHasUseHigh );
-	} // OK to enable ROMSrch if we remove it first
-	else {
-		m_btnROMSrch.EnableWindow( FALSE );
-		m_btnDisROMSrch.EnableWindow( FALSE );
+	if (!m_bROMSrchEna) {
 		m_bROMSrch = FALSE;
 		m_bDisROMSrch = FALSE;
 	} // Can't run ROMsrch because of BCF
-	m_btnDisVGASwap.EnableWindow( m_bHasVGASwap );
+	MxDialog::OnInitDialog();
 
+	if (m_bROMSrchEna) {
+		Enable( IDC_DISROMSRCH, m_bHasUseHigh );
+	} // OK to enable ROMSrch if we remove it first
+	else {
+		Enable( IDC_ROMSRCH, FALSE );
+		Enable( IDC_DISROMSRCH, FALSE );
+	} // Can't run ROMsrch because of BCF
+
+	Enable( IDC_DISVGASWAP, m_bHasVGASwap );
 	if (m_bWin95) {
-		// Disable Maximize DOSStart button if no DOSSTART.BAT found
-		m_btnDOSStart.EnableWindow( m_bDOSStartEna );
+		Enable( IDC_DOSSTART, m_bDOSStartEna );
 	} // Win95
-
-	// Center ourselves
-	CenterDialog( this );
-
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	return TRUE;
 }
 
-
-void CCustomOpts::OnRomsrch()
+BOOL CCustomOpts::OnCommand(int id, int notify)
 {
-	// Get current setting
-	UpdateData( TRUE );
+	if (notify != BN_CLICKED) return FALSE;
+	switch (id) {
+	case IDC_BACK:
+		DataExchange( TRUE );
+		EndDialog( IDC_BACK );
+		return TRUE;
 
-	// If enabling ROMSrch and there are existing statements, make
-	// sure we remove them by default
-	if (m_bROMSrch && m_bHasUseHigh && !m_bDisROMSrch) {
-		m_bDisROMSrch = TRUE;
-		m_bAutoStrip = TRUE;
-	} // Automatic behavior: strip previous USE= in BIOS area
-	else if (!m_bROMSrch && m_bAutoStrip) {
-		m_bDisROMSrch = FALSE;
+	case IDC_DISROMSRCH:
+		DataExchange( TRUE );
+		if (m_bDisROMSrch) {
+			SetCheck( IDC_ROMSRCH, FALSE ); // Clear it
+			Enable( IDC_ROMSRCH, FALSE ); // Disable it
+		} // Going from off (not removing) to on (removing)
+		else {
+			Enable( IDC_ROMSRCH, TRUE );
+		} // Re-enabling "Run ROMSRCH"
 		m_bAutoStrip = FALSE;
-	} // Undo automatic behavior
+		return TRUE;
 
-	// Copy updated m_bDisROMSrch back to control
-	UpdateData( FALSE );
+	case IDC_DISVGASWAP:
+		DataExchange( TRUE );
+		if (m_bDisVGASwap) {
+			SetCheck( IDC_VGASWAP, FALSE ); // Clear it
+			Enable( IDC_VGASWAP, FALSE ); // Disable it
+		} // Going from off to on
+		else {
+			Enable( IDC_VGASWAP, TRUE );
+		} // Re-enabling
+		return TRUE;
 
+	case IDC_ROMSRCH:
+		DataExchange( TRUE );
+		if (m_bROMSrch && m_bHasUseHigh && !m_bDisROMSrch) {
+			m_bDisROMSrch = TRUE;
+			m_bAutoStrip = TRUE;
+		} // Automatic behavior: strip previous USE= in BIOS area
+		else if (!m_bROMSrch && m_bAutoStrip) {
+			m_bDisROMSrch = FALSE;
+			m_bAutoStrip = FALSE;
+		} // Undo automatic behavior
+		DataExchange( FALSE );
+		return TRUE;
+	}
+	return MxDialog::OnCommand(id, notify);
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // CEndPhase1 dialog
 
-
-CEndPhase1::CEndPhase1(CWnd* pParent /*=NULL*/)
-	: CDialog(CEndPhase1::IDD, pParent)
+BOOL CEndPhase1::OnCommand(int id, int notify)
 {
-	//{{AFX_DATA_INIT(CEndPhase1)
-		// NOTE: the ClassWizard will add member initialization here
-	//}}AFX_DATA_INIT
+	if (id == IDC_BACK && notify == BN_CLICKED) {
+		EndDialog( IDC_BACK );
+		return TRUE;
+	}
+	return MxDialog::OnCommand(id, notify);
 }
 
-void CEndPhase1::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CEndPhase1)
-		// NOTE: the ClassWizard will add DDX and DDV calls here
-	//}}AFX_DATA_MAP
-}
-
-BEGIN_MESSAGE_MAP(CEndPhase1, CDialog)
-	//{{AFX_MSG_MAP(CEndPhase1)
-	ON_BN_CLICKED(IDC_BACK, OnBack)
-	ON_BN_CLICKED(IDC_HELP, OnHelp)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-
-/////////////////////////////////////////////////////////////////////////////
-// CEndPhase1 message handlers
 /////////////////////////////////////////////////////////////////////////////
 // CSelectMBoot dialog
 
-
-CSelectMBoot::CSelectMBoot(CWnd* pParent, LPCSTR lpDefault)
-	: CDialog(CSelectMBoot::IDD, pParent)
+CSelectMBoot::CSelectMBoot(LPCSTR lpDefault) : MxDialog(IDD_SELECTMBOOT)
 {
-	//{{AFX_DATA_INIT(CSelectMBoot)
-	m_csSelDesc = "";
-	//}}AFX_DATA_INIT
-
-	m_csSelected = "";
-
+	m_szSelDesc[ 0 ] = '\0';
+	m_szSelected[ 0 ] = '\0';
 	if (lpDefault) {
-		m_csSelected = lpDefault;
+		lstrcpyn( m_szSelected, lpDefault, sizeof( m_szSelected ) );
 	}
 }
 
-
 BOOL CSelectMBoot::OnInitDialog( void )
 {
-	CDialog::OnInitDialog();
-
-	THEAPP->m_hwndDlg = m_hWnd;
+	MxDialog::OnInitDialog();
 
 	char cBoot = ::get_bootdrive();
 	int nFoundSelect = -1;
+	HWND hCb = Item( IDC_SELECTMB );
 
-	// Zap current contents
-	m_cbSelect.ResetContent();
+	::SendMessage( hCb, CB_RESETCONTENT, 0, 0L );
+	::SendMessage( hCb, CB_LIMITTEXT, sizeof( m_szSelDesc ) - 1, 0L );
 
-	// Center ourselves
-	CenterDialog( this );
-
-	// Get all MultiConfig sections
+	// Get list of sections
 	if (::menu_parse( cBoot, 0 )) {
-
-		m_cbSelect.AddString( m_csSelected );
-
+		::SendMessage( hCb, CB_ADDSTRING, 0, (LPARAM)(LPSTR)m_szSelected );
 	} // Failed; add default
 	else {
-
 		SECTNAME FAR *lpSect;
 		int nPosition;
 
 		for (lpSect = FirstSect; lpSect; lpSect = lpSect->next) {
-
-			if (!_stricmp( lpSect->name, "menu" ) ||
-				!_stricmp( lpSect->name, "common" )) {
+			if (!_fstricmp( lpSect->name, "menu" ) ||
+				!_fstricmp( lpSect->name, "common" )) {
 					continue;
 			} // These aren't real sections...
 
-			// Add description.  If none, use name
-			if (lpSect->text && *lpSect->text) {
-				nPosition = m_cbSelect.AddString( lpSect->text );
-			} // text exists
-			else {
-				nPosition = m_cbSelect.AddString( lpSect->name );
-			} // no text, use name
+			LPSTR lpText = (lpSect->text && *lpSect->text) ? lpSect->text : lpSect->name;
+			nPosition = (int)::SendMessage( hCb, CB_ADDSTRING, 0, (LPARAM)lpText );
 
-			// Check for our target section
-			if (nFoundSelect < 0 && !_stricmp( lpSect->name, m_csSelected )) {
+			if (nFoundSelect < 0 && !_fstricmp( lpSect->name, m_szSelected )) {
 				nFoundSelect = nPosition;
-				m_csSelDesc = (lpSect->text ? lpSect->text : lpSect->name);
+				lstrcpyn( m_szSelDesc, lpText, sizeof( m_szSelDesc ) );
 			} // Save index to highlight
 
-			// Save lpSect->name as item data
 			if (nPosition >= 0) {
-				m_cbSelect.SetItemDataPtr( nPosition, (void *)lpSect->name );
+				::SendMessage( hCb, CB_SETITEMDATA, nPosition, (LPARAM)lpSect->name );
 			} // String added successfully
-
 		} // for all sections
-
 	} // Get all sections
 
-	m_cbSelect.SetCurSel( nFoundSelect );
-
-	// Now re-write current selection
-	UpdateData( FALSE );
-
+	::SendMessage( hCb, CB_SETCURSEL, nFoundSelect, 0L );
 	return TRUE;
-
-}
-
-void CSelectMBoot::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CSelectMBoot)
-	DDX_Control(pDX, IDC_SELECTMB, m_cbSelect);
-	DDX_CBString(pDX, IDC_SELECTMB, m_csSelDesc);
-	DDV_MaxChars(pDX, m_csSelDesc, 80);
-	//}}AFX_DATA_MAP
-}
-
-BEGIN_MESSAGE_MAP(CSelectMBoot, CDialog)
-	//{{AFX_MSG_MAP(CSelectMBoot)
-	ON_BN_CLICKED(IDC_HELP, OnHelp)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-
-/////////////////////////////////////////////////////////////////////////////
-// CSelectMBoot message handlers
-
-
-void CSelectMBoot::OnHelp()
-{
-	THEAPP->WinHelp( HID_BASE_RESOURCE+IDD );
 }
 
 void CSelectMBoot::OnOK()
 {
-	// Get selected item
-	UpdateData();
+	HWND hCb = Item( IDC_SELECTMB );
+	::GetWindowText( hCb, m_szSelDesc, sizeof( m_szSelDesc ) );
 
-	int nSelected = m_cbSelect.FindStringExact( -1, m_csSelDesc );
-
-	if (nSelected != LB_ERR) {
-		m_csSelected = (char *)m_cbSelect.GetItemDataPtr( nSelected );
+	// Get selected section and ensure it's valid
+	int nSelected = (int)::SendMessage( hCb, CB_FINDSTRINGEXACT, (WPARAM)-1,
+					(LPARAM)(LPSTR)m_szSelDesc );
+	if (nSelected != CB_ERR) {
+		lstrcpyn( m_szSelected,
+			(LPCSTR)::SendMessage( hCb, CB_GETITEMDATA, nSelected, 0L ),
+			sizeof( m_szSelected ) );
 	} // Found index
 	else {
-
-		int n, nTotal = m_cbSelect.GetCount();
-
+		int n, nTotal = (int)::SendMessage( hCb, CB_GETCOUNT, 0, 0L );
 		for (n = 0; n < nTotal; n++) {
-			if (!lstrcmpi( m_csSelDesc, (LPCSTR)m_cbSelect.GetItemDataPtr( n ))) {
+			LPCSTR lpName = (LPCSTR)::SendMessage( hCb, CB_GETITEMDATA, n, 0L );
+			if (!lstrcmpi( m_szSelDesc, lpName )) {
+				lstrcpyn( m_szSelected, lpName, sizeof( m_szSelected ) );
 				break;
 			} // Found a match
 		} // Try to find matching section
-
 		if (n >= nTotal) {
-
 			char szMsg[ 256 ];
-			int n;
-
-			n = strspn( m_csSelDesc, " \t." );
-			wsprintf( szMsg, "Invalid section [%s] - please try again", m_csSelDesc );
-			AfxMessageBox( m_csSelDesc[ n ] ? szMsg : "You must select a MultiConfig section" );
-
+			n = strspn( m_szSelDesc, " \t." );
+			wsprintf( szMsg, "Invalid section [%s] - please try again", (LPSTR)m_szSelDesc );
+			MxMessageBox( m_szSelDesc[ n ] ? szMsg : "You must select a MultiConfig section" );
 			return;
-
 		} // Didn't find it
-
 	} // Check to ensure it's a real section
-	
-	CDialog::OnOK();
+
+	EndDialog( IDOK );
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // CSelectMode dialog
 
-
-CSelectMode::CSelectMode(CWnd* pParent /*=NULL*/)
-	: CDialog(CSelectMode::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CSelectMode)
-		// NOTE: the ClassWizard will add member initialization here
-	//}}AFX_DATA_INIT
-}
-
 BOOL CSelectMode::OnInitDialog( void )
 {
-	// Set default button based on current m_bCustom setting
-	SetDefID( m_bCustom ? IDC_CUSTOM : IDC_EXPRESS );
-
-	// Center ourselves
-	CenterDialog( this );
-
-	THEAPP->m_hwndDlg = m_hWnd;
-
-	return CDialog::OnInitDialog();
+	MxDialog::OnInitDialog();
+	::SendMessage( m_hWnd, DM_SETDEFID, m_bCustom ? IDC_CUSTOM : IDC_EXPRESS, 0L );
+	::SetFocus( Item( m_bCustom ? IDC_CUSTOM : IDC_EXPRESS ) );
+	return FALSE;		// focus set
 }
 
-void CSelectMode::DoDataExchange(CDataExchange* pDX)
+BOOL CSelectMode::OnCommand(int id, int notify)
 {
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CSelectMode)
-		// NOTE: the ClassWizard will add DDX and DDV calls here
-	//}}AFX_DATA_MAP
-}
-
-BEGIN_MESSAGE_MAP(CSelectMode, CDialog)
-	//{{AFX_MSG_MAP(CSelectMode)
-	ON_BN_CLICKED(IDC_CUSTOM, OnCustom)
-	ON_BN_CLICKED(IDC_EXPRESS, OnExpress)
-	ON_BN_CLICKED(IDC_BACK, OnBack)
-	ON_BN_CLICKED(IDC_HELP, OnHelp)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-
-/////////////////////////////////////////////////////////////////////////////
-// CSelectMode message handlers
-/////////////////////////////////////////////////////////////////////////////
-// CWelcome dialog
-
-
-CWelcome::CWelcome(CWnd* pParent /*=NULL*/)
-	: CDialog(CWelcome::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CWelcome)
-		// NOTE: the ClassWizard will add member initialization here
-	//}}AFX_DATA_INIT
-}
-
-void CWelcome::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CWelcome)
-		// NOTE: the ClassWizard will add DDX and DDV calls here
-	//}}AFX_DATA_MAP
-}
-
-BEGIN_MESSAGE_MAP(CWelcome, CDialog)
-	//{{AFX_MSG_MAP(CWelcome)
-	ON_BN_CLICKED(IDC_HELP, OnHelp)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-
-/////////////////////////////////////////////////////////////////////////////
-// CWelcome message handlers
-
-void CSelectMode::OnCustom()
-{
-	m_bCustom = TRUE;
-	EndDialog( IDC_CUSTOM );
-}
-
-void CSelectMode::OnExpress()
-{
-	m_bCustom = FALSE;
-	EndDialog( IDC_EXPRESS );
-}
-
-void CSelectMode::OnBack()
-{
-	EndDialog( IDC_BACK );
-}
-
-void CEndPhase1::OnBack()
-{
-	EndDialog( IDC_BACK );
-}
-
-
-void CWelcome::OnHelp()
-{
-	THEAPP->WinHelp( HID_BASE_RESOURCE+IDD );
-}
-
-void CSelectMode::OnHelp()
-{
-	THEAPP->WinHelp( HID_BASE_RESOURCE+IDD );
-}
-
-void CEndPhase1::OnHelp()
-{
-	THEAPP->WinHelp( HID_BASE_RESOURCE+IDD );
+	if (notify == BN_CLICKED) switch (id) {
+	case IDC_CUSTOM:
+		m_bCustom = TRUE;
+		EndDialog( IDC_CUSTOM );
+		return TRUE;
+	case IDC_EXPRESS:
+		m_bCustom = FALSE;
+		EndDialog( IDC_EXPRESS );
+		return TRUE;
+	case IDC_BACK:
+		EndDialog( IDC_BACK );
+		return TRUE;
+	case IDOK:		// Enter: the default button
+		EndDialog( m_bCustom ? IDC_CUSTOM : IDC_EXPRESS );
+		return TRUE;
+	}
+	return MxDialog::OnCommand(id, notify);
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// CExit dialog
+// Splash screen
 
-
-CExit::CExit(CWnd* pParent /*=NULL*/)
-	: CDialog(CExit::IDD, pParent)
+CSplash::CSplash()
 {
-	//{{AFX_DATA_INIT(CExit)
-		// NOTE: the ClassWizard will add member initialization here
-	//}}AFX_DATA_INIT
+	BITMAP bm;
+
+	m_hbm = ::LoadBitmap( wxTheApp->hInstance, MAKEINTRESOURCE( IDB_STAT_SPLASHSCRN ) );
+	LoadNativeDialog( NULL, (char *)MAKEINTRESOURCE( IDD_STAT_SPLASH ), FALSE );
+	::ShowWindow( ::GetDlgItem( GetHWND(), IDC_STAT_SPLASHBMP ), SW_HIDE );
+	if (m_hbm && ::GetObject( m_hbm, sizeof( bm ), &bm )) {
+		::MoveWindow( GetHWND(), 0, 0, bm.bmWidth, bm.bmHeight, FALSE );
+	}
+	CenterDialog( GetHWND() );
+	Show( TRUE );
+	::UpdateWindow( GetHWND() );
 }
 
-void CExit::DoDataExchange(CDataExchange* pDX)
+CSplash::~CSplash()
 {
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CExit)
-		// NOTE: the ClassWizard will add DDX and DDV calls here
-	//}}AFX_DATA_MAP
+	if (m_hbm) ::DeleteObject( m_hbm );
 }
 
-BEGIN_MESSAGE_MAP(CExit, CDialog)
-	//{{AFX_MSG_MAP(CExit)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
+void CSplash::OnPaint(void)
+{
+	if (!m_hbm || !paintHDC) return;
 
+	BITMAP bm;
+	HDC hdcMem = ::CreateCompatibleDC( paintHDC );
+	if (!hdcMem) return;
+	::GetObject( m_hbm, sizeof( bm ), &bm );
+	HBITMAP hOld = (HBITMAP)::SelectObject( hdcMem, m_hbm );
+	::BitBlt( paintHDC, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY );
+	::SelectObject( hdcMem, hOld );
+	::DeleteDC( hdcMem );
+}
 
 /////////////////////////////////////////////////////////////////////////////
-// CExit message handlers
+// Blue screen behind the summary
 
-BOOL CWelcome::OnInitDialog()
+CBlue::CBlue()
 {
-	CDialog::OnInitDialog();
-
-	THEAPP->m_hwndDlg = m_hWnd;
-
-	// Center ourselves
-	CenterDialog( this );
-
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	LoadNativeDialog( NULL, (char *)MAKEINTRESOURCE( IDD_STAT_BLUESCREEN ), FALSE );
+	::MoveWindow( GetHWND(), 0, 0, ::GetSystemMetrics( SM_CXSCREEN ),
+			::GetSystemMetrics( SM_CYSCREEN ), TRUE );
+	Show( TRUE );
+	::UpdateWindow( GetHWND() );
 }
 
-
-BOOL CExit::OnInitDialog()
+void CBlue::OnPaint(void)
 {
-	CDialog::OnInitDialog();
+	RECT rc;
+	int i, xInc, yInc;
 
-	THEAPP->m_hwndDlg = m_hWnd;
+	if (!paintHDC) return;
+	::GetClientRect( GetHWND(), &rc );
+	xInc = (rc.right - rc.left) / 10;
+	yInc = (rc.bottom - rc.top) / 10;
 
-	// Center ourselves
-	CenterDialog( this );
-
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	// Six nested rectangles, lighter towards the middle
+	for (i = 0; i < 6; i++, ::InflateRect( &rc, -xInc, -yInc )) {
+		HBRUSH hbr = ::CreateSolidBrush( RGB( 0, 10 + i * 4, 127 + i + 16 ) );
+		if (!hbr) continue;
+		::FillRect( paintHDC, &rc, hbr );
+		::DeleteObject( hbr );
+	} // for all colors
 }
-
-BOOL CEndPhase1::OnInitDialog()
-{
-	CDialog::OnInitDialog();
-
-	THEAPP->m_hwndDlg = m_hWnd;
-
-	// Center ourselves
-	CenterDialog( this );
-
-	return TRUE;  // return TRUE  unless you set the focus to a control
-}
-
-void CCustomOpts::OnCancel()
-{
-	// Shut down help
-	THEAPP->WinHelp( 0L, HELP_QUIT );
-	
-	CDialog::OnCancel();
-}
-
-void CWelcome::OnCancel()
-{
-	// Shut down help
-	THEAPP->WinHelp( 0L, HELP_QUIT );
-
-	CDialog::OnCancel();
-}
-
-void CEndPhase1::OnCancel()
-{
-	// Shut down help
-	THEAPP->WinHelp( 0L, HELP_QUIT );
-
-	CDialog::OnCancel();
-}
-
-void CSelectMBoot::OnCancel()
-{
-	// Shut down help
-	THEAPP->WinHelp( 0L, HELP_QUIT );
-
-	CDialog::OnCancel();
-}
-
-void CSelectMode::OnCancel()
-{
-	// Shut down help
-	THEAPP->WinHelp( 0L, HELP_QUIT );
-
-	CDialog::OnCancel();
-}
-

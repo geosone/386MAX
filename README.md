@@ -46,9 +46,9 @@ build passes it to all programs, resources and the release media.
 compatibility and jwlink with Microsoft LINK and Windows 3.x VxD
 compatibility. `make` builds them into `linux/bin` first.
 
-WINMAXIM (Windows Maximize) uses MFC 2.5, which is not part of this tree:
-`make MFC_ARCHIVE=/path/to/Visual-C++-1.52-CD.iso` builds it once from your
-Visual C++ 1.52 CD (see `linux/mfc`).
+The Windows programs of version 9 use
+[wxWindows 1.68E](https://github.com/geosone/wxWindows) (git submodule
+`wxWindows`, the Windows 3.1 compatible version), shared as `WX.DLL`.
 
 Release media, one build per language:
 

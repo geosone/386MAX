@@ -43,11 +43,9 @@
 #                 (wxdll.lib, wxdllmain.obj; WX.DLL goes to build/bin)
 #   WXSTATIC      1: wxWindows linked into the program (wx.lib) instead
 #                 of WX.DLL (the installer, which runs before it exists)
-#   MFC           1: Microsoft Foundation Classes 2.5 (build/mfc, made by
-#                 linux/mfc: headers, owmfc.h, -zf, LAFXCW.LIB; large model).
-#                 All modules then use OpenWatcom's convention (no -ecc);
-#                 headers of libraries made for the Microsoft C convention
-#                 mark their functions __cdecl for OpenWatcom C++ (QUILIB)
+#   CCONV         calling convention (default -ecc, Microsoft C's cdecl);
+#                 empty: OpenWatcom's, for libraries of the wxWindows
+#                 programs (STATUTIL)
 #   LIBRARIES     static libraries to build (build/$(PROJ)/<lib>)
 #   <lib>_OBJS    their objects
 #   <lib>_EXTRA   further objects made elsewhere (paths)
@@ -91,23 +89,12 @@ CC_C    := $(WCC)
 CC_CPP  := $(WPP)
 OWINC   := $(WATCOM)/h $(WATCOM)/h/win
 WINPROLOG ?= -zWs
-CFLAGS  := -bt=windows $(WINPROLOG) -m$(CMODEL) -ecc -zp$(CPACK) -j -2 -s -os -zq -ei
+CCONV   ?= -ecc
+CFLAGS  := -bt=windows $(WINPROLOG) -m$(CMODEL) $(CCONV) -zp$(CPACK) -j -2 -s -os -zq -ei
 RCFLAGS := -bt=windows
 endif
 ifneq ($(MSHINST),)
 CDEFS   += WinMain=owc_WinMain _hInstance=owc_hInstance
-endif
-ifeq ($(MFC),1)
-MFCOUT  := $(ROOT)/build/mfc
-MFCLIB  := $(MFCOUT)/LAFXCW.LIB
-# OpenWatcom names its C++ run time only in the module with the C entry;
-# MFC itself calls COMMDLG and SHELL.  Full path: wlink would take the DOS
-# plib of lib286 first
-MFCRTL  := $(WATCOM)/lib286/win/plib$(CMODEL).lib commdlg shell
-CDEFS   += OWMFC _WINDOWS
-INCDIRS += $(MFCOUT)/include $(LX)/mk/owwin16
-CPPFLAGS_MFC := -zf
-CFLAGS  := $(filter-out -ecc,$(CFLAGS))
 endif
 ifeq ($(WX),1)
 # as wxWindows/GNUmakefile builds the library: calling convention, packing
@@ -149,10 +136,6 @@ RCSRCS  := $(foreach p,$(PROGS),$($(p)_RC))
 
 all: $(addprefix $(OUT)/,$(LIBRARIES)) $(addprefix $(BINDIR)/,$(PROGS))
 
-ifeq ($(MFC),1)
-$(MFCLIB):
-	$(MAKE) -C $(LX)/mfc
-endif
 ifeq ($(WX),1)
 ifeq ($(WXSTATIC),1)
 $(WXLIB): wxlib-force
@@ -193,9 +176,9 @@ $(CINCDIR)/.done: $(MAKEFILE_LIST) $(foreach o,$(ALLOBJS),$(call srcof,$(o))) $(
 	touch $@
 
 define OBJRULE
-$(OUT)/$(1): $(call srcof,$(1)) $(CINCDIR)/.done $(VERSION_FILE) $(LX)/mk/owwin.h $(if $(MFC),$(LX)/mk/owmfc.h $(MFCLIB)) $(if $(WX),$(WXLIB)) | $(OUT)
+$(OUT)/$(1): $(call srcof,$(1)) $(CINCDIR)/.done $(VERSION_FILE) $(LX)/mk/owwin.h $(if $(WX),$(WXLIB)) | $(OUT)
 	$$(if $$(filter %.ASM,$$<),$(JWASM) -q -Zm -Cu -c -DLANG_$(MAXLANG) $(VERDEFS_ASM) $(addprefix -D,$(ASMDEFS)) -Fo$$@ $$(foreach d,$(INCDIRS),-I$$(d)) $$<,\
-	  $$(if $$(filter %.CPP %.cpp,$$<),$(CC_CPP) $(CPPFLAGS_MFC),$(CC_C)) $(CFLAGS) $$($(1)_CFLAGS) -fo=$$@ $$<)
+	  $$(if $$(filter %.CPP %.cpp,$$<),$(CC_CPP),$(CC_C)) $(CFLAGS) $$($(1)_CFLAGS) -fo=$$@ $$<)
 endef
 $(foreach o,$(ALLOBJS),$(eval $(call OBJRULE,$(o))))
 
@@ -252,7 +235,7 @@ $(OUT)/$(1).res: $($(1)_RC) $(CINCDIR)/.done $(VERSION_FILE) $(LX)/tools/rcprep.
 $(OUT)/$(1).lnk: $($(1)_DEF) $($(1)_STUB) $(LX)/tools/def2wlink.py $(if $(filter win32,$(TARGET)),$(addprefix $(OUT)/,$($(1)_OBJS))) | $(OUT)
 	$(PYTHON) $(LX)/tools/def2wlink.py $(if $($(1)_STUB),--stub=$($(1)_STUB)) $$< $(TARGET) $(if $(filter win32,$(TARGET)),$(addprefix $(OUT)/,$($(1)_OBJS))) > $$@
 
-$(OUT)/$(1): $(filter %.LIB %.lib,$($(1)_LIBS)) $(addprefix $(OUT)/,$($(1)_OBJS) $(MSCOBJS) $(if $(filter $(1),$(MSHINST)),OWHINST.OBJ)) $(MFCLIB) $(if $(WX),$(WXLIB) $(WXMAIN)) $(if $(MSCOBJS),$(OUT)/msclib/.done) $(if $($(1)_RC),$(OUT)/$(1).res) $(if $($(1)_DEF),$(OUT)/$(1).lnk)
+$(OUT)/$(1): $(filter %.LIB %.lib,$($(1)_LIBS)) $(addprefix $(OUT)/,$($(1)_OBJS) $(MSCOBJS) $(if $(filter $(1),$(MSHINST)),OWHINST.OBJ)) $(if $(WX),$(WXLIB) $(WXMAIN)) $(if $(MSCOBJS),$(OUT)/msclib/.done) $(if $($(1)_RC),$(OUT)/$(1).res) $(if $($(1)_DEF),$(OUT)/$(1).lnk)
 	cd $(OUT) && $(or $($(1)_LINKER),$(WLINK)) option quiet \
 	  $$(if $$(shell grep -q '^# kind dll' $(OUT)/$(1).lnk 2>/dev/null && echo dll),\
 	    $(if $(filter win32,$(TARGET)),format windows nt dll,format windows dll),\
@@ -261,7 +244,7 @@ $(OUT)/$(1): $(filter %.LIB %.lib,$($(1)_LIBS)) $(addprefix $(OUT)/,$($(1)_OBJS)
 	  $(if $(filter win32,$(TARGET)),libpath $(WATCOM)/lib386/nt libpath $(WATCOM)/lib386 library kernel32 library user32 library gdi32,\
 	    libpath $(WATCOM)/lib286/win libpath $(WATCOM)/lib286 library windows option nocaseexact) \
 	  $(foreach o,$($(1)_FIRST) $(WXMAIN) $($(1)_OBJS) $(MSCOBJS) $(if $(filter $(1),$(MSHINST)),OWHINST.OBJ),file $(o)) $(if $(MSCOBJS),libpath msclib) \
-	  $(foreach l,$($(1)_LIBS) $(MFCLIB) $(MFCRTL) $(WXLIB) $(WXRTL),library $(l)) \
+	  $(foreach l,$($(1)_LIBS) $(WXLIB) $(WXRTL),library $(l)) \
 	  $(if $(filter win32,$(TARGET)),,option stack=8k option version=3.10) \
 	  $(if $($(1)_DEF),@$(1).lnk) \
 	  $(if $($(1)_RC),option resource=$(1).res) \

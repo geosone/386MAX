@@ -5,10 +5,10 @@ NAME         WINMAXIM
 DESCRIPTION  'Windows Startup for Maximize'
 EXETYPE      WINDOWS
 
-CODE         PRELOAD MOVEABLE DISCARDABLE
+; no CODE line: wlink packs the code segments only without one
 DATA         PRELOAD MOVEABLE MULTIPLE
 
-HEAPSIZE     1024   ; initial heap size
+HEAPSIZE     8192   ; initial heap size
 ; Stack size is passed as argument to linker's /STACK option
 
 ; Use Windows launcher to pass free low DOS on command line

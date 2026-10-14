@@ -3,10 +3,6 @@
 #ifndef OWWIN_H
 #define OWWIN_H
 
-#ifdef OWMFC                    /* win.mk MFC=1: before any run time header */
-#include "owmfc.h"
-#endif
-
 #if !defined(FILEOKSTRING) && !defined(__NT__)  /* win16 commdlg.h */
 #define FILEOKSTRING    "commdlg_FileNameOK"
 #endif

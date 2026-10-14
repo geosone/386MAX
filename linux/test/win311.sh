@@ -48,12 +48,14 @@ cp "$ROOT"/build/bin/* "$OUT/c/MAX/"
 [ -n "$EXTRA" ] && cp "$EXTRA" "$OUT/c/MAX/"
 [ -n "${FILES:-}" ] && cp ${FILES} "$OUT/c/MAX/"
 cp "$BASE" "$OUT/test.img"
+# the profile of MM=386max (WINMAXIM wants a PRO= in the DEVICE line)
+[ -f "$OUT/c/MAX/386MAX.PRO" ] || printf '; 386MAX profile\r\n' > "$OUT/c/MAX/386MAX.PRO"
 
 crlf() { tr '|' '\n' | sed 's/$/\r/'; }
 {
     case "$MM" in
     himem)  echo 'DEVICE=C:\HIMEM.SYS' ;;
-    386max) echo 'DEVICE=C:\MAX\386MAX.SYS'
+    386max) echo 'DEVICE=C:\MAX\386MAX.SYS PRO=C:\MAX\386MAX.PRO'
             echo 'DOS=HIGH,UMB' ;;
     *) echo "unknown MM=$MM" >&2; exit 1 ;;
     esac

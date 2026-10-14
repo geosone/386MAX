@@ -2,7 +2,7 @@
 # Build a hard disk image with Windows 98 SE (German), set up unattended in
 # QEMU from the user's CD tree with its MSBATCH.INF (product key, options;
 # nothing of it is stored in the repository).  Base image for 386MAX tests
-# under Windows 98 (VxD, MFC programs).
+# under Windows 98 (VxD, Windows programs).
 #
 #   linux/test/mkwin98.sh
 #

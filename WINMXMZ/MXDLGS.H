@@ -1,36 +1,70 @@
-// $Header:   P:/PVCS/MAX/WINMXMZ/MXDLGS.H_V   1.8   23 May 1996 13:43:14   HENRY  $
+// MXDLGS.H - WINMAXIM dialogs on wxWindows 1.68E (Open 386MAX 9)
 //
-// mxdlgs.h - Maximize dialog classes
+// The dialogs are the DIALOG resources of WINMXMZ.RC / WINMXMZ.GR, loaded
+// by wxDialogBox::LoadNativeDialog; MxDialog takes the place of MFC's
+// CDialog (DoModal, EndDialog, OnInitDialog, OnOK, OnCancel, data
+// exchange).
 //
+// Copyright (C) 1995 Qualitas, Inc.  GNU General Public License version 3.
+// Open 386MAX contributors 2022-2026.
 
-/////////////////////////////////////////////////////////////////////////////
-// CCustomOpts dialog
+#ifndef _MXDLGS_INCLUDED
+#define	_MXDLGS_INCLUDED
 
-class CCustomOpts : public CDialog
+class MxDialog;
+
+// the wxWindows window of a dialog: passes commands to the MxDialog
+class MxDialogBox : public wxDialogBox
 {
-// Construction
 public:
-	CCustomOpts(CWnd* pParent = NULL, int nID = CCustomOpts::IDD);	// standard constructor
+	MxDialogBox(MxDialog *pDlg) { m_pDlg = pDlg; }
+	Bool OnNativeCommand(int id, int notify);
+	Bool OnClose(void);
+	MxDialog *m_pDlg;
+};
 
-// Dialog Data
-	//{{AFX_DATA(CCustomOpts)
-	enum { IDD = IDD_CUSTOPTS };
-	CButton	m_btnVGASwap;
-	CButton	m_btnROMSrch;
-	CButton	m_btnDisVGASwap;
-	CButton	m_btnDisROMSrch;
+class MxDialog
+{
+public:
+	MxDialog(int nID);
+	virtual ~MxDialog() {}
+
+	int DoModal(wxWindow *pParent = NULL);	// IDOK, IDCANCEL, ...
+	void EndDialog(int nResult);
+
+	virtual BOOL OnInitDialog(void);
+	virtual void DataExchange(BOOL bSave) {}	// controls <-> members
+	virtual BOOL OnCommand(int id, int notify);	// TRUE: handled
+	virtual void OnOK(void);
+	virtual void OnCancel(void);
+	virtual void OnHelp(void);
+
+	// controls
+	HWND Item(int id) { return ::GetDlgItem(m_hWnd, id); }
+	BOOL GetCheck(int id) { return ::IsDlgButtonChecked(m_hWnd, id) != 0; }
+	void SetCheck(int id, BOOL b) { ::CheckDlgButton(m_hWnd, id, b ? 1 : 0); }
+	void Enable(int id, BOOL b) { ::EnableWindow(Item(id), b); }
+
+	HWND m_hWnd;
+	int m_nID;		// IDD_...
+	int m_nResult;
+	BOOL m_bEnded;
+	MxDialogBox *m_pBox;
+};
+
+class CCustomOpts : public MxDialog
+{
+public:
+	CCustomOpts(int nID = IDD_CUSTOPTS);
+
 	BOOL	m_bExtraDOS;
 	BOOL	m_bROMSrch;
 	BOOL	m_bVGASwap;
 	BOOL	m_bDisROMSrch;
 	BOOL	m_bDisVGASwap;
-	CButton	m_btnDOSStart;
-	//}}AFX_DATA
-
 	BOOL	m_bDOSStart;
 
-	CString m_csMaxPro;	// Path of 386MAX.PRO file
-
+	char m_szMaxPro[ _MAX_PATH ];	// Path of 386MAX.PRO file
 	BOOL m_bHasVGASwap; // TRUE if VGASWAP already present
 	BOOL m_bHasUseHigh;	// TRUE if USE= >= F000 already present
 	BOOL m_bAutoStrip;	// TRUE if m_bDisROMSrch turned on automatically
@@ -38,166 +72,69 @@ public:
 	BOOL m_bDOSStartEna; // If Win95, TRUE if DOSSTART exists
 	BOOL m_bROMSrchEna;	// FALSE if ROMSrch must not be run (e.g. BCF)
 
-// Implementation
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
-	// Generated message map functions
-	//{{AFX_MSG(CCustomOpts)
-	afx_msg void OnHelp();
-	afx_msg void OnBack();
-	afx_msg void OnDisromsrch();
-	afx_msg void OnDisvgaswap();
-	virtual BOOL OnInitDialog();
-	afx_msg void OnRomsrch();
-	virtual void OnCancel();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+	BOOL OnInitDialog(void);
+	void DataExchange(BOOL bSave);
+	BOOL OnCommand(int id, int notify);
 };
 
-/////////////////////////////////////////////////////////////////////////////
-// CEndPhase1 dialog
-
-class CEndPhase1 : public CDialog
+class CEndPhase1 : public MxDialog
 {
-// Construction
 public:
-	CEndPhase1(CWnd* pParent = NULL);	// standard constructor
-
-// Dialog Data
-	//{{AFX_DATA(CEndPhase1)
-	enum { IDD = IDD_END_PHASE1 };
-		// NOTE: the ClassWizard will add data members here
-	//}}AFX_DATA
-
-// Implementation
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
-	// Generated message map functions
-	//{{AFX_MSG(CEndPhase1)
-	afx_msg void OnBack();
-	afx_msg void OnHelp();
-	virtual BOOL OnInitDialog();
-	virtual void OnCancel();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+	CEndPhase1() : MxDialog(IDD_END_PHASE1) {}
+	BOOL OnCommand(int id, int notify);
 };
-/////////////////////////////////////////////////////////////////////////////
-// CSelectMBoot dialog
 
-class CSelectMBoot : public CDialog
+class CSelectMBoot : public MxDialog
 {
-// Construction
 public:
-	CSelectMBoot(CWnd* pParent, LPCSTR lpDefault);	// standard constructor
-
-// Dialog Data
-	//{{AFX_DATA(CSelectMBoot)
-	enum { IDD = IDD_SELECTMBOOT };
-	CComboBox	m_cbSelect;
-	CString m_csSelDesc;
-	//}}AFX_DATA
-
-	// Actual short section name selected
-	CString m_csSelected;
-
-// Implementation
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
-	// Generated message map functions
-	//{{AFX_MSG(CSelectMBoot)
-	afx_msg void OnHelp();
-	virtual BOOL OnInitDialog();
-	virtual void OnOK();
-	virtual void OnCancel();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+	CSelectMBoot(LPCSTR lpDefault);
+	char m_szSelDesc[ 81 ];
+	char m_szSelected[ 81 ];
+	BOOL OnInitDialog(void);
+	void OnOK(void);
 };
-/////////////////////////////////////////////////////////////////////////////
-// CSelectMode dialog
 
-class CSelectMode : public CDialog
+class CSelectMode : public MxDialog
 {
-// Construction
 public:
-	CSelectMode(CWnd* pParent = NULL);	// standard constructor
-
-// Dialog Data
-	//{{AFX_DATA(CSelectMode)
-	enum { IDD = IDD_SELECTMODE };
-		// NOTE: the ClassWizard will add data members here
-	//}}AFX_DATA
-
+	CSelectMode() : MxDialog(IDD_SELECTMODE) { m_bCustom = FALSE; }
 	BOOL m_bCustom; // TRUE if custom, FALSE if express
-
-// Implementation
-protected:
-	virtual BOOL OnInitDialog( void );
-
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
-	// Generated message map functions
-	//{{AFX_MSG(CSelectMode)
-	afx_msg void OnCustom();
-	afx_msg void OnExpress();
-	afx_msg void OnBack();
-	afx_msg void OnHelp();
-	virtual void OnCancel();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+	BOOL OnInitDialog(void);
+	BOOL OnCommand(int id, int notify);
 };
-/////////////////////////////////////////////////////////////////////////////
-// CWelcome dialog
 
-class CWelcome : public CDialog
+class CWelcome : public MxDialog
 {
-// Construction
 public:
-	CWelcome(CWnd* pParent = NULL); // standard constructor
-
-// Dialog Data
-	//{{AFX_DATA(CWelcome)
-	enum { IDD = IDD_WELCOME };
-		// NOTE: the ClassWizard will add data members here
-	//}}AFX_DATA
-
-// Implementation
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
-	// Generated message map functions
-	//{{AFX_MSG(CWelcome)
-	afx_msg void OnHelp();
-	virtual BOOL OnInitDialog();
-	virtual void OnCancel();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+	CWelcome() : MxDialog(IDD_WELCOME) {}
 };
 
-/////////////////////////////////////////////////////////////////////////////
-// CExit dialog
-
-class CExit : public CDialog
+class CExit : public MxDialog
 {
-// Construction
 public:
-	CExit(CWnd* pParent = NULL);	// standard constructor
-
-// Dialog Data
-	//{{AFX_DATA(CExit)
-	enum { IDD = IDD_CONFIRMEXIT };
-		// NOTE: the ClassWizard will add data members here
-	//}}AFX_DATA
-
-// Implementation
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
-	// Generated message map functions
-	//{{AFX_MSG(CExit)
-	virtual BOOL OnInitDialog();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+	CExit() : MxDialog(IDD_CONFIRMEXIT) {}
+	void OnCancel(void) { EndDialog(IDCANCEL); }	// no help to close
 };
+
+// Splash screen (bitmap IDB_STAT_SPLASHSCRN) while starting
+class CSplash : public wxDialogBox
+{
+public:
+	CSplash();
+	~CSplash();
+	void OnPaint(void);
+	HBITMAP m_hbm;
+};
+
+// Blue background of the summary
+class CBlue : public wxDialogBox
+{
+public:
+	CBlue();
+	void OnPaint(void);
+	Bool OnClose(void) { return FALSE; }
+};
+
+void CenterDialog(HWND hWnd);
+
+#endif

@@ -1,12 +1,18 @@
-// $Header:   P:/PVCS/MAX/WINMXMZ/WINMXMZ.CPV   1.10   23 May 1996 13:43:30   HENRY  $
+// WINMXMZ.CPP - Windows-based kickoff for Maximize (WINMAXIM.EXE)
 //
-// WINMXMZ.CPP - Windows-based kickoff for Maximize
+// Open 386MAX 9: on wxWindows 1.68E instead of MFC 2.5.  Same steps as
+// the MFC version (Henry Groover, Qualitas 1995-96): splash screen,
+// welcome, MultiConfig section, express/custom, options, then exit
+// Windows and run MAXIMIZE; "/summary<KB>" (from WINLNCH after Maximize)
+// shows the summary.
 //
 // Copyright (C) 1995-96 Qualitas, Inc.  GNU General Public License version 3.
-//
+// Open 386MAX contributors 2022-2026.
 
-#include "stdafx.h"
-
+#include "wx.h"
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <io.h>
 #include <dos.h>
@@ -17,80 +23,92 @@
 #include <commfunc.h>
 #include <mbparse.h>
 #include <statutil.h>
-#include <splash.h>
-#include <bluescr.h>
-
 #include "winmxmz.h"
-#include "progdde.h"
 #include "mxdlgs.h"
 #include "summary.h"
-#include "resource.h"
 
 #define	WINMXMZ
 #include "messages.h"
 
 #include <mxhelpid.h>
-
 #include <ctl3d.h>
-
-#ifdef _DEBUG
-#undef THIS_FILE
-static char BASED_CODE THIS_FILE[] = __FILE__;
-#endif
-
-/////////////////////////////////////////////////////////////////////////////
-// CWinmxmzApp
-
-BEGIN_MESSAGE_MAP(CWinmxmzApp, CWinApp)
-	//{{AFX_MSG_MAP(CWinmxmzApp)
-	ON_COMMAND(ID_HELP, OnHelp)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// CWinmxmzApp construction
-
-CWinmxmzApp::CWinmxmzApp()
-{
-	// TODO: add construction code here,
-	// Place all significant initialization in InitInstance
-
-        // don't erase ourself yet.
-    m_hwndDlg = NULL;
-	m_CWndSummary = NULL;
-    m_idDlg = 0;
-    m_bWin95 = FALSE;
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // The one and only CWinmxmzApp object
 
-CWinmxmzApp NEAR theApp;
+CWinmxmzApp theApp;
 
-// Useful globals
-CString csMaxDir;		// 386MAX directory with trailing BS
+BOOL g_bWin95 = FALSE;
+HWND g_hwndDlg = NULL;
+char g_szProfile[ _MAX_PATH ] = MAXIMIZE_INI;
+char g_szTitle[ 80 ] = "Windows Maximize";
+
+char szMaxDir[ _MAX_PATH ];	// 386MAX directory with trailing BS
 char *pszSect = NULL;	// Selected MultiConfig section
+
 #define	MAXBUFF 256
 
-// Callback used when displaying bluescreen
-CWnd FAR * CALLBACK CBSummWnd( void )
+/////////////////////////////////////////////////////////////////////////////
+// MAXIMIZE.INI (MFC: CWinApp profile functions)
+
+int ProfileInt(LPCSTR lpSect, LPCSTR lpEntry, int nDefault)
 {
-	return THEAPP->m_CWndSummary;
+	return ::GetPrivateProfileInt( lpSect, lpEntry, nDefault, g_szProfile );
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// CWinmxmzApp initialization
+void WriteProfileInt(LPCSTR lpSect, LPCSTR lpEntry, int nValue)
+{
+	char szBuff[ 16 ];
+	wsprintf( szBuff, "%d", nValue );
+	::WritePrivateProfileString( lpSect, lpEntry, szBuff, g_szProfile );
+}
 
-// Snoop for various settings by reading MAXIMIZE.CFG, etc.
-// This is done after getting defaults from MAXIMIZE.INI.
-// We'll let Maximize remove any statements from MAXIMIZE.CFG.
+void ProfileString(LPCSTR lpSect, LPCSTR lpEntry, LPCSTR lpDefault, char *pszBuff, int nSize)
+{
+	::GetPrivateProfileString( lpSect, lpEntry, lpDefault, pszBuff, nSize, g_szProfile );
+}
+
+void WriteProfileStr(LPCSTR lpSect, LPCSTR lpEntry, LPCSTR lpValue)
+{
+	::WritePrivateProfileString( lpSect, lpEntry, lpValue, g_szProfile );
+}
+
+int MxMessageBox(LPCSTR lpMsg)
+{
+	return ::MessageBox( g_hwndDlg, lpMsg, g_szTitle, MB_OK | MB_ICONEXCLAMATION );
+}
+
+// Help for the dialogs (MAXHELP.HLP)
+void MxWinHelp( DWORD dwData, UINT uCmd )
+{
+	static BOOL bHelp = FALSE;	// Have not been run yet
+	static HWND hwndHelp = NULL;
+
+	if (uCmd == HELP_QUIT) {
+		if (bHelp && hwndHelp && ::IsWindow( hwndHelp )) {
+			::WinHelp( hwndHelp, MAXHELP_HLP, HELP_QUIT, 0L );
+		}
+		bHelp = FALSE;
+		return;
+	}
+	if (uCmd == HELP_CONTEXT || uCmd == HELP_CONTEXTPOPUP) {
+		dwData |= WINMX_HLP_DWORD;
+	}
+	if (g_hwndDlg) {
+		bHelp = TRUE;
+		hwndHelp = g_hwndDlg;
+		::WinHelp( g_hwndDlg, MAXHELP_HLP, uCmd, dwData );
+	}
+}
+
 void
 ParseCfg( CCustomOpts& opts ) {
 
 	// First, let's read MAXIMIZE.CFG
-	CString csMaxCfg( csMaxDir );
-	csMaxCfg += MAXIMIZE_CFG;
-	FILE *pfCfg = fopen( (LPCSTR)csMaxCfg, "rt" );
+	char szMaxCfg[ _MAX_PATH ];
+	strcpy( szMaxCfg, szMaxDir );
+	strcat( szMaxCfg, MAXIMIZE_CFG );
+	FILE *pfCfg = fopen( szMaxCfg, "rt" );
 	char szBuff[ MAXBUFF + 1 ], *psz;
 
 	if (pfCfg) {
@@ -139,7 +157,7 @@ public:
 	// Parse CONFIG.SYS.  Returns 1 if found, else 0.
 	int Parse( void );
 
-	CString m_csDevLine; // DEVICE= line
+	char m_szDevLine[ 256 ]; // DEVICE= line
 	char m_cBoot;		// Boot drive
 	BYTE m_Owner;		// Active owner
 
@@ -154,7 +172,7 @@ protected:
 // Implementation of CConfigParse class
 CConfigParse::CConfigParse( LPCSTR lpSect ) {
 
-	m_csDevLine = "";
+	m_szDevLine[ 0 ] = '\0';
 	m_cBoot = ::get_bootdrive();
 
 	m_nMenuFree = ::menu_parse( m_cBoot, 1 );
@@ -219,7 +237,7 @@ CConfigParse::CBfn( CONFIGLINE _far *lpCfg ) {
 			// c:\386max\386max.sys pro=c:\386max\386max.pro
 			if (!_stricmp( szName, MGRNAME_SYS ) ||
 				!_stricmp( szName, ALTMGRNAME_SYS )) {
-				m_csDevLine = (lpCfg->line + (int)(pszTok - szBuff));
+				lstrcpyn( m_szDevLine, (lpCfg->line + (int)(pszTok - szBuff)), sizeof( m_szDevLine ) );
 			} // Found it
 
 		} // Got path
@@ -239,10 +257,10 @@ CConfigParse::~CConfigParse( void ) {
 
 // Parse CONFIG.SYS to find 386MAX.PRO and save profile name.
 void
-ParseCfgSys( CString& csPro ) {
+ParseCfgSys( char *pszPro ) {
 
 	// Innocent until proven guilty...
-	csPro = "";
+	*pszPro = '\0';
 
 	// Troll for DEVICE=386max.sys or DEVICE=bluemax.sys
 	CConfigParse cfgp( pszSect ? pszSect : "common" );
@@ -250,16 +268,16 @@ ParseCfgSys( CString& csPro ) {
 	// If found, parse line for pro= (ignore other statements)
 	if (cfgp.Parse()) {
 
-		cfgp.m_csDevLine.MakeLower();
+		strlwr( cfgp.m_szDevLine );
 
-		LPSTR lpszPro = (LPSTR)strstr( cfgp.m_csDevLine, "pro=" );
+		LPSTR lpszPro = (LPSTR)strstr( cfgp.m_szDevLine, "pro=" );
 
 		if (lpszPro) {
 
 			lpszPro = strtok( lpszPro + 4, " \t\r\n" );
 
 			if (lpszPro) {
-				csPro = lpszPro;
+				strcpy( pszPro, lpszPro );
 			} // Got argument
 
 		} // Found pro= statement
@@ -270,7 +288,7 @@ ParseCfgSys( CString& csPro ) {
 
 // Parse .PRO file for USE= above F000 and for VGASWAP.
 // Also check for BCF= or AUTOBCF and if found, disable ROMSrch.
-// opts.m_csMaxPro should already be set.
+// opts.m_szMaxPro should already be set.
 void
 ParsePro( CCustomOpts& opts ) {
 
@@ -285,8 +303,8 @@ ParsePro( CCustomOpts& opts ) {
 	// Now parse profile if found.  If no path, tough.
 	// FIXME assert boot drive as drive letter, but it's not quite
 	// that simple, and assert boot root as directory.
-	if (!opts.m_csMaxPro.IsEmpty() &&
-		(pfPro = fopen( opts.m_csMaxPro, "rt" ))) {
+	if (opts.m_szMaxPro[ 0 ] &&
+		(pfPro = fopen( opts.m_szMaxPro, "rt" ))) {
 
 		// If no multiconfig, we're seeking common
 		int nSectFound = 1; // Always start with common
@@ -494,67 +512,51 @@ SetAutoWMX( LPCSTR lpMaxDir, char *pszMaximize, char *pszOptions ) {
 
 } // SetAutoWMX()
 
-BOOL CWinmxmzApp::InitInstance()
+/////////////////////////////////////////////////////////////////////////////
+// Start: splash screen, then the dialogs (or the summary)
+
+wxFrame *CWinmxmzApp::OnInit(void)
 {
-    DWORD dwVer;
-	// Standard initialization
-	// If you are not using these features and wish to reduce the size
-	//  of your final executable, you should remove from the following
-	//  the specific initialization routines you do not need.
+	DWORD dwVer;
+	int i;
 
-    m_pszProfileName = MAXIMIZE_INI;
+	::LoadString( hInstance, IDS_APP_TITLE, g_szTitle, sizeof( g_szTitle ) );
 
-    m_pszHelpFilePath = MAXHELP_HLP;	// MAXHELP.HLP
+	// command line (WINLNCH: "/summary<KB>"; Toolbox: "/I")
+	char szCmdLine[ 128 ];
+	szCmdLine[ 0 ] = '\0';
+	for (i = 1; i < argc; i++) {
+		if (strlen( szCmdLine ) + strlen( argv[ i ] ) + 2 > sizeof( szCmdLine )) break;
+		if (i > 1) strcat( szCmdLine, " " );
+		strcat( szCmdLine, argv[ i ] );
+	}
 
 	// Enable 3D controls
-	Ctl3dRegister( AfxGetInstanceHandle());
-	Ctl3dAutoSubclass( AfxGetInstanceHandle());
-
-	SetDialogBkColor();        // Set dialog background color to gray
+	Ctl3dRegister( hInstance );
+	Ctl3dAutoSubclass( hInstance );
 
 	// Display splash screen
-	CSplashDlg splash;
+	CSplash *pSplash = new CSplash;
 
 	DWORD dwStartSplash = ::GetTickCount();
 	DWORD dwNow;
 
-            // find out if we're in Win95.
-        dwVer = GetVersion();
-        if ( ( LOBYTE( LOWORD( dwVer )) > 3 ) ||
-             ( ( LOBYTE( LOWORD( dwVer )) > 2) && 
-               ( HIBYTE( LOWORD( dwVer )) > 15) ) ) {
-            m_bWin95 = TRUE;
-        }
-        else {
-            m_bWin95 = FALSE;
-        }
+	// find out if we're in Win95.
+	dwVer = GetVersion();
+	g_bWin95 = ( LOBYTE( LOWORD( dwVer )) > 3 ) ||
+		   ( ( LOBYTE( LOWORD( dwVer )) > 2) && ( HIBYTE( LOWORD( dwVer )) > 15) );
 
 	WORD wHigh, wLSeg;
 	BOOL bQMax = qmaxpres( &wHigh, &wLSeg );
 
 	// Get directory we're loaded from to locate Max components.
-
-	LPSTR lpsz = csMaxDir.GetBuffer( _MAX_PATH );
-	::GetModuleFileName( m_hInstance, lpsz, _MAX_PATH );
-	csMaxDir.ReleaseBuffer();
-
-	// Split path into various components.
-	char szDrive[ _MAX_DRIVE ], szDir[_MAX_DIR ];
-	_splitpath( (LPCSTR)csMaxDir, szDrive, szDir, NULL, NULL );
+	char szExe[ _MAX_PATH ], szDrive[ _MAX_DRIVE ], szDir[ _MAX_DIR ];
+	::GetModuleFileName( hInstance, szExe, sizeof( szExe ) );
+	_splitpath( szExe, szDrive, szDir, NULL, NULL );
 
 	// Now reassemble the drive and directory (with trailing backslash)
-	csMaxDir = szDrive;
-	csMaxDir += szDir;
-
-	// Use our directory as a default, but try to get directory name from
-	// QDSPATCH.INI
-	//m_csDir = GetProfileString( INI_CONFIG, INI_CONFIG_DBFILES,
-	//					(LPCSTR)csDispatchDir );
-
-	// Make sure there's no trailing backslash
-	//if ((m_csDir.GetLength() > 3) && (m_csDir.Right( 1 ) == "\\")) {
-	//	m_csDir = m_csDir.Left( m_csDir.GetLength() - 1 );
-	//} // Strip trailing backslash
+	strcpy( szMaxDir, szDrive );
+	strcat( szMaxDir, szDir );
 
 	// Put up our dialogs
 	// From here on out we're running a simple state machine
@@ -575,10 +577,11 @@ BOOL CWinmxmzApp::InitInstance()
 	int nRes;
 	CWelcome welcome;
 	CSelectMode mode;
-	CCustomOpts opts( NULL, m_bWin95 ? IDD_CUSTOPTS95 : IDD_CUSTOPTS );
+	CCustomOpts opts( g_bWin95 ? IDD_CUSTOPTS95 : IDD_CUSTOPTS );
 	CEndPhase1 end1;
 	CExit confexit;
-	CString addbat;
+	char addbat[ _MAX_PATH ];
+	addbat[ 0 ] = '\0';
 
 	// Don't try to evade a faked current section
 	char *pszConfig = getenv( "CONFIG" );
@@ -587,25 +590,23 @@ BOOL CWinmxmzApp::InitInstance()
 	} // CONFIG defined in environment
 
 	// Set defaults from MAXIMIZE.INI
-	CString csProfile( csMaxDir );
-	csProfile += MAXIMIZE_INI;
+	strcpy( g_szProfile, szMaxDir );
+	strcat( g_szProfile, MAXIMIZE_INI );
 
-	m_pszProfileName = csProfile;
+	mode.m_bCustom = ProfileInt( INIS_DEFAULTS, INI_CUSTOM, FALSE );
 
-	mode.m_bCustom = GetProfileInt( INIS_DEFAULTS, INI_CUSTOM, FALSE );
-
-	opts.m_bWin95 = m_bWin95;
-	if (m_bWin95) {
-		opts.m_bDOSStart = GetProfileInt( INIS_DEFAULTS, INI_DOSSTART, FALSE );
+	opts.m_bWin95 = g_bWin95;
+	if (g_bWin95) {
+		opts.m_bDOSStart = ProfileInt( INIS_DEFAULTS, INI_DOSSTART, FALSE );
 	} // Get additional option for Win95
 
-	opts.m_bROMSrch = GetProfileInt( INIS_DEFAULTS, INI_ROMSRCH, TRUE );
-	opts.m_bVGASwap = GetProfileInt( INIS_DEFAULTS, INI_VGASWAP, TRUE );
-	opts.m_bExtraDOS = GetProfileInt( INIS_DEFAULTS, INI_EXTRADOS, TRUE );
+	opts.m_bROMSrch = ProfileInt( INIS_DEFAULTS, INI_ROMSRCH, TRUE );
+	opts.m_bVGASwap = ProfileInt( INIS_DEFAULTS, INI_VGASWAP, TRUE );
+	opts.m_bExtraDOS = ProfileInt( INIS_DEFAULTS, INI_EXTRADOS, TRUE );
 
 	// Now try to find a DEVICE=386max.sys or DEVICE=bluemax.sys line
 	// and get m_csMaxPro
-	ParseCfgSys( opts.m_csMaxPro );
+	ParseCfgSys( opts.m_szMaxPro );
 
 	// Check Maximize.CFG and 386MAX.PRO specifically for NO* statements
 	// and USE= statements at or above F000
@@ -613,9 +614,9 @@ BOOL CWinmxmzApp::InitInstance()
 
 	// If the current section does _not_ have 386MAX.SYS and we're
 	// not going to ask about Multiconfig, bail out now...
-	if (!pszSect && opts.m_csMaxPro.IsEmpty()) {
-		AfxMessageBox( ERRMSG_NOMAX );
-		return TRUE;
+	if (!pszSect && !opts.m_szMaxPro[ 0 ]) {
+		MxMessageBox( ERRMSG_NOMAX );
+		return NULL;
 	} // Max not found
 
 	// Parse profile for m_bHasVGASwap, m_bHasUseHigh
@@ -627,7 +628,7 @@ BOOL CWinmxmzApp::InitInstance()
 	} // ROMsrch-recovered areas already present
 
 	// Create and save path to DOSSTART.BAT
-	if (m_bWin95) {
+	if (g_bWin95) {
 
 		char szDir[ _MAX_DIR ], szPath[ _MAX_PATH ];
 
@@ -637,32 +638,32 @@ BOOL CWinmxmzApp::InitInstance()
 		// as the docs so erroneously indicate.
 		_makepath( szPath, "", szDir, "DOSStart", ".bat" );
 
-		addbat = szPath;
+		strcpy( addbat, szPath );
 
 	} // Save path to DOSSTART.BAT
 
 	// Wait a bit
 	do {
 		dwNow = ::GetTickCount();
-		// FIXME figure out how to yield
+		wxYield();
 	} while (dwNow - dwStartSplash < 1600);
 
 	// Dump the splash screen
-	splash.DestroyWindow();
+	delete pSplash;
 
 	// Note that only one _or_ the other of /I or /summary is allowed...
-	int nFromToolbox = !_stricmp( m_lpCmdLine, "/I" );
+	int nFromToolbox = !_stricmp( szCmdLine, "/I" );
 
-	if (!_strnicmp( m_lpCmdLine, "/summary", 8 ))
+	if (!_strnicmp( szCmdLine, "/summary", 8 ))
 	{
 		// If invoked with /summary get summary data from MAXIMIZE.INI
 		// This also removes the line that forces a Windows start at
 		// the end of autoexec.
-		CBlue blue( NULL, ::CBSummWnd );
-		CSummary summ( atoi( &m_lpCmdLine[ 8 ] ) );
-		int nRes = summ.DoModal();
+		CBlue *pBlue = new CBlue;
+		CSummary summ( atoi( &szCmdLine[ 8 ] ) );
+		int nRes = summ.DoModal( pBlue );
 
-		blue.DestroyWindow();
+		delete pBlue;
 
 		// If we're to revert, exit Windows and run Premaxim then reboot
 		if (nRes == IDC_REVERT) {
@@ -670,16 +671,16 @@ BOOL CWinmxmzApp::InitInstance()
 			char szMaximize[ _MAX_PATH ];
 
 			// Build path to maximize
-			wsprintf( szMaximize, "%s" MAXIMIZE_EXE, (LPCSTR)csMaxDir );
+			wsprintf( szMaximize, "%s" MAXIMIZE_EXE, szMaxDir );
 
 			// If this fails, bitch about it
 			if (!::ExitWindowsExec( szMaximize, "/X /P" )) {
-				AfxMessageBox( ERRMSG_CANTPREMAXIM );
+				MxMessageBox( ERRMSG_CANTPREMAXIM );
 			} // Failed to run maximize /X /P
 
 		} // Take me home, daddy...
 
-		return TRUE;
+		return NULL;
 	}
 
 	while (nState < END_STATE) {
@@ -698,7 +699,7 @@ BOOL CWinmxmzApp::InitInstance()
 				// on current section.
 				if (pszSect && !nFromToolbox) {
 
-					CSelectMBoot selectmb( NULL, pszSect );
+					CSelectMBoot selectmb( pszSect );
 
 					nDirection = 1;
 					_ffree( pszSect );
@@ -706,15 +707,15 @@ BOOL CWinmxmzApp::InitInstance()
 					switch (selectmb.DoModal()) {
 
 						case IDOK:
-							pszSect = _fstrdup( (LPCSTR)selectmb.m_csSelected );
+							pszSect = _fstrdup( selectmb.m_szSelected );
 							// Now re-read profile (possibly a different
 							// profile or a different section in the same
 							// profile)
-							ParseCfgSys( opts.m_csMaxPro );
-							opts.m_bROMSrch = GetProfileInt( INIS_DEFAULTS,
+							ParseCfgSys( opts.m_szMaxPro );
+							opts.m_bROMSrch = ProfileInt( INIS_DEFAULTS,
 										INI_ROMSRCH, FALSE );
-							if (opts.m_csMaxPro.IsEmpty()) {
-								AfxMessageBox( ERRMSG_MAX_MCFG );
+							if (!opts.m_szMaxPro[ 0 ]) {
+								MxMessageBox( ERRMSG_MAX_MCFG );
 								nDirection = 0;
 							} // Bitch about it
 							else {
@@ -783,7 +784,7 @@ BOOL CWinmxmzApp::InitInstance()
 
 			case OPTION_STATE:
 				// If DOSSTART.BAT doesn't exist, disable the option
-				if (m_bWin95) {
+				if (g_bWin95) {
 
 					opts.m_bDOSStartEna = !_access( addbat, 00 );
 
@@ -824,7 +825,7 @@ BOOL CWinmxmzApp::InitInstance()
 					WriteProfileInt( INIS_DEFAULTS, INI_VGASWAP, opts.m_bVGASwap );
 					WriteProfileInt( INIS_DEFAULTS, INI_EXTRADOS, opts.m_bExtraDOS );
 
-					if (m_bWin95) {
+					if (g_bWin95) {
 						WriteProfileInt( INIS_DEFAULTS, INI_DOSSTART, opts.m_bDOSStart );
 					}
 
@@ -833,7 +834,7 @@ BOOL CWinmxmzApp::InitInstance()
 					WriteProfileInt( INIS_REMOVE, INI_VGASWAP, opts.m_bDisVGASwap );
 
 					// Build path to maximize
-					wsprintf( szMaximize, "%s" MAXIMIZE_EXE, (LPCSTR)csMaxDir );
+					wsprintf( szMaximize, "%s" MAXIMIZE_EXE, szMaxDir );
 
 					// Build options
 					sprintf( szOptions, "/X /V %s",
@@ -847,26 +848,26 @@ BOOL CWinmxmzApp::InitInstance()
 					// FIXME we need a scheme that'll work for DOS and Windows.
 					// We're close to running out of command line space
 					// in some configurations though it's _highly_ unlikely.
-					if (m_bWin95 && opts.m_bDOSStart && !addbat.IsEmpty()) {
+					if (g_bWin95 && opts.m_bDOSStart && addbat[ 0 ]) {
 						strcat( szOptions, " /O " );
 						strcat( szOptions, addbat );
 					} // Process DOSSTART.BAT too
 
 					// Save startup name in MAXIMIZE.INI.  This is used to
 					// save some code in MAXIMIZE.EXE.
-					WriteProfileString( INIS_CURRENTSECT, INI_STARTUPBAT, StartupBat );
+					WriteProfileStr( INIS_CURRENTSECT, INI_STARTUPBAT, StartupBat );
 
 					// If Max isn't present, set up batch file to boot into
 					// Maximize
 					if (!bQMax) {
-						SetAutoWMX( csMaxDir, szMaximize, szOptions );
+						SetAutoWMX( szMaxDir, szMaximize, szOptions );
 					} // MAX is not present
 
 					// Exit and start Maximize.  Note that this may be done
 					// via a batch file (szMaximize = "%COMSPEC%" and
 					// szOptions = "/c c:\386max\_mximize.bat")
 					if (!::ExitWindowsExec( szMaximize, szOptions )) {
-						AfxMessageBox( ERRMSG_CANTEXIT );
+						MxMessageBox( ERRMSG_CANTEXIT );
 						nDirection = 0;
 					} // Failed, try again
 
@@ -908,97 +909,18 @@ BOOL CWinmxmzApp::InitInstance()
 
 	} // Not end of loop
 
-	return TRUE;
+	return NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // application cleanup routine
-int CWinmxmzApp::ExitInstance()
+
+int CWinmxmzApp::OnExit(void)
 {
-    CString csTempDir;
-    CString csTempDir2;
+	// Shut down help
+	MxWinHelp( 0L, HELP_QUIT );
 
-   	// Shut down help
-	WinHelp( 0L, HELP_QUIT );
+	Ctl3dUnregister( hInstance );
 
-    Ctl3dUnregister( AfxGetInstanceHandle());
-
-    return 0;
+	return 0;
 }
-
-
-// ---------------------------------------------------------------------------
-// Set Win95-ish small font for dialog
-
-void CWinmxmzApp::SetSmallFont(CWnd *pDlg)
-{
-	// Get handle and font of dialog
-    HWND hwnd = pDlg->m_hWnd;
-    HFONT hfont = (HFONT)pDlg->GetFont()->m_hObject;
-    if(!hfont)
-    	return;
-
-	// Try to create a normal weight version of the bold font used in dialog    	
-	TRY 
-	{		
-		LOGFONT lf;
-		if(!hfont || !::GetObject(hfont, sizeof(lf), &lf))
-			return;
-		lf.lfWeight = FW_NORMAL;
-		m_font.CreateFontIndirect(&lf);
-		hfont = (HFONT)m_font.m_hObject;
-	} 
-	CATCH_ALL(e) 
-	{
-		return;
-	}
-	END_CATCH_ALL;
-
-	// Set small font into every control
-	for(hwnd = ::GetWindow(hwnd, GW_CHILD); hwnd; hwnd = ::GetWindow(hwnd, GW_HWNDNEXT))
-		::SendMessage(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
-}
-
-// ---------------------------------------------------------------------------
-
-void CWinmxmzApp::OnHelp()
-{
-	WinHelp( HID_BASE_RESOURCE+m_idDlg );
-}
-
-// ---------------------------------------------------------------------------
-
-void CWinmxmzApp::WinHelp( DWORD dwData, UINT uCmd /*=HELP_CONTEXT*/ )
-{
-	static BOOL bHelp = FALSE;	// Have not been run yet
-
-	if(uCmd == HELP_QUIT)
-	{
-        if(bHelp)
-            {
-            bHelp = FALSE;
-            if(m_hwndDlg)
-                ::WinHelp(m_hwndDlg, MAXHELP_HLP, HELP_QUIT, 0L);
-            }
-        return;
-	}
-	
-	// Convert CONTENTS and INDEX requests into application-specific context
-	if(uCmd == HELP_CONTENTS || uCmd == HELP_INDEX)
-	{
-            uCmd = HELP_CONTEXT;
-            dwData = HID_BASE_RESOURCE+m_idDlg;
-	}
-
-	// Convert contexts so they are application-specific	
-	if(uCmd == HELP_CONTEXT || uCmd == HELP_CONTEXTPOPUP)
-            dwData |= WINMX_HLP_DWORD;
-
-	if(m_hwndDlg)
-	{
-            bHelp = TRUE;
-            TRACE2("WinHelp dwData=0x%08lx, uCmd=0x%04x\n", dwData, uCmd);
-            ::WinHelp(m_hwndDlg, MAXHELP_HLP, uCmd, dwData);
-	}
-}
-

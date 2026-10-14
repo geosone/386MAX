@@ -8,8 +8,9 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 // $Header:   P:/PVCS/MAX/WINMXMZ/WINMXMZ.RCV   1.10   23 May 1996 13:43:56   HENRY  $
-#include "afxres.h"
+#include <windows.h>
 #include <statres.h>
+#include "wx.rc"		// wxWindows (dummy dialogs, cursors)
 
 /////////////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -285,7 +286,7 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    AFX_IDS_APP_TITLE       "Windows Maximize"
+    IDS_APP_TITLE           "Windows Maximize"
 END
 
 
@@ -298,7 +299,6 @@ END
 #include <mversion.h>
 #include <common.ver>
 
-#include "afxres.rc"  	// Standard components
 
 /////////////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

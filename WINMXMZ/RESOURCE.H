@@ -14,6 +14,10 @@
 #define IDD_SUMMARY                     112
 #define IDD_CONFIRMEXIT                 113
 #define IDD_CUSTOPTS95                  115
+#define IDS_APP_TITLE                   200
+#ifndef IDC_STATIC
+#define IDC_STATIC                      (-1)
+#endif
 #define IDC_DELETEFILES                 1001
 #define IDC_REMOVEDATA                  1002
 #define IDC_REMOVEDIR                   1003

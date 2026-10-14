@@ -36,12 +36,20 @@ PROG=${1:?program in build/bin, e.g. WINMAXIM.EXE}; shift
 rm -rf "$OUT"; mkdir -p "$OUT/c/MAX"
 cp "$ROOT"/build/bin/* "$OUT/c/MAX/"
 [ -n "${FILES:-}" ] && cp ${FILES} "$OUT/c/MAX/"
+# the profile of MM=386max (WINMAXIM wants a PRO= in the DEVICE line)
+[ -f "$OUT/c/MAX/386MAX.PRO" ] || printf '; 386MAX profile\r\n' > "$OUT/c/MAX/386MAX.PRO"
 cp --sparse=always "$BASE" "$OUT/test.img"
 P="$OUT/test.img@@32256"
 mcopy -o -s -i "$P" "$OUT"/c/MAX ::/
 
-# program start through WIN.INI [windows] run=
-RUN="C:\\MAX\\$PROG $*"
+# program start through WIN.INI [windows] run= (a list of programs: with
+# arguments through a batch file)
+RUN="C:\\MAX\\$PROG"
+if [ $# -gt 0 ]; then
+    printf '@ECHO OFF\r\nC:\\MAX\\%s %s\r\n' "$PROG" "$*" > "$OUT/runprog.bat"
+    mcopy -o -i "$P" "$OUT/runprog.bat" ::/MAX/RUNPROG.BAT
+    RUN="C:\\MAX\\RUNPROG.BAT"
+fi
 if [ "${SETUPPKG:-0}" = 1 ]; then
     mmd -i "$P" ::/INSTALL 2>/dev/null
     for f in "$ROOT"/build/package/*; do [ -f "$f" ] && mcopy -o -i "$P" "$f" ::/INSTALL/; done
@@ -57,7 +65,7 @@ mcopy -o -i "$P" "$OUT/win.ini" ::/WINDOWS/WIN.INI
 
 if [ "$MM" = 386max ]; then
     mcopy -o -i "$P" ::/CONFIG.SYS "$OUT/config.sys"
-    sed -i 's#^DEVICE=C:\\WINDOWS\\HIMEM.SYS#DEVICE=C:\\MAX\\386MAX.SYS#I' "$OUT/config.sys"
+    sed -i 's#^DEVICE=C:\\WINDOWS\\HIMEM.SYS#DEVICE=C:\\MAX\\386MAX.SYS PRO=C:\\MAX\\386MAX.PRO#I' "$OUT/config.sys"
     mcopy -o -i "$P" "$OUT/config.sys" ::/CONFIG.SYS
     mcopy -o -i "$P" ::/WINDOWS/SYSTEM.INI "$OUT/system.ini"
     sed -i 's/^\[386Enh\]\r$/[386Enh]\r\ndevice=C:\\MAX\\386MAX.VXD\r/' "$OUT/system.ini"
