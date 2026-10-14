@@ -818,15 +818,18 @@ static int Winmaxim(HINSTANCE hInstance, LPSTR lpCmdLine)
 						// everything as is?
 
 						// I guess we should revert...
-						if (!opts.m_bHasUseHigh && opts.m_bROMSrchEna) {
-							opts.m_bROMSrch = TRUE;
-						}
+						// (Unattended: the options of SETUP.INF stay.)
+						if (!g_bUnattended) {
+							if (!opts.m_bHasUseHigh && opts.m_bROMSrchEna) {
+								opts.m_bROMSrch = TRUE;
+							}
 
-						if (!opts.m_bHasVGASwap) {
-							opts.m_bVGASwap = TRUE;
-						}
+							if (!opts.m_bHasVGASwap) {
+								opts.m_bVGASwap = TRUE;
+							}
 
-						opts.m_bExtraDOS = TRUE;
+							opts.m_bExtraDOS = TRUE;
+						}
 
 						// Fall through to custom case
 
