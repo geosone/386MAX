@@ -98,16 +98,7 @@ HWND _export WINAPI DlgTabbedDlg_Create(LPTABBEDDIALOGPARM lpTab);
 
 #include "sfttabs2.h"                   // Additional definitions when using C++
 
-#if !defined(NOCLASSLIBRARY) 
-
-// use #define NOCLASSLIBRARY when using C++, but not MFC
-#if !defined(__BORLANDC__)
-#include "sftmfc2.h"                    // Definitions for C++ MFC 2.x
-#endif
-
-#endif
-
-#endif /* !defined(NOCLASSLIBRARY) */
+#endif /* __cplusplus */
 
 #endif  /* !defined(RC_INVOKED) */
 
