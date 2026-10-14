@@ -16,6 +16,11 @@ extern HWND g_hwndDlg;		// dialog for WinHelp
 extern char g_szProfile[];	// MAXIMIZE.INI with path
 extern char g_szTitle[];	// "Windows Maximize"
 
+// SETUP.INF (unattended installation, see MAXCFG): in the 386MAX directory
+extern BOOL g_bUnattended;
+int InfBool(LPCSTR lpSect, LPCSTR lpKey, int nDefault);
+void InfString(LPCSTR lpSect, LPCSTR lpKey, char *pszBuff, int nSize);
+
 // MAXIMIZE.INI
 int ProfileInt(LPCSTR lpSect, LPCSTR lpEntry, int nDefault);
 void WriteProfileInt(LPCSTR lpSect, LPCSTR lpEntry, int nValue);

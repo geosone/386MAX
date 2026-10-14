@@ -49,6 +49,7 @@
 
 #define SCRN_C
 #include "instext.h"    /* Message text */
+#include "setupinf.h"
 #undef SCRN_C
 
 #ifndef PROTO
@@ -525,6 +526,14 @@ int	do_configsysn ( void )
 
 	if (!filecount) return (2); // No changes needed
 
+	// Unattended (SETUP.INF): no dialog, ConfigChanges decides
+	if (Unattended) {
+		key = unattend_apply_config () ? KEY_ENTER : KEY_ESCAPE;
+		inf_log ("SETUPDOS: %s", key == KEY_ENTER ?
+			"CONFIG.SYS etc. changed" : "changes saved as *.ADD only");
+		goto DOCONFIG_ANSWER;
+	}
+
 	// Tally up help files (README, WINDOWS.DOC).
 	for (helpcount = filecount, i=0; i < NUMCHANGES; i++)
 		if (Changes[i].Active) helpcount++;
@@ -866,6 +875,7 @@ DOCONFIG_EXIT:
 	if (behind) win_restore (behind, TRUE);
 	pop_cursor ();
 
+DOCONFIG_ANSWER:
 	if (key != KEY_ENTER) return (0); // No changes
 
 	do_intmsg (MsgCreateBackup);

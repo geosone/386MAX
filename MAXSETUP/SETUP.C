@@ -357,7 +357,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
     // create or activate the "Open 386MAX" group
     if (bWin95 == 0) {
 	if ((pmCreateGroup( szProgmanGroup, NULLSTR ) == FALSE ) || (pmShowGroup( szProgmanGroup, 1 ) == FALSE )) {
-	    MessageBox(0, szMsg_Init, szMsg_InitTitle, MB_OK | MB_ICONSTOP);
+	    UMessageBox(0, szMsg_Init, szMsg_InitTitle, MB_OK | MB_ICONSTOP);
 	    goto Exit;
 	}
 	pmShowGroup( szProgmanGroup, SW_SHOWMINIMIZED );
@@ -389,6 +389,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 
     // get full path & filename of SETUP.EXE
     GetModuleFileName( hInstance, szSetupName, 127 );
+    unattend_init( szSetupName );	// SETUP.INF next to SETUP.EXE
 
     MakePath( path_part(szSetupName), "setup.hlp", szHelpName );
 
@@ -483,7 +484,7 @@ Exit:
 		bExec = ExitWindowsExec( (LPSTR)szExe, (LPSTR)szParm );
 
 		if ( !bExec ) {
-		nCancel = MessageBox( NULL, szMsg_SFFail, szMsg_SFFailTitle, MB_RETRYCANCEL | MB_ICONSTOP );
+		nCancel = UMessageBox( NULL, szMsg_SFFail, szMsg_SFFailTitle, MB_RETRYCANCEL | MB_ICONSTOP );
 		}
 	    } while( nCancel == IDRETRY );
 	}
@@ -759,7 +760,7 @@ _asm {
 
 	// create CONFIG.SYS for those who don't have it!
 	} else if ((fh = _lcreat (szConfigSys, 0 )) == HFILE_ERROR ) {
-		MessageBox(0, szMsg_CreaCsys, szMsg_SetTitle, MB_OK | MB_ICONSTOP);
+		UMessageBox(0, szMsg_CreaCsys, szMsg_SetTitle, MB_OK | MB_ICONSTOP);
 		fMaximize = 0;
 		longjmp( quit_env, -1 );
 	}
@@ -789,11 +790,11 @@ void Install()
 
 	SetupYield(0);
 Welcome:
-	rc = DialogBox(ghInstance, MAKEINTRESOURCE(WELCOMEDLGBOX), hParent, WelcomeDlgProc);
+	rc = UDialogBox(ghInstance, MAKEINTRESOURCE(WELCOMEDLGBOX), hParent, WelcomeDlgProc);
 	SetupYield(0);
 
 	// the GNU GPL v3 (LICENSE.TXT on the installation disk)
-	rc = DialogBox(ghInstance, MAKEINTRESOURCE(LICENSEDLGBOX), hParent, LicenseDlgProc);
+	rc = UDialogBox(ghInstance, MAKEINTRESOURCE(LICENSEDLGBOX), hParent, LicenseDlgProc);
 	SetupYield(0);
 	if (rc == 2)
 		goto Welcome;
@@ -804,7 +805,7 @@ Welcome:
 	// check for multiconfig
 Multiconfig:
 	if (szSections[0]) {
-		rc = DialogBox(ghInstance, MAKEINTRESOURCE(MULTIDLGBOX), hParent, MultiDlgProc);
+		rc = UDialogBox(ghInstance, MAKEINTRESOURCE(MULTIDLGBOX), hParent, MultiDlgProc);
 		SetupYield(0);
 		if (rc == 2)
 			goto Welcome;
@@ -814,7 +815,7 @@ Multiconfig:
 	CheckForMax( );
 
 	// get directory
-	rc = DialogBox(ghInstance, MAKEINTRESOURCE(DIRECTORYDLGBOX), hParent, DirectoryDlgProc);
+	rc = UDialogBox(ghInstance, MAKEINTRESOURCE(DIRECTORYDLGBOX), hParent, DirectoryDlgProc);
 	SetupYield(0);
 	if (rc == 2) {
 		if (szSections[0])
@@ -840,8 +841,9 @@ Multiconfig:
 //------------------------------------------------------------------
 
 	// extract files
-	rc = DialogBox(ghInstance, MAKEINTRESOURCE(EXTRACTDLGBOX), hParent, ExtractDlgProc);
+	rc = UDialogBox(ghInstance, MAKEINTRESOURCE(EXTRACTDLGBOX), hParent, ExtractDlgProc);
 	SetupYield(0);
+	unattend_copy( szDest );	// SETUP.INF for MAXIMIZE, WINMAXIM
 
 	if ((bPrograms == 0) && (fRefresh == 0))
 		goto SetupGroup;
@@ -936,7 +938,7 @@ Multiconfig:
 
 	// configure 386MAX
 Configure:
-	rc = DialogBox(ghInstance, MAKEINTRESOURCE(CONFIGUREDLGBOX), hParent, ConfigureDlgProc);
+	rc = UDialogBox(ghInstance, MAKEINTRESOURCE(CONFIGUREDLGBOX), hParent, ConfigureDlgProc);
 	SetupYield(0);
 
 	// Save original SYSTEM.INI, WIN.INI, CONFIG.SYS, and AUTOEXEC.BAT
@@ -1121,7 +1123,7 @@ Configure:
 	    // test for MCA machine.
     if ( DPMI_Is_MCA() ) {
 		// get disk, make dir and copy ADF file there.
-	if ((rc = DialogBox(ghInstance, MAKEINTRESOURCE(REFSRCDLGBOX), hParent, RefDirDlgProc )) == 0) {
+	if ((rc = UDialogBox(ghInstance, MAKEINTRESOURCE(REFSRCDLGBOX), hParent, RefDirDlgProc )) == 0) {
 	    if ( szADFSrc[0] && szADFDest[0] ){
 		CopyADFFiles( "@????.adf" );
 		CopyADFFiles( "P????.adf" );
@@ -1134,7 +1136,7 @@ SetupGroup:
 	pmCreateGroup( szProgmanGroup, NULLSTR );
 	pmShowGroup( szProgmanGroup, 2 );
 	if (pmShowGroup( szProgmanGroup, 1 ) == FALSE) {
-		MessageBox(0, szMsg_Group, szMsg_InitTitle, MB_OK | MB_ICONSTOP);
+		UMessageBox(0, szMsg_Group, szMsg_InitTitle, MB_OK | MB_ICONSTOP);
 		goto NoMAXGroup;
 	}
 	SetupYield(0);
@@ -1162,7 +1164,7 @@ SetupGroup:
     if ( !bPrograms && (fRefresh == 0)) {
 		ShowWindow( hParent, SW_SHOW );
 		fMaximize = fReboot = bUpdateFiles = 0;
-		MessageBox( 0, szMsg_SetComp, szMsg_SetTitle, MB_OK );
+		UMessageBox( 0, szMsg_SetComp, szMsg_SetTitle, MB_OK );
 		return;
 	}
 
@@ -1403,7 +1405,7 @@ NoMAXGroup:
     }
 
 	// display modified files
-	rc = DialogBox(ghInstance, MAKEINTRESOURCE(FILESDLGBOX), hParent, FilesDlgProc);
+	rc = UDialogBox(ghInstance, MAKEINTRESOURCE(FILESDLGBOX), hParent, FilesDlgProc);
 	SetupYield(0);
 	if (rc == 2)
 		goto Configure;
@@ -1500,12 +1502,12 @@ FinalDlgs:
 	SetupYield( 0 );
 
     if( bHadToCopy ) {
-	DialogBox( ghInstance, MAKEINTRESOURCE(EXITRESTARTDLGBOX), hParent, ExitRestartDlgProc);
+	UDialogBox( ghInstance, MAKEINTRESOURCE(EXITRESTARTDLGBOX), hParent, ExitRestartDlgProc);
     } else {
 	if ( bUpdateFiles ) {
-	    DialogBox( ghInstance, MAKEINTRESOURCE(EXITSUCCESSDLGBOX), hParent, ExitSuccessDlgProc);
+	    UDialogBox( ghInstance, MAKEINTRESOURCE(EXITSUCCESSDLGBOX), hParent, ExitSuccessDlgProc);
 	    if ((fMaximize == 0) && (fReboot)) {
-		DialogBox( ghInstance, MAKEINTRESOURCE(EXITREBOOTDLGBOX), hParent, ExitRebootDlgProc);
+		UDialogBox( ghInstance, MAKEINTRESOURCE(EXITREBOOTDLGBOX), hParent, ExitRebootDlgProc);
 	    } else {
 		    // only restart if reboot not necessary and Max is already loaded.
 		if((fMaximize == 0) && bMaxFound ) {
@@ -1514,7 +1516,7 @@ FinalDlgs:
 	    }
 	} else {
 		// need to copy .add files.
-	    DialogBox( ghInstance, MAKEINTRESOURCE(EXITNEWDLGBOX), hParent, ExitNewDlgProc);
+	    UDialogBox( ghInstance, MAKEINTRESOURCE(EXITNEWDLGBOX), hParent, ExitNewDlgProc);
 	}
     }
 }
@@ -1601,7 +1603,7 @@ BOOL CALLBACK __export WelcomeDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			return TRUE;
 
 		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hParent, AskQuitDlgProc) == 1) {
+			if (UDialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hParent, AskQuitDlgProc) == 1) {
 				EndDialog( hDlg, 1 );
 				longjmp( quit_env, -1 );
 			}
@@ -1662,7 +1664,7 @@ BOOL CALLBACK __export LicenseDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			return TRUE;
 
 		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hParent, AskQuitDlgProc) == 1) {
+			if (UDialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hParent, AskQuitDlgProc) == 1) {
 				EndDialog( hDlg, 1 );
 				longjmp( quit_env, -1 );
 			}
@@ -1740,7 +1742,7 @@ BOOL CALLBACK __export MultiDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			}
 
 			if ( szMultiSection[0] == '\0' ) {
-				MessageBox( hDlg, szMsg_MustMult, szMsg_Multi, MB_OK | MB_ICONSTOP );
+				UMessageBox( hDlg, szMsg_MustMult, szMsg_Multi, MB_OK | MB_ICONSTOP );
 				SetFocus(GetDlgItem(hDlg, IDC_MULTI));
 				break;
 			}
@@ -1749,7 +1751,7 @@ BOOL CALLBACK __export MultiDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			return TRUE;
 
 		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE( ASKQUITDLGBOX ), hParent, AskQuitDlgProc) == 1) {
+			if (UDialogBox(ghInstance, MAKEINTRESOURCE( ASKQUITDLGBOX ), hParent, AskQuitDlgProc) == 1) {
 				EndDialog(hDlg, 1);
 				longjmp(quit_env, -1);
 			}
@@ -1867,7 +1869,7 @@ DisplayKB:
 		case IDC_CONTINUE:
 
 			if ((fRefresh == 0) && (bPrograms == 0) && (bOnlineHelp == 0) && (bDosReader == 0)) {
-				MessageBox(hDlg, szMsg_MustSel, szMsg_NoFile, MB_OK | MB_ICONSTOP);
+				UMessageBox(hDlg, szMsg_MustSel, szMsg_NoFile, MB_OK | MB_ICONSTOP);
 				break;
 			}
 
@@ -1878,7 +1880,7 @@ DisplayKB:
 				szDest[0] = '\0';
 				GetDlgItemText(hDlg, IDC_PATH, szDest, 127 );
 				if ( szDest[0] == '\0' ) {
-					MessageBox( hDlg, szMsg_MustDir, szMsg_Dir, MB_OK | MB_ICONSTOP );
+					UMessageBox( hDlg, szMsg_MustDir, szMsg_Dir, MB_OK | MB_ICONSTOP );
 					SetFocus(GetDlgItem(hDlg, IDC_PATH));
 					break;
 				}
@@ -1887,7 +1889,7 @@ DisplayKB:
 			strip_trailing( szDest + 3, "\\/" );
 
 			if (mkfname( szDest ) == NULL) {
-				MessageBox( hDlg, szMsg_NoDrive, szMsg_Dir, MB_OK | MB_ICONSTOP );
+				UMessageBox( hDlg, szMsg_NoDrive, szMsg_Dir, MB_OK | MB_ICONSTOP );
 				ShowWindow( GetDlgItem( hDlg, 666), SW_HIDE);
 				SendDlgItemMessage( hDlg, IDC_PATH, EM_LIMITTEXT, _MAX_PATH, 0L );
 				SetDlgItemText( hDlg, IDC_PATH, ((szMax[0]) ? szMax : szDest ));
@@ -1897,7 +1899,7 @@ DisplayKB:
 
 			if (QueryFileExists( szDest )) {
 				wsprintf(szBuffer, "%s \"%s\" - %s", szMsg_NDir, szMsg_Xist, szDest );
-				MessageBox( hDlg, szBuffer, szMsg_Dir, MB_OK | MB_ICONSTOP );
+				UMessageBox( hDlg, szBuffer, szMsg_Dir, MB_OK | MB_ICONSTOP );
 				break;
 			}
 
@@ -1911,7 +1913,7 @@ DisplayKB:
 				uKB += DOSREADER_SIZE;
 
 			if ((szMax[0] == '\0') && (freeKB( szDest ) < uKB)) {
-				MessageBox( hDlg, szMsg_NS, szMsg_NoSpc, MB_OK | MB_ICONSTOP );
+				UMessageBox( hDlg, szMsg_NS, szMsg_NoSpc, MB_OK | MB_ICONSTOP );
 				break;
 			}
 
@@ -1925,14 +1927,14 @@ DisplayKB:
 			if ((szDest[3] != '\0') && (_dos_findfirst( szDest, 0x17, &dir ) != 0)) {
 
 				wsprintf( szBuffer, "%s \"%s\" %s", szMsg_TheDir, szMsg_NoXst, szDest );
-				if (MessageBox( hDlg, szBuffer, szMsg_Dir, MB_YESNO | MB_ICONSTOP ) != IDYES) {
+				if (UMessageBox( hDlg, szBuffer, szMsg_Dir, MB_YESNO | MB_ICONSTOP ) != IDYES) {
 					SetFocus(GetDlgItem(hDlg, IDC_PATH));
 					break;
 				}
 
 				if ((_mkdir( szDest ) == -1) && (_doserrno != 5)) {
 					wsprintf( szBuffer,"%s \"%s\".", szMsg_NDir2, szDest );
-					MessageBox( hDlg, szBuffer, szMsg_Dir, MB_OK | MB_ICONSTOP );
+					UMessageBox( hDlg, szBuffer, szMsg_Dir, MB_OK | MB_ICONSTOP );
 					break;
 				}
 			}
@@ -1941,7 +1943,7 @@ DisplayKB:
 			return TRUE;
 
 		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hParent, AskQuitDlgProc) == 1) {
+			if (UDialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hParent, AskQuitDlgProc) == 1) {
 				EndDialog( hDlg, 1 );
 				longjmp( quit_env, -1 );
 			}
@@ -2094,7 +2096,7 @@ BOOL CALLBACK __export ConfigureDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 			return TRUE;
 
 		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE( ASKQUITDLGBOX ), hParent, AskQuitDlgProc) == 1) {
+			if (UDialogBox(ghInstance, MAKEINTRESOURCE( ASKQUITDLGBOX ), hParent, AskQuitDlgProc) == 1) {
 				EndDialog(hDlg, 1);
 				longjmp(quit_env, -1);
 			}
@@ -2181,7 +2183,7 @@ BOOL CALLBACK __export FilesDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		if ((HIWORD(lParam) == LBN_DBLCLK) || ((GetFocus() == GetDlgItem(hDlg, IDC_FILESLB)) && (LOWORD(wParam) == IDC_CONTINUE))) {
 			SendDlgItemMessage(hDlg, IDC_FILESLB, LB_GETTEXT, (WORD)SendDlgItemMessage(hDlg, IDC_FILESLB,  LB_GETCURSEL, 0, 0L), (LONG)(LPSTR)szBuf);
 			pszShowFile = szBuf;
-			DialogBox(ghInstance, MAKEINTRESOURCE(SHOWDLGBOX), hParent, ShowDlgProc);
+			UDialogBox(ghInstance, MAKEINTRESOURCE(SHOWDLGBOX), hParent, ShowDlgProc);
 			SetFocus(GetDlgItem(hDlg,IDC_CONTINUE));
 			return TRUE;
 		}
@@ -2198,7 +2200,7 @@ BOOL CALLBACK __export FilesDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			return TRUE;
 
 		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE( ASKQUITDLGBOX ), hParent, AskQuitDlgProc) == 1) {
+			if (UDialogBox(ghInstance, MAKEINTRESOURCE( ASKQUITDLGBOX ), hParent, AskQuitDlgProc) == 1) {
 				EndDialog(hDlg, 1);
 				longjmp(quit_env, -1);
 			}
@@ -3083,7 +3085,7 @@ int AddDOSMAXKeys( void )
 
 	for (i = 0; (DosMaxRegistry[i].pszKey != NULL); i++) {
 		// Add the DOSMAX keys to the registry
-	MessageBox(0,DosMaxRegistry[i].pszKey,DosMaxRegistry[i].pszValue,MB_OK);
+	UMessageBox(0,DosMaxRegistry[i].pszKey,DosMaxRegistry[i].pszValue,MB_OK);
 		if (i == 1) {
 			MakePath( szDest, "dosmax32.dll", szBuf );
 			DosMaxRegistry[i].pszValue = szBuf;
@@ -3261,7 +3263,7 @@ BOOL CALLBACK __export RefDirDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 	    if( _dos_findfirst( szTemp, _A_NORMAL, &dir )) {
 		int rc;
-		if(( rc=MessageBox( NULL, szMsg_BadRef, NULL,
+		if(( rc=UMessageBox( NULL, szMsg_BadRef, NULL,
 				    MB_ICONHAND | MB_YESNO )) == IDYES ){
 		    szADFSrc[0] = '\0';
 		    szADFDest[0] = '\0';
@@ -3293,7 +3295,7 @@ BOOL CALLBACK __export RefDirDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 	    }
 
 		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hDlg, AskQuitDlgProc) == 1) {
+			if (UDialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hDlg, AskQuitDlgProc) == 1) {
 				EndDialog( hDlg, 1 );
 				longjmp( quit_env, -1 );
 			}

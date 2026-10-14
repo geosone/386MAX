@@ -26,6 +26,21 @@
 /*	Definitions for this Module */
 #define MAXEDITWIDTH 81
 
+KEYCODE (*DialogHook)(DIALOGPARM *parm, char *title, char *message,
+	int helpnum, DIALOGEDIT *edit, int nEdit) = NULL;
+
+/* The default button's return code (Enter), else the first button's */
+KEYCODE dialog_default (DIALOGPARM *parm)
+{
+	int ii;
+
+	if (!parm || !parm->pButton || parm->nButtons < 1) return (KEY_ENTER);
+	for (ii = 0; ii < parm->nButtons; ii++) {
+		if (parm->pButton[ii].defButton) return (parm->pButton[ii].returnCode);
+	}
+	return (parm->pButton[0].returnCode);
+}
+
 static KEYCODE CallBackKey = 0;
 static int (*CallBackFunc)(void) = NULL;
 static int RowShift;
@@ -111,6 +126,12 @@ KEYCODE dialog(
 	if (!edit) nEdit = 0;
 	if (!parm || nEdit < 1) edit = NULL;
 	if (nEdit > MAXNEDIT) nEdit = MAXNEDIT;
+
+	/* Unattended installation: answered without showing it */
+	if (DialogHook) {
+		result = DialogHook (parm, title, message, helpnum, edit, nEdit);
+		if (result) return (result);
+	}
 top:
 	push_cursor();
 	hide_cursor();

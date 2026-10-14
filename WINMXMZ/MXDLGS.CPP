@@ -35,7 +35,12 @@ BOOL CALLBACK __export MxDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPar
 		pDlg->m_hWnd = hDlg;
 		pDlg->m_pNext = pDialogs;
 		pDialogs = pDlg;
-		return pDlg->OnInitDialog();
+		BOOL rc = pDlg->OnInitDialog();
+		if (g_bUnattended) {	// SETUP.INF: fill in and press the button
+			int btn = pDlg->OnUnattended();
+			if (btn) ::PostMessage( hDlg, WM_COMMAND, btn, 0L );
+		}
+		return rc;
 	}
 	for (pDlg = pDialogs; pDlg && pDlg->m_hWnd != hDlg; pDlg = pDlg->m_pNext) ;
 	if (!pDlg) return FALSE;
@@ -235,6 +240,26 @@ BOOL CCustomOpts::OnCommand(int id, int notify)
 	return MxDialog::OnCommand(id, notify);
 }
 
+// Unattended: the options of SETUP.INF [Maximize]
+int CCustomOpts::OnUnattended(void)
+{
+	static struct { int id; LPCSTR lpKey; int nDefault; } aOpt[] = {
+		{ IDC_ROMSRCH,	"ROMSearch",	0 },	// needs a key press
+		{ IDC_VGASWAP,	"VGASwap",	1 },
+		{ IDC_EXTRADOS,	"ExtraDOS",	1 },
+		{ IDC_DOSSTART,	"DOSStart",	1 },
+	};
+	int i;
+
+	for (i = 0; i < sizeof( aOpt ) / sizeof( aOpt[0] ); i++) {
+		HWND hCtl = Item( aOpt[i].id );
+
+		if (hCtl && ::IsWindowEnabled( hCtl ))
+			SetCheck( aOpt[i].id, InfBool( "Maximize", aOpt[i].lpKey, aOpt[i].nDefault ) );
+	}
+	return (IDOK);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CEndPhase1 dialog
 
@@ -366,6 +391,15 @@ BOOL CSelectMode::OnCommand(int id, int notify)
 		return TRUE;
 	}
 	return MxDialog::OnCommand(id, notify);
+}
+
+// Unattended: [Maximize] Mode=Express|Custom
+int CSelectMode::OnUnattended(void)
+{
+	char sz[16];
+
+	InfString( "Maximize", "Mode", sz, sizeof( sz ) );
+	return (lstrcmpi( sz, "Custom" ) ? IDC_EXPRESS : IDC_CUSTOM);
 }
 
 /////////////////////////////////////////////////////////////////////////////

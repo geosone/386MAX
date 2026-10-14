@@ -170,7 +170,7 @@ void *get_mem (size_t s)
   if (ret = my_malloc (s))	{
       memset (ret, 0, s);
   } else {
-      MessageBox( NULL, szMsg_Mem, NULL, MB_OK );
+      UMessageBox( NULL, szMsg_Mem, NULL, MB_OK );
   }
 
   return (ret);
@@ -221,7 +221,7 @@ FILE *cfopen (char *filename, char *mode, int abort)
     if (!ret && abort) {
 	char szT[_MAX_PATH + 80 ];
 	wsprintf( szT, szFmt_RWErr, cfopen_path );
-	MessageBox( NULL, szT, NULL, MB_OK );
+	UMessageBox( NULL, szT, NULL, MB_OK );
     }
 
     return (ret);
@@ -247,7 +247,7 @@ char *cfgets (char *buff, size_t buffsize, FILE *fp)
 	if (ferror (fp)) {
 	char szT[_MAX_PATH + 80 ];
 	wsprintf( szT, szFmt_RWErr, cfopen_path );
-	MessageBox( NULL, szT, NULL, MB_OK );
+	UMessageBox( NULL, szT, NULL, MB_OK );
     }
   } // Read failed - check for error or EOF
 
@@ -264,7 +264,7 @@ void cfputs (char *buff, FILE *fp)
 	if (ferror (fp)) {
 	    char szT[_MAX_PATH + 80 ];
 	    wsprintf( szT, szFmt_RWErr, cfopen_path );
-	    MessageBox( NULL, szT, NULL, MB_OK );
+	    UMessageBox( NULL, szT, NULL, MB_OK );
 	}
     }
 } // cfputs ()
@@ -300,7 +300,7 @@ void copy_file (char *srcpath, char *dstpath)
 	if ( FileCopy( dstpath, srcpath ) < 0) {
 	    char szT[_MAX_PATH + 80 ];
 	    wsprintf( szT, szFmt_RWErr, srcpath );
-	    MessageBox( NULL, szT, NULL, MB_OK );
+	    UMessageBox( NULL, szT, NULL, MB_OK );
 	}
     }
 } // copy_file ()

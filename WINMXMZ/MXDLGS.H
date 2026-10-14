@@ -25,6 +25,7 @@ public:
 	virtual void OnOK(void);
 	virtual void OnCancel(void);
 	virtual void OnHelp(void);
+	virtual int OnUnattended(void) { return (IDOK); }	// SETUP.INF: button
 
 	// controls
 	HWND Item(int id) { return ::GetDlgItem(m_hWnd, id); }
@@ -60,6 +61,7 @@ public:
 	BOOL OnInitDialog(void);
 	void DataExchange(BOOL bSave);
 	BOOL OnCommand(int id, int notify);
+	int OnUnattended(void);
 };
 
 class CEndPhase1 : public MxDialog
@@ -86,6 +88,7 @@ public:
 	BOOL m_bCustom; // TRUE if custom, FALSE if express
 	BOOL OnInitDialog(void);
 	BOOL OnCommand(int id, int notify);
+	int OnUnattended(void);
 };
 
 class CWelcome : public MxDialog
@@ -99,6 +102,7 @@ class CExit : public MxDialog
 public:
 	CExit() : MxDialog(IDD_CONFIRMEXIT) {}
 	void OnCancel(void) { EndDialog(IDCANCEL); }	// no help to close
+	int OnUnattended(void) { return (IDCANCEL); }	// go on with Maximize
 };
 
 // Splash screen (bitmap IDB_STAT_SPLASHSCRN) while starting

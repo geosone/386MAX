@@ -70,6 +70,13 @@ KEYCODE dialog(
 	DIALOGEDIT *edit,	/*	Pointer to edit fields */
 	int nEdit);		/*	How many edit fields */
 
+/* Unattended installation (SETUP.INF): called first by dialog().  Returns
+ * the answer (a button's return code; edit fields filled in) or 0 to show
+ * the dialog.  dialog_default() is the default button's return code. */
+extern KEYCODE (*DialogHook)(DIALOGPARM *parm, char *title, char *message,
+	int helpnum, DIALOGEDIT *edit, int nEdit);
+KEYCODE dialog_default (DIALOGPARM *parm);
+
 void dialog_callback(		/* Install a dialog callback function */
 	KEYCODE key,		/* Call function when this key happens */
 	int (*func)(void));	/* Function to call */

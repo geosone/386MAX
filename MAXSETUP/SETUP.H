@@ -161,3 +161,10 @@ int truename_cmp (char *, char *);
 void truedir (char *);
 
 
+
+/* UNATTEND.C: SETUP.INF (unattended installation) */
+extern int Unattended;
+void unattend_init (LPCSTR lpSetup);
+void unattend_copy (LPCSTR lpDir);
+int UDialogBox (HINSTANCE hInst, LPCSTR lpTemplate, HWND hParent, DLGPROC lpfn);
+int UMessageBox (HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);

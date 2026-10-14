@@ -281,7 +281,7 @@ int do_extract (HWND hDlg, char *szDest)
 
 	// Open file
 	if ((open_archive (nDiskNumber) == -1) || (_lread (fhArchive, &ftemp, sizeof (ftemp)) != sizeof (ftemp))) {
-		MessageBox( hDlg, szMsg_ArcRE, szMsg_Error, MB_OK | MB_ICONSTOP );
+		UMessageBox( hDlg, szMsg_ArcRE, szMsg_Error, MB_OK | MB_ICONSTOP );
 		SetupYield(0);
 	SetErrorMode( uError );
 		longjmp( quit_env, -1 );
@@ -294,7 +294,7 @@ int do_extract (HWND hDlg, char *szDest)
 	    (fhead.dir < sizeof (fhead)) ||	// Bad dir start or no directory
 	    !fhead.fnum ||			// No dir entries
 	    (fhead.dlen > XBUFFSIZE)) { 	// Dir too big
-		MessageBox( hDlg, szMsg_ArcDC, szMsg_Error, MB_OK | MB_ICONSTOP );
+		UMessageBox( hDlg, szMsg_ArcDC, szMsg_Error, MB_OK | MB_ICONSTOP );
 		SetupYield(0);
 	SetErrorMode( uError );
 		longjmp(quit_env, -1);
@@ -302,7 +302,7 @@ int do_extract (HWND hDlg, char *szDest)
 
 	// Seek to start of directory
 	if (_llseek (fhArchive, (long) fhead.dir, 0) == -1) {
-		MessageBox( hDlg, szMsg_ArcDir, szMsg_Error, MB_OK | MB_ICONSTOP );
+		UMessageBox( hDlg, szMsg_ArcDir, szMsg_Error, MB_OK | MB_ICONSTOP );
 		SetupYield(0);
 	SetErrorMode( uError );
 		longjmp(quit_env, -1);
@@ -310,7 +310,7 @@ int do_extract (HWND hDlg, char *szDest)
 
 	// Read entire directory into xbuff
 	if (_lread (fhArchive, xbuff, fhead.dlen) == -1) {
-		MessageBox( hDlg, szMsg_ArcRE, szMsg_Error, MB_OK | MB_ICONSTOP );
+		UMessageBox( hDlg, szMsg_ArcRE, szMsg_Error, MB_OK | MB_ICONSTOP );
 		SetupYield(0);
 	SetErrorMode( uError );
 		longjmp(quit_env, -1);
@@ -382,7 +382,7 @@ int do_extract (HWND hDlg, char *szDest)
 	    CheckFloppy ( hDlg );
 
 	    if (open_archive (nDiskNumber) == -1) {	// Open next extent
-		MessageBox( hDlg, szMsg_ArcRE, szMsg_Error, MB_OK | MB_ICONSTOP );
+		UMessageBox( hDlg, szMsg_ArcRE, szMsg_Error, MB_OK | MB_ICONSTOP );
 		SetupYield(0);
 		SetErrorMode( uError );
 		longjmp(quit_env, -1);
@@ -390,12 +390,12 @@ int do_extract (HWND hDlg, char *szDest)
 	}
 
 	      if (vseek (fcur->start) == -1L)
-		MessageBox(hDlg, szMsg_ArcExt, szMsg_Extract, MB_OK | MB_ICONSTOP);
+		UMessageBox(hDlg, szMsg_ArcExt, szMsg_Extract, MB_OK | MB_ICONSTOP);
 	      rbuff_left = 0;
 
 	      SetupYield(0);
 	      if (buff_read ((char *) &crc, sizeof (crc)) == 0xffff)
-		MessageBox(hDlg, szMsg_ArcBuf, szMsg_Extract, MB_OK | MB_ICONSTOP);
+		UMessageBox(hDlg, szMsg_ArcBuf, szMsg_Extract, MB_OK | MB_ICONSTOP);
 	      arcCRC = ~0;
 	      arcbytes = fcur->csiz - 4L;
 
@@ -441,7 +441,7 @@ int do_extract (HWND hDlg, char *szDest)
 	    MakePath( lpCopyPath, fcur->path, szTarget );
 
 	    if ((fhTarget = _lcreat (szTarget, 0 )) == HFILE_ERROR ) {
-		MessageBox( hDlg, szMsg_Target, NULL, MB_OK | MB_ICONSTOP);
+		UMessageBox( hDlg, szMsg_Target, NULL, MB_OK | MB_ICONSTOP);
 	    } else {
 		AddToCopyBatch( (LPSTR)szTarget, (LPSTR)szDest, (LPSTR) lpCopyFile );
 	    }
@@ -462,12 +462,12 @@ int do_extract (HWND hDlg, char *szDest)
 		    else
 			len = (int) arcbytes;
 		    if ((buff_read (xbuff, len) == -1) || (_lwrite (fhTarget, xbuff, len) == -1))
-			MessageBox(hDlg, szMsg_UncW, szMsg_Error, MB_OK | MB_ICONSTOP);
+			UMessageBox(hDlg, szMsg_UncW, szMsg_Error, MB_OK | MB_ICONSTOP);
 		    arcbytes -= (long) len;
 		}
 
 	      } else if ((res = explode (Explode_In, Explode_Out, xbuff)) || (~arcCRC != crc))
-		MessageBox( hDlg, ((res) ? szMsg_BadData : szMsg_CRC ), szMsg_Error, MB_OK | MB_ICONSTOP);
+		UMessageBox( hDlg, ((res) ? szMsg_BadData : szMsg_CRC ), szMsg_Error, MB_OK | MB_ICONSTOP);
 
 	      SetupYield(0);
 	      _dos_setftime (fhTarget, fcur->date.dt.date, fcur->date.dt.time);
@@ -540,7 +540,7 @@ void CheckFloppy ( HWND hDlg )
 
 			// we can't find the archive file, so ask the user
 			//   where it is!
-			DialogBox(ghInstance, MAKEINTRESOURCE(SOURCEDLGBOX), hDlg, SourceDlgProc);
+			UDialogBox(ghInstance, MAKEINTRESOURCE(SOURCEDLGBOX), hDlg, SourceDlgProc);
 			DrawMeter( GetDlgItem(hDlg, IDC_METER), nPercent );
 			SetupYield(0);
 			DrawMeter( GetDlgItem(hDlg, IDC_METER), nPercent );
@@ -589,7 +589,7 @@ BOOL BackupMAXDir( void )
 	if ( ((_mkdir( szBackupDir ) == -1) && (_doserrno != 5))
 	|| ( uCount > 0xFFF ))	{
 		wsprintf( szBuffer,"%s \"%s\".", szMsg_BackDir, szBackupDir );
-		MessageBox( 0, szBuffer, szMsg_Dir, MB_OK | MB_ICONSTOP );
+		UMessageBox( 0, szBuffer, szMsg_Dir, MB_OK | MB_ICONSTOP );
 	SetErrorMode( uError );
 	szBackupDir[0] = '\0';
 	return FALSE;
@@ -704,7 +704,7 @@ BOOL CALLBACK __export SourceDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			return 0;
 
 		case IDC_EXIT:
-			if (DialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hDlg, AskQuitDlgProc) == 1) {
+			if (UDialogBox(ghInstance, MAKEINTRESOURCE(ASKQUITDLGBOX), hDlg, AskQuitDlgProc) == 1) {
 				EndDialog( hDlg, 1 );
 				longjmp( quit_env, -1 );
 			}

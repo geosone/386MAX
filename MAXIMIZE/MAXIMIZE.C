@@ -33,6 +33,8 @@
 #include <qprint.h>
 #include <qhelp.h>
 #include <ui.h>
+#include <dialog.h>
+#include <setupinf.h>
 
 #define OWNER
 #include <debug.h>		/* Debug variables */
@@ -112,6 +114,8 @@ int _cdecl main (int argc, char **argv)
 	/* Parse the command line.  Command switches may override */
 	/* settings in MAXIMIZE.CFG. */
 	setOptions(argc, argv);
+
+	unattend_init ();	/* SETUP.INF in our directory */
 
 	initializeScreenInfo (SnowControl);
 	setColors(ScreenType == SCREEN_MONO ? TRUE : FALSE);
@@ -1372,6 +1376,65 @@ NOTFD:
 
 } /* parse_maxcfg () */
 #pragma optimize("",on)
+
+/******************************* UNATTENDED ********************************/
+/* SETUP.INF (written by MAXCFG, copied here by SETUP): [Maximize] options;
+ * with [Setup] Unattended=1 the dialogs are answered from it (DialogHook
+ * in QUILIB's dialog()), Express Maximize without pauses, every other
+ * input takes its default after a short time (as /E /T).  ROMSRCH runs
+ * only with ROMSearch=1: it needs a key press and mouse movement to probe
+ * the keyboard and mouse code in ROM. */
+
+static KEYCODE max_hook (DIALOGPARM *parm, char *title, char *message,
+	int helpnum, DIALOGEDIT *edit, int nEdit)
+{
+	if (!message) message = "";
+	if (!strcmp (message, "M.Quick")) {
+		const char *v = inf_get ("Maximize", "Mode");
+
+		return ((v && !stricmp (v, "Custom")) ? RESP_NO : RESP_YES);
+	}
+	if (!strcmp (message, "M.ROMSrch1"))
+		return (inf_bool ("Maximize", "ROMSearch", 0) ? RESP_YES : RESP_NO);
+	if (!strcmp (message, "M.VGASwap"))
+		return (inf_bool ("Maximize", "VGASwap", 1) ? RESP_YES : RESP_NO);
+
+	inf_log ("MAXIMIZE: %s: %.60s (default)", title ? title : "", message);
+	return (dialog_default (parm));
+}
+
+void unattend_init (void)
+{
+	char path[_MAX_PATH];
+	const char *v;
+
+	sprintf (path, "%s" SETUPINF_NAME, LoadString);
+	if (inf_load (path)) return;
+
+	sprintf (path, "%c:\\SETUPMAX.LOG", get_bootdrive ());
+	inf_logfile (path);
+	inf_log ("MAXIMIZE: answers from %s" SETUPINF_NAME "%s", LoadString,
+		Unattended ? " (unattended)" : "");
+
+	/* [Maximize] options (as NOROMSRCH, NOVGASWAP, NOHARPO) */
+	if (!inf_bool ("Maximize", "ROMSearch", Unattended ? 0 : 1)) maxcfg.noromsrch = 1;
+	if (!inf_bool ("Maximize", "VGASwap", 1)) maxcfg.novgaswap = 1;
+	if (!inf_bool ("Maximize", "ExtraDOS", 1)) {
+		maxcfg.noharpo = 1;
+		maxcfg.nativehigh = 0;
+	}
+
+	if (!Unattended) return;
+	v = inf_get ("Maximize", "Mode");
+	if (v && !stricmp (v, "Custom")) QuickMax = -1;
+	else {
+		QuickMax = 1;
+		NopauseMax = 1;
+	}
+	TimeoutInput = 1;		/* Every other input: default */
+	TimeoutDelay = 3000L;
+	DialogHook = max_hook;
+}
 
 #ifdef STACKER
 void SwapUpdate (int ndx)

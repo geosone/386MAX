@@ -39,6 +39,48 @@ char g_szProfile[ _MAX_PATH ] = MAXIMIZE_INI;
 char g_szTitle[ 80 ] = "Windows Maximize";
 
 char szMaxDir[ _MAX_PATH ];	// 386MAX directory with trailing BS
+
+/////////////////////////////////////////////////////////////////////////////
+// SETUP.INF (unattended installation): [Setup] Unattended=1 answers the
+// dialogs (MxDialog::OnUnattended), [Maximize] gives the options
+
+BOOL g_bUnattended = FALSE;
+static char szInf[ _MAX_PATH ] = "";
+
+void InfString(LPCSTR lpSect, LPCSTR lpKey, char *pszBuff, int nSize)
+{
+	*pszBuff = '\0';
+	if (*szInf) ::GetPrivateProfileString( lpSect, lpKey, "", pszBuff, nSize, szInf );
+}
+
+int InfBool(LPCSTR lpSect, LPCSTR lpKey, int nDefault)
+{
+	char sz[8];
+
+	InfString( lpSect, lpKey, sz, sizeof( sz ) );
+	switch (sz[0]) {
+	case '1': case 'Y': case 'y': case 'J': case 'j': case 'T': case 't':
+		return 1;
+	case '0': case 'N': case 'n': case 'F': case 'f':
+		return 0;
+	case 'O': case 'o':
+		return (sz[1] == 'N' || sz[1] == 'n');
+	}
+	return nDefault;
+}
+
+static void InfInit(void)
+{
+	OFSTRUCT of;
+
+	strcpy( szInf, szMaxDir );
+	strcat( szInf, "SETUP.INF" );
+	if (::OpenFile( szInf, &of, OF_EXIST ) == HFILE_ERROR) {
+		*szInf = '\0';
+		return;
+	}
+	g_bUnattended = InfBool( "Setup", "Unattended", 0 );
+}
 char *pszSect = NULL;	// Selected MultiConfig section
 
 #define	MAXBUFF 256
@@ -560,6 +602,8 @@ static int Winmaxim(HINSTANCE hInstance, LPSTR lpCmdLine)
 	// Now reassemble the drive and directory (with trailing backslash)
 	strcpy( szMaxDir, szDrive );
 	strcat( szMaxDir, szDir );
+
+	InfInit();		// SETUP.INF (unattended installation)
 
 	// Put up our dialogs
 	// From here on out we're running a simple state machine

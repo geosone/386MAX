@@ -481,7 +481,7 @@ void profile_add ( void )
 	    if ( _lwrite( hf, buffer, strlen( buffer )) == HFILE_ERROR ) {
 		char szMsg[ _MAX_PATH + 128 ];
 		wsprintf( szMsg, szFmt_RWErr, fname );
-		MessageBox( NULL, szMsg, NULL, MB_OK );
+		UMessageBox( NULL, szMsg, NULL, MB_OK );
 	     }
 
 	_lclose( hf );
@@ -489,13 +489,13 @@ void profile_add ( void )
 	} else {
 	    char szMsg[ _MAX_PATH + 128 ];
 	    wsprintf( szMsg, szFmt_RWErr, fname );
-	    MessageBox( NULL, szMsg, NULL, MB_OK );
+	    UMessageBox( NULL, szMsg, NULL, MB_OK );
 	}
 
     _ffree( buffer );
     } else {
 	    // out of memory
-	MessageBox( NULL, szMsg_Mem, NULL, MB_OK );
+	UMessageBox( NULL, szMsg_Mem, NULL, MB_OK );
     }
 } // End of profile_add
 

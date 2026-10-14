@@ -40,6 +40,11 @@
 #define OWNER
 #define MAIN_C
 #include "instext.h"
+
+/* UNATTEND.C: SETUP.INF (unattended installation) */
+extern char InfPath[MAXPATH+1];
+void unattend_init (void);
+void unattend_copy (void);
 #undef MAIN_C
 #undef OWNER
 
@@ -313,6 +318,7 @@ REINSTALL_INVAL:
 					// Unzip the distribution files
 
 		do_delete(DeleteList);
+		unattend_copy ();	// SETUP.INF for MAXIMIZE
 		do_bcfextract();	// Extract BCF file if appropriate
 		disableButton(KEY_F1,FALSE);
 	 } // !ReInstall
@@ -422,6 +428,8 @@ void	 startup_init ( int argc, char *argv[] )
 	*source_drive = (char) toupper (fdrive[0]);  // Assume the home drive
 
 	setOptions(argc,argv);
+
+	unattend_init ();		// SETUP.INF: [Advanced], answers
 
 	/* Init global variables */
 	ident[0][0].fname = OEM_FileName = MAX_FILENAME;
@@ -535,6 +543,18 @@ void setOptions(int argc, char **argv)
 		} /* End IF */
 
 		switch( toupper( *opt )) {
+		case 'A':       /* Answer file (SETUP.INF) */
+			if (*(opt+1) == ':') opt++;
+			pp = arg_token(opt+1,&ntok);
+			if (pp && ntok < sizeof (InfPath)) {
+				memcpy(InfPath,pp,ntok);
+				InfPath[ntok] = '\0';
+				opt = pp;
+				skip = ntok;
+			} /* Argument to /A specified */
+			else	goto showHelp;
+			break;
+
 		case 'B':       /* B&W monitor */
 			ScreenType = SCREEN_MONO;
 			ScreenSet = TRUE;

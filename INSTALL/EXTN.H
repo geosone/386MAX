@@ -98,6 +98,12 @@ extern	 int	VideoSet;
 
 extern	 int	ProductSet;
 extern	 int	ReInstall;
+/* UNATTEND.C: SETUP.INF (unattended installation) */
+extern char InfPath[MAXPATH+1];
+void unattend_init (void);
+void unattend_copy (void);
+int unattend_apply_config (void);
+
 extern	 int	Overwrite;
 extern	 int	GraphicsLogo;
 extern	 int	Backup;
