@@ -423,6 +423,19 @@ else
 MSG_PRO_UNK db	 BEL,'Unknown keyword ==> ',EOS
 endif				; IFDEF LANG_GR
 
+	 public  MSG_NATIVE
+MSG_NATIVE   label byte
+ifdef LANG_GR
+	     db  '  Nicht n',94h,'tig: dieser DOS-Kern verlagert FILES, BUFFERS, LASTDRIVE und',CR,LF
+	     db  '  STACKS selbst in den HiDOS-Speicher (MAXIMIZE tr',84h,'gt HIFILES= bzw.',CR,LF
+	     db  '  FILESHIGH= usw. und DOSDATA=UMB ein).'
+else
+	     db  '  Not needed: this DOS kernel moves FILES, BUFFERS, LASTDRIVE and STACKS',CR,LF
+	     db  '  into high DOS memory itself (MAXIMIZE sets HIFILES= or FILESHIGH= etc.',CR,LF
+	     db  '  and DOSDATA=UMB).'
+endif				; IFDEF LANG_GR
+	     db  CR,LF,EOS
+
 	 public  MSG_ERR_XDOS
 MSG_ERR_XDOS db  BEL
 ifdef LANG_GR
@@ -489,6 +502,36 @@ CF	=	0 All went well
 
 	 xchg	 al,ah		; Convert to usable format
 	 mov	 DOSVER, ax	; Store the version # for later
+
+; The DR DOS kernels (DR DOS, Novell DOS, Enhanced DR-DOS, SvarDOS) and
+; the FreeDOS kernel put FILES, BUFFERS, FCBS, LASTDRIVE and STACKS into
+; upper memory themselves (HIFILES=, FILESHIGH=, DOSDATA=UMB, ...; set by
+; MAXIMIZE); we know only the internals of MS-DOS.  Say so and unload.
+; INT 21h AX=4452h answers 10xxh on DR DOS; AX=33FFh returns the kernel
+; name in DX:AX on FreeDOS (and Enhanced DR-DOS; MS-DOS: DX unchanged).
+
+	 mov	 ax,4452h	; DR DOS version call
+	 stc			; CF=0 on return
+	 int	 21h		; AX = DR DOS version code
+	 jc	 short @F	; Jump if not DR DOS
+
+	 and	 ax,0FF00h	; 1060h 3.40 ... 1072h 7.x
+	 cmp	 ax,1000h	; Izit a DR DOS version?
+	 je	 short CHECK_DOSVER_NATIVE ; Jump if so
+@@:
+	 mov	 ax,33FFh	; FreeDOS: kernel name
+	 sub	 dx,dx		; (unchanged elsewhere)
+	 int	 21h		; DX:AX ==> name
+	 and	 dx,dx		; Izit FreeDOS?
+	 jz	 short CHECK_DOSVER_MSDOS ; Jump if not
+CHECK_DOSVER_NATIVE:
+	 lea	 di,MSG_NATIVE	; Tell 'em the kernel does it
+	 call	 DISP_COPY	; Display copyright and message
+
+	 jmp	 near ptr DOSVER_ERR ; Set error flag, and leave (no key)
+
+CHECK_DOSVER_MSDOS:
+	 mov	 ax,DOSVER	; Restore the version #
 
 	 cmp	 ah,05h 	; izit DOS Version 5.0 or greater
 	 jae	 DOSVER_EXIT	; Yes, EVERYTHING is OK to do
