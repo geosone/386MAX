@@ -651,6 +651,15 @@ static int Winmaxim(HINSTANCE hInstance, LPSTR lpCmdLine)
 	opts.m_bVGASwap = ProfileInt( INIS_DEFAULTS, INI_VGASWAP, TRUE );
 	opts.m_bExtraDOS = ProfileInt( INIS_DEFAULTS, INI_EXTRADOS, TRUE );
 
+	// Unattended (SETUP.INF): the [Maximize] options, in Express mode too
+	// (the options dialog is shown in Custom mode only)
+	if (g_bUnattended) {
+		opts.m_bROMSrch = InfBool( "Maximize", "ROMSearch", 0 );
+		opts.m_bVGASwap = InfBool( "Maximize", "VGASwap", opts.m_bVGASwap );
+		opts.m_bExtraDOS = InfBool( "Maximize", "ExtraDOS", opts.m_bExtraDOS );
+		opts.m_bDOSStart = InfBool( "Maximize", "DOSStart", opts.m_bDOSStart );
+	}
+
 	// Now try to find a DEVICE=386max.sys or DEVICE=bluemax.sys line
 	// and get m_csMaxPro
 	ParseCfgSys( opts.m_szMaxPro );

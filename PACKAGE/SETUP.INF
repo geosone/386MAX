@@ -1,0 +1,40 @@
+; SETUP.INF - answers for the installation of Open 386MAX
+;
+; Read by SETUPDOS (DOS setup), SETUP (Windows setup), MAXIMIZE and
+; WINMAXIM.  A missing or commented key: the installer asks as usual.
+; MAXCFG.EXE (DOS and Windows) edits this file.  With Unattended=1 the
+; installation runs without questions; every answer comes from here, the
+; defaults for the rest.  Notes go to SETUPMAX.LOG on the boot drive.
+; Values: 1/0 (also Yes/No), or one of the listed words.
+
+[Setup]
+Unattended=0            ; 1: no questions
+;Directory=C:\QMAX      ; installation directory
+;ProgramFiles=1         ; Windows setup: program files
+;OnlineHelp=1           ; Windows setup: Windows help
+;DOSHelpReader=1        ; Windows setup: help reader for DOS
+;ConfigChanges=Apply    ; Apply: change CONFIG.SYS etc.  Save: only *.ADD files
+;RunMaximize=1          ; run Maximize afterwards
+
+[386MAX]
+;EMS=0                  ; provide EMS memory
+;MDA=1                  ; use the MDA region B000-B800 if it is free
+;MemoryTester=0         ; QMT memory test at boot
+
+[Windows]
+;GoAhead=1              ; Windows setup: Go Ahead
+;MAXmeter=1             ; Windows setup: MAXmeter in the Startup group
+
+[Maximize]
+;Mode=Express           ; Express | Custom (Custom asks)
+;ROMSearch=0            ; needs a key press and mouse movement
+;VGASwap=1
+;ExtraDOS=1             ; MS-DOS: ExtraDOS; DR DOS kernels: HIFILES= etc.
+;DOSStart=1             ; Windows 9x: also DOSSTART.BAT
+
+[Advanced]
+;VideoB000=Auto         ; Auto | Safe | Unsafe   (SETUP /S, /U)
+;Overwrite=All          ; All | Older | Changed  (SETUP /O, /P)
+;Screen=Auto            ; Auto | Color | Mono    (SETUP /C, /B)
+;Logo=1                 ; 0: as SETUP /V
+;SnowControl=0          ; 1: as SETUP /W

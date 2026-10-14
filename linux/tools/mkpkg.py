@@ -64,7 +64,11 @@ inst = {'setupdos.exe': os.path.join(bindir, 'SETUPDOS.EXE'),
         'setupdos.hlp': os.path.join(bindir, 'setupdos.hlp'),   # DOSHELP
         'setup.hlp': os.path.join(bindir, 'SETUP.HLP'),         # MAXHELP
         # Windows setup (MAXSETUP)
-        'setup.exe': os.path.join(bindir, 'SETUP.EXE')}
+        'setup.exe': os.path.join(bindir, 'SETUP.EXE'),
+        # unattended installation: the answers (example, Unattended=0)
+        # and MAXCFG.EXE (DOS and Windows) to edit them
+        'setup.inf': os.path.join(root, 'PACKAGE', 'SETUP.INF'),
+        'maxcfg.exe': os.path.join(bindir, 'MAXCFG.EXE')}
 inst['license.txt'] = lic
 for name, path in inst.items():
     shutil.copy2(path, os.path.join(out, name.upper()))

@@ -86,7 +86,7 @@ void unattend_copy (LPCSTR lpDir)
 	len = strlen (dst);
 	if (len && dst[len - 1] != '\\') strcat (dst, "\\");
 	strcat (dst, INF);
-	if (lstrcmpi (dst, szInf)) FileCopy (szInf, dst);
+	if (lstrcmpi (dst, szInf)) FileCopy (dst, szInf);	// (target, source)
 }
 
 /* Fill in the controls of a dialog; return the button to press (0: none) */

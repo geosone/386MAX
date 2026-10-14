@@ -1,0 +1,5 @@
+/* MAXCFG.RC - MAXCFG resources (Open 386MAX, GPL v3) */
+#include <windows.h>
+#include "maxcfg.h"
+
+IDI_MAXCFG ICON MAXCFG.ICO
