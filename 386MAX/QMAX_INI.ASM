@@ -4230,6 +4230,33 @@ if @OEM_HIFILL
 	 les	 bx,PLAST_MAC	; ES:BX ==> last entry in MAC
 	 assume  es:nothing	; Tell the assembler
 
+; The FreeDOS kernel links its UMBs itself (DOS=UMB): it shortens the
+; last low DOS MAC entry for its spanning entry after this DEVICE= line
+; (umb_init), so a paragraph of ours would leave a gap in the chain.  As
+; with DOS=UMB under MS-DOS, leave the link and the 58xx calls to DOS.
+; (INT 21h AX=33FFh: DX:AX ==> kernel name on FreeDOS; DR DOS kernels,
+; which answer AX=4452h, keep our spanning entry.)
+	 push	 dx		; Save
+	 mov	 ax,4452h	; DR DOS?
+	 stc			; (CF=0 on return)
+	 int	 21h		; AX = DR DOS version code
+	 jnc	 short INIT2X_NOTFD ; Jump if so (not FreeDOS)
+
+	 mov	 ax,33FFh	; FreeDOS: kernel name
+	 sub	 dx,dx		; (unchanged elsewhere)
+	 int	 21h		; DX:AX ==> name
+	 and	 dx,dx		; Izit the FreeDOS kernel?
+	 pop	 dx		; Restore
+	 jnz	 short INIT2X_X58 ; Jump if so (DOS links)
+
+	 jmp	 short INIT2X_FD1 ; Join common code
+
+INIT2X_NOTFD:
+	 pop	 dx		; Restore
+INIT2X_FD1:
+	 les	 bx,PLAST_MAC	; ES:BX ==> last entry in MAC (again)
+	 assume  es:nothing	; Tell the assembler
+
 	 mov	 ax,PREV_LMAC_NPAR ; Get previous value of starting MAC entry
 
 	 test	 CMD_FLAG,@CMD_XHI ; Is NOHIGH specified?
