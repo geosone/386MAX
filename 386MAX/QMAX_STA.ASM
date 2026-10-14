@@ -366,7 +366,7 @@ endif				; IF @OEM_SYS eq @OEMSYS_AST386
 if @OEM_SYS eq @OEMSYS_3COM
 MSG1	 db	 'ิออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออพ',CR,LF
 else
-MSG1	 db	 'ิออออออออออออออออออออออออออออออ Open 386MAX 2022-2026, GNU GPL v3 อพ',CR,LF
+MSG1	 db	 'ิอออออออออออออออออออออออออออ GNU General Public License version 3 อพ',CR,LF
 endif				; IF @OEM_SYS eq @OEMSYS_3COM
 ROWLEN	 equ	 $-MSG1 	; Row length in message
 	 db	 EOS
