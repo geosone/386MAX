@@ -24,7 +24,7 @@ cp "$SRC" "$OUT/test.img"
 P="$OUT/test.img@@32256"
 crlf() { tr '|' '\n' | sed 's/$/\r/'; }
 mmd -i "$P" ::/MAX 2>/dev/null
-for f in 386MAX.SYS 386MAX.VXD 386LOAD.SYS 386LOAD.COM 386UTIL.COM ASQ.EXE asq.hlp; do
+for f in 386MAX.SYS 386MAX.VXD 386LOAD.SYS 386LOAD.COM 386UTIL.COM EXTRADOS.MAX ASQ.EXE asq.hlp; do
     [ -f "$ROOT/build/bin/$f" ] && mcopy -o -i "$P" "$ROOT/build/bin/$f" ::/MAX/
 done
 [ "${KEEPCFG:-0}" = 1 ] || {

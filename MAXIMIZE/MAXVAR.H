@@ -38,11 +38,13 @@ typedef struct _CfgFlags {
 	noharpo:1,		/* NOHARPO specified in MAXIMIZE.CFG */
 	noexpand:1,		/* NOEXPAND specified in MAXIMIZE.CFG */
 	drdos:1,		/* DR DOS detected */
+	freedos:1,		/* FreeDOS kernel detected */
+	nativehigh:1,		/* DR DOS/FreeDOS: kernel's own HIGH variants */
 	PCIBIOS:1,		/* PCIBIOS keyword detected */
 	PCIBIOS_flag:1, 	/* PCI local bus detected by MAX (Phase 2) */
 	BREAK:2,		/* Which pass to break on */
 	BREAKALL:1,		/* Breakpoint on all passes */
-	:6;			/* Unused bits */
+	:4;			/* Unused bits */
 } CFGFLAGS;
 
 GLOBAL CFGFLAGS maxcfg

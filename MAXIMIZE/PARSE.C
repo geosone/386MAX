@@ -1543,5 +1543,78 @@ NO_ADDENDA:
 
 } // do_harpo()
 #pragma optimize("",on)
+
+/******************* DO_NATIVE_HIGH() ***************************/
+// DR DOS (Novell DOS, Enhanced DR-DOS, SvarDOS) and the FreeDOS kernel
+// put FILES, BUFFERS, FCBS, LASTDRIVE and STACKS into upper memory
+// themselves, which is what ExtraDOS does on MS-DOS (it knows only the
+// MS-DOS internals).  Phase I turns these statements of the active
+// configuration into the kernel's HIGH variants and adds DOSDATA=UMB
+// (DR DOS: also DDSCS=HIGH,UMB), after the 386MAX line: the kernel uses
+// the UMBs 386MAX provides.
+#pragma optimize("leg",off)
+void do_native_high( void )
+{
+ static struct {
+	char *low, *fdos, *drdos;	// FreeDOS / DR DOS high variant
+ } kw[] = {
+	{"FILES",     "FILESHIGH",     "HIFILES"},
+	{"BUFFERS",   "BUFFERSHIGH",   "HIBUFFERS"},
+	{"FCBS",      NULL,	       "HIFCBS"},   // FreeDOS: DOSDATA=UMB
+	{"LASTDRIVE", "LASTDRIVEHIGH", "HILASTDRIVE"},
+	{"STACKS",    "STACKSHIGH",    "HISTACKS"},
+ };
+ static char *add_fdos[] = { "DOSDATA=UMB", NULL };
+ static char *add_drdos[] = { "DOSDATA=UMB", "DDSCS=HIGH,UMB", NULL };
+ DSPTEXT *n, *maxline = NULL, *a;
+ char buff[256], *hi, **add;
+ int i, lead, len, found[2];
+
+ found[0] = found[1] = 0;	// DOSDATA=, DDSCS= present
+ for (n = HbatStrt[CONFIG]; n; n = n->next) {
+
+	if (n->max == 1 && !maxline) maxline = n;	// DEVICE=386MAX.SYS
+	if (!n->text || n->text == MsgRedundant || n->device) continue;
+	if (MultiBoot && n->MBOwner != ActiveOwner &&
+			n->MBOwner != CommonOwner) continue;
+
+	lead = strspn (n->text, " \t");
+	len = strcspn (n->text + lead, " \t=");
+	if (len == 7 && !_strnicmp (n->text + lead, "DOSDATA", 7)) found[0] = 1;
+	if (len == 5 && !_strnicmp (n->text + lead, "DDSCS", 5))   found[1] = 1;
+
+	for (i = 0; i < sizeof (kw) / sizeof (kw[0]); i++) {
+	  if (len != (int) strlen (kw[i].low) ||
+	      _strnicmp (n->text + lead, kw[i].low, len)) continue;
+	  hi = maxcfg.drdos ? kw[i].drdos : kw[i].fdos;
+	  if (!hi || strlen (n->text) + strlen (hi) >= sizeof (buff)) break;
+	  sprintf (buff, "%.*s%s%s", lead, n->text, hi, n->text + lead + len);
+	  free_mem (n->text);
+	  n->text = str_mem (buff);
+	  break;
+	} // for (all statements)
+
+ } // for (all lines)
+
+ if (!maxline) return;		// No 386MAX: no UMBs
+
+ // New statements after DEVICE=386MAX.SYS (same section)
+ add = maxcfg.drdos ? add_drdos : add_fdos;
+ for (i = 0; add[i]; i++) {
+	if (found[i]) continue;
+	a = get_mem (sizeof (DSPTEXT));
+	a->text = str_mem (add[i]);
+	a->visible = 1;
+	a->MBOwner = maxline->MBOwner;
+	a->MBtype = ID_OTHER;
+	a->prev = maxline;
+	a->next = maxline->next;
+	if (maxline->next) maxline->next->prev = a;
+	maxline->next = a;
+	maxline = a;
+ } // for (statements to add)
+
+} // do_native_high()
+#pragma optimize("",on)
 #endif	/* ifdef HARPO */
 

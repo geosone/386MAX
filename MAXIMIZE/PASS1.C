@@ -160,6 +160,10 @@ void pass1 (void)
 
 #ifdef HARPO
 	do_harpo( bStripExtraDOS ); /* Make sure HARPO is in CONFIG.SYS */
+	if (maxcfg.nativehigh) {    /* DR DOS/FreeDOS: instead of HARPO */
+		do_harpo( TRUE );   /* (no EXTRADOS.MAX there) */
+		do_native_high();
+	}
 #endif				/* ifdef HARPO */
 
 	/* Put 386LOAD GETSIZE on all DEVICE and INSTALL lines in */

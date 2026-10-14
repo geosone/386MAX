@@ -1327,7 +1327,9 @@ void parse_maxcfg (void)
    * and the FreeDOS kernel.  If so, turn on NOHARPO: ExtraDOS knows only
    * the internals of MS-DOS.  INT 21h AX=4452h answers with a DR DOS
    * version code 10xxh whatever version AH=30h reports; AX=33FFh returns
-   * the kernel name in DX:AX on FreeDOS (MS-DOS: AL=FFh, DX unchanged). */
+   * the kernel name in DX:AX on FreeDOS (MS-DOS: AL=FFh, DX unchanged).
+   * Enhanced DR-DOS answers AX=33FFh too, so FreeDOS = 33FFh but not
+   * 4452h. */
   /* (OpenWatcom: no jumps from _asm to C labels) */
   {
   int drdos = 0, freedos = 0;
@@ -1352,11 +1354,17 @@ NOTDR:
 	mov	 freedos,1;
 NOTFD:
   }
+  /* These kernels put FILES, BUFFERS, FCBS, LASTDRIVE and STACKS into
+   * upper memory themselves (do_native_high); NOHARPO turns that off too */
+  if ((drdos || freedos) && !maxcfg.noharpo) maxcfg.nativehigh = 1;
   if (drdos) {
 	maxcfg.noharpo = 1; /* Disable HARPO support */
 	maxcfg.drdos = 1;
   }
-  if (freedos) maxcfg.noharpo = 1;
+  if (freedos && !drdos) {
+	maxcfg.noharpo = 1;
+	maxcfg.freedos = 1;
+  }
   }
 #endif /* ifdef HARPO */
 

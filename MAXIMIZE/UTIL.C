@@ -372,7 +372,9 @@ void *get_mem(WORD size)
 	mov	gm_call_cs,ax;	// Save it
  }
 #endif
-	ptr = my_malloc(size);
+	// Microsoft C: malloc(0) returns a block, OpenWatcom NULL (P3UPDATE
+	// asks for 0 bytes when no item besides 386MAX is in CONFIG.SYS)
+	ptr = my_malloc(size ? size : 1);
 #ifdef CHK_MALLOC
 	gm_call_ip = gm_call_cs = 0;
 #endif
