@@ -40,9 +40,6 @@ void set_mbs_callback (int (*callback) (BYTE, char *));
  *	LINE is the actual line data, including leading and/or trailing spaces
 ***/
 
-#ifdef __WATCOMC__		/* int-sized as in QUILIB (-ei), also for the */
-#pragma enum int		/* wxWindows programs (WINMAXIM) */
-#endif
 typedef enum {
 	ID_BUFFERS = 'B',
 	ID_DEVICE = 'D',
@@ -60,9 +57,6 @@ typedef enum {
 	ID_SUBMENU = 'U',
 	ID_FCBS = 'X'
 } CFGID;
-#ifdef __WATCOMC__
-#pragma enum pop
-#endif
 
 /***
  * Parse CONFIG.SYS on the specified drive for menu items only.
@@ -184,7 +178,7 @@ void config_free (void);
 
 #if defined(__WATCOMC__) && defined(__cplusplus)
 /* QUILIB is compiled for the Microsoft C convention (OpenWatcom -ecc); the
-   C++ modules (wxWindows programs) use OpenWatcom's, so these functions are
+   C++ modules (WINMAXIM) use OpenWatcom's, so these functions are
    marked __cdecl (after their declarations: in C++ a pragma before them
    would declare them) */
 #pragma aux (__cdecl) config_free;

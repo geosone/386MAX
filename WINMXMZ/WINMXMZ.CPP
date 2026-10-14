@@ -1,6 +1,6 @@
 // WINMXMZ.CPP - Windows-based kickoff for Maximize (WINMAXIM.EXE)
 //
-// Open 386MAX 9: on wxWindows 1.68E instead of MFC 2.5.  Same steps as
+// Open 386MAX: Win16 API instead of MFC 2.5.  Same steps as
 // the MFC version (Henry Groover, Qualitas 1995-96): splash screen,
 // welcome, MultiConfig section, express/custom, options, then exit
 // Windows and run MAXIMIZE; "/summary<KB>" (from WINLNCH after Maximize)
@@ -9,7 +9,6 @@
 // Copyright (C) 1995-96 Qualitas, Inc.  GNU General Public License version 3.
 // Open 386MAX contributors 2022-2026.
 
-#include "wx.h"
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,11 +32,7 @@
 #include <mxhelpid.h>
 #include <ctl3d.h>
 
-/////////////////////////////////////////////////////////////////////////////
-// The one and only CWinmxmzApp object
-
-CWinmxmzApp theApp;
-
+HINSTANCE g_hInstance;
 BOOL g_bWin95 = FALSE;
 HWND g_hwndDlg = NULL;
 char g_szProfile[ _MAX_PATH ] = MAXIMIZE_INI;
@@ -515,28 +510,36 @@ SetAutoWMX( LPCSTR lpMaxDir, char *pszMaximize, char *pszOptions ) {
 /////////////////////////////////////////////////////////////////////////////
 // Start: splash screen, then the dialogs (or the summary)
 
-wxFrame *CWinmxmzApp::OnInit(void)
+static int Winmaxim(HINSTANCE hInstance, LPSTR lpCmdLine);
+
+int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	DWORD dwVer;
-	int i;
-
+	g_hInstance = hInstance;
 	::LoadString( hInstance, IDS_APP_TITLE, g_szTitle, sizeof( g_szTitle ) );
-
-	// command line (WINLNCH: "/summary<KB>"; Toolbox: "/I")
-	char szCmdLine[ 128 ];
-	szCmdLine[ 0 ] = '\0';
-	for (i = 1; i < argc; i++) {
-		if (strlen( szCmdLine ) + strlen( argv[ i ] ) + 2 > sizeof( szCmdLine )) break;
-		if (i > 1) strcat( szCmdLine, " " );
-		strcat( szCmdLine, argv[ i ] );
-	}
 
 	// Enable 3D controls
 	Ctl3dRegister( hInstance );
 	Ctl3dAutoSubclass( hInstance );
 
+	Winmaxim( hInstance, lpCmdLine );
+
+	// Shut down help
+	MxWinHelp( 0L, HELP_QUIT );
+
+	Ctl3dUnregister( hInstance );
+	return 0;
+}
+
+static int Winmaxim(HINSTANCE hInstance, LPSTR lpCmdLine)
+{
+	DWORD dwVer;
+
+	// command line (WINLNCH: "/summary<KB>"; Toolbox: "/I")
+	char szCmdLine[ 128 ];
+	lstrcpyn( szCmdLine, lpCmdLine, sizeof( szCmdLine ) );
+
 	// Display splash screen
-	CSplash *pSplash = new CSplash;
+	HWND hSplash = SplashCreate();
 
 	DWORD dwStartSplash = ::GetTickCount();
 	DWORD dwNow;
@@ -616,7 +619,7 @@ wxFrame *CWinmxmzApp::OnInit(void)
 	// not going to ask about Multiconfig, bail out now...
 	if (!pszSect && !opts.m_szMaxPro[ 0 ]) {
 		MxMessageBox( ERRMSG_NOMAX );
-		return NULL;
+		return 0;
 	} // Max not found
 
 	// Parse profile for m_bHasVGASwap, m_bHasUseHigh
@@ -645,11 +648,17 @@ wxFrame *CWinmxmzApp::OnInit(void)
 	// Wait a bit
 	do {
 		dwNow = ::GetTickCount();
-		wxYield();
+		{
+			MSG msg;
+			while (::PeekMessage( &msg, NULL, 0, 0, PM_REMOVE )) {
+				::TranslateMessage( &msg );
+				::DispatchMessage( &msg );
+			}
+		}
 	} while (dwNow - dwStartSplash < 1600);
 
 	// Dump the splash screen
-	delete pSplash;
+	SplashDestroy( hSplash );
 
 	// Note that only one _or_ the other of /I or /summary is allowed...
 	int nFromToolbox = !_stricmp( szCmdLine, "/I" );
@@ -659,11 +668,11 @@ wxFrame *CWinmxmzApp::OnInit(void)
 		// If invoked with /summary get summary data from MAXIMIZE.INI
 		// This also removes the line that forces a Windows start at
 		// the end of autoexec.
-		CBlue *pBlue = new CBlue;
+		HWND hBlue = BlueCreate();
 		CSummary summ( atoi( &szCmdLine[ 8 ] ) );
-		int nRes = summ.DoModal( pBlue );
+		int nRes = summ.DoModal( hBlue );
 
-		delete pBlue;
+		::DestroyWindow( hBlue );
 
 		// If we're to revert, exit Windows and run Premaxim then reboot
 		if (nRes == IDC_REVERT) {
@@ -680,7 +689,7 @@ wxFrame *CWinmxmzApp::OnInit(void)
 
 		} // Take me home, daddy...
 
-		return NULL;
+		return 0;
 	}
 
 	while (nState < END_STATE) {
@@ -908,19 +917,6 @@ wxFrame *CWinmxmzApp::OnInit(void)
 		nState += nDirection;
 
 	} // Not end of loop
-
-	return NULL;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// application cleanup routine
-
-int CWinmxmzApp::OnExit(void)
-{
-	// Shut down help
-	MxWinHelp( 0L, HELP_QUIT );
-
-	Ctl3dUnregister( hInstance );
 
 	return 0;
 }

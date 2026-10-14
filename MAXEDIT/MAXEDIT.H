@@ -82,7 +82,7 @@
 /*
  *  External variable declarations
  */
-extern HINSTANCE hInst;		/* application instance handle		  */
+extern HANDLE hInst;		/* application instance handle		  */
 extern HANDLE hAccel;		/* resource handle of accelerators	  */
 extern HWND hwndFrame;		/* main window handle			  */
 extern HWND hwndMDIClient;	/* handle of MDI Client window		  */
@@ -103,9 +103,9 @@ extern BOOL CALLBACK __export AboutDlgProc( HWND, UINT, WPARAM, LPARAM );
 extern HWND PASCAL AddFile(char *);
 extern VOID PASCAL ReadFile(HWND);
 extern VOID PASCAL SaveFile(HWND);
-extern BOOL PASCAL ChangeFile(HWND, BOOL);
+extern BOOL PASCAL ChangeFile(HWND);
 extern int PASCAL LoadFile(HWND, char *);
-extern VOID PASCAL PrintFile(HWND, HWND);
+extern VOID PASCAL PrintFile(HWND);
 extern BOOL PASCAL GetInitializationData(HWND);
 extern short CDECL MPError(HWND,WORD,WORD,...);
 extern VOID PASCAL Find(void);

@@ -1,4 +1,4 @@
-// WINMXMZ.H - main header file for WINMAXIM (Open 386MAX 9, wxWindows 1.68E)
+// WINMXMZ.H - main header file for WINMAXIM (Win16 API, formerly MFC)
 //
 // Copyright (C) 1995 Qualitas, Inc.  GNU General Public License version 3.
 // Open 386MAX contributors 2022-2026.
@@ -10,13 +10,7 @@
 
 #define	HID_BASE_RESOURCE	0x00020000UL	// help ids of the dialogs (as MFC)
 
-class CWinmxmzApp : public wxApp
-{
-public:
-	wxFrame *OnInit(void);
-	int OnExit(void);
-};
-
+extern HINSTANCE g_hInstance;
 extern BOOL g_bWin95;		// Windows 95/98
 extern HWND g_hwndDlg;		// dialog for WinHelp
 extern char g_szProfile[];	// MAXIMIZE.INI with path

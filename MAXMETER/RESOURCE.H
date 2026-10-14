@@ -6,7 +6,6 @@
 #define IDM_HELPTS			1004
 #define IDM_ABOUT			1005
 #define IDM_FONT			1006
-#define IDM_CLOSE			1007
 
 #define CONFIGDLGBOX		101
 #define ABOUTDLGBOX         102

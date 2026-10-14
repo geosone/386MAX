@@ -46,9 +46,7 @@ build passes it to all programs, resources and the release media.
 compatibility and jwlink with Microsoft LINK and Windows 3.x VxD
 compatibility. `make` builds them into `linux/bin` first.
 
-The Windows programs of version 9 use
-[wxWindows 1.68E](https://github.com/geosone/wxWindows) (git submodule
-`wxWindows`, the Windows 3.1 compatible version), shared as `WX.DLL`.
+All Windows programs are plain Win16 programs (Windows SDK API, no MFC).
 
 Release media, one build per language:
 

@@ -1,4 +1,4 @@
-// MXDLGS.CPP - WINMAXIM dialogs on wxWindows 1.68E (Open 386MAX 9)
+// MXDLGS.CPP - WINMAXIM dialogs (Win16 API, formerly MFC)
 //
 // Same dialogs and behaviour as the MFC version (Henry Groover, Qualitas
 // 1995-96): the DIALOG resources of WINMXMZ.RC / .GR with MxDialog in
@@ -8,7 +8,6 @@
 // Copyright (C) 1995-96 Qualitas, Inc.  GNU General Public License version 3.
 // Open 386MAX contributors 2022-2026.
 
-#include "wx.h"
 #include <windows.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,15 +22,31 @@
 /////////////////////////////////////////////////////////////////////////////
 // MxDialog
 
-Bool MxDialogBox::OnNativeCommand(int id, int notify)
-{
-	return m_pDlg->OnCommand(id, notify);
-}
+extern HINSTANCE g_hInstance;
 
-// system menu Close / Alt+F4: as Cancel
-Bool MxDialogBox::OnClose(void)
+static MxDialog *pDialogs;		// open dialogs, innermost first
+
+BOOL CALLBACK __export MxDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	m_pDlg->OnCancel();
+	MxDialog *pDlg;
+
+	if (msg == WM_INITDIALOG) {
+		pDlg = (MxDialog *)lParam;
+		pDlg->m_hWnd = hDlg;
+		pDlg->m_pNext = pDialogs;
+		pDialogs = pDlg;
+		return pDlg->OnInitDialog();
+	}
+	for (pDlg = pDialogs; pDlg && pDlg->m_hWnd != hDlg; pDlg = pDlg->m_pNext) ;
+	if (!pDlg) return FALSE;
+
+	switch (msg) {
+	case WM_COMMAND:		// Win16: notification in HIWORD(lParam)
+		return pDlg->OnCommand( (int)wParam, HIWORD( lParam ) );
+	case WM_CLOSE:			// system menu Close / Alt+F4: as Cancel
+		pDlg->OnCancel();
+		return TRUE;
+	}
 	return FALSE;
 }
 
@@ -39,39 +54,28 @@ MxDialog::MxDialog(int nID)
 {
 	m_nID = nID;
 	m_hWnd = NULL;
-	m_pBox = NULL;
-	m_nResult = IDCANCEL;
-	m_bEnded = FALSE;
+	m_pNext = NULL;
 }
 
-int MxDialog::DoModal(wxWindow *pParent)
+int MxDialog::DoModal(HWND hParent)
 {
-	m_pBox = new MxDialogBox(this);
-	if (!m_pBox->LoadNativeDialog( pParent, (char *)MAKEINTRESOURCE( m_nID ), TRUE)) {
-		delete m_pBox;
-		m_pBox = NULL;
-		return -1;
-	}
-	m_hWnd = m_pBox->GetHWND();
-	m_bEnded = FALSE;
-	m_nResult = IDCANCEL;
-	// (Windows has set the focus to the first control after WM_INITDIALOG)
-	OnInitDialog();
-	if (!m_bEnded) {
-		m_pBox->Show(TRUE);		// returns after EndDialog
+	int nResult = ::DialogBoxParam( g_hInstance, MAKEINTRESOURCE( m_nID ), hParent,
+				(DLGPROC)MxDlgProc, (LPARAM)(MxDialog FAR *)this );
+	MxDialog **pp;
+	for (pp = &pDialogs; *pp; pp = &(*pp)->m_pNext) {
+		if (*pp == this) {
+			*pp = m_pNext;
+			break;
+		}
 	}
 	if (g_hwndDlg == m_hWnd) g_hwndDlg = NULL;
-	delete m_pBox;
-	m_pBox = NULL;
 	m_hWnd = NULL;
-	return m_nResult;
+	return nResult;
 }
 
 void MxDialog::EndDialog(int nResult)
 {
-	m_nResult = nResult;
-	m_bEnded = TRUE;
-	if (m_pBox && m_pBox->IsShown()) m_pBox->Show(FALSE);
+	::EndDialog( m_hWnd, nResult );
 }
 
 BOOL MxDialog::OnInitDialog(void)
@@ -367,67 +371,103 @@ BOOL CSelectMode::OnCommand(int id, int notify)
 /////////////////////////////////////////////////////////////////////////////
 // Splash screen
 
-CSplash::CSplash()
+static HBITMAP hbmSplash;
+
+BOOL CALLBACK __export SplashProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	BITMAP bm;
+	PAINTSTRUCT ps;
 
-	m_hbm = ::LoadBitmap( wxTheApp->hInstance, MAKEINTRESOURCE( IDB_STAT_SPLASHSCRN ) );
-	LoadNativeDialog( NULL, (char *)MAKEINTRESOURCE( IDD_STAT_SPLASH ), FALSE );
-	::ShowWindow( ::GetDlgItem( GetHWND(), IDC_STAT_SPLASHBMP ), SW_HIDE );
-	if (m_hbm && ::GetObject( m_hbm, sizeof( bm ), &bm )) {
-		::MoveWindow( GetHWND(), 0, 0, bm.bmWidth, bm.bmHeight, FALSE );
+	switch (msg) {
+	case WM_INITDIALOG:
+		::ShowWindow( ::GetDlgItem( hWnd, IDC_STAT_SPLASHBMP ), SW_HIDE );
+		if (hbmSplash && ::GetObject( hbmSplash, sizeof( bm ), &bm )) {
+			::MoveWindow( hWnd, 0, 0, bm.bmWidth, bm.bmHeight, FALSE );
+		}
+		CenterDialog( hWnd );
+		return TRUE;
+
+	case WM_PAINT:
+		::BeginPaint( hWnd, &ps );
+		if (hbmSplash) {
+			HDC hdcMem = ::CreateCompatibleDC( ps.hdc );
+			if (hdcMem) {
+				::GetObject( hbmSplash, sizeof( bm ), &bm );
+				HBITMAP hOld = (HBITMAP)::SelectObject( hdcMem, hbmSplash );
+				::BitBlt( ps.hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY );
+				::SelectObject( hdcMem, hOld );
+				::DeleteDC( hdcMem );
+			}
+		}
+		::EndPaint( hWnd, &ps );
+		return TRUE;
 	}
-	CenterDialog( GetHWND() );
-	Show( TRUE );
-	::UpdateWindow( GetHWND() );
+	return FALSE;
 }
 
-CSplash::~CSplash()
+HWND SplashCreate(void)
 {
-	if (m_hbm) ::DeleteObject( m_hbm );
+	hbmSplash = ::LoadBitmap( g_hInstance, MAKEINTRESOURCE( IDB_STAT_SPLASHSCRN ) );
+	HWND hWnd = ::CreateDialog( g_hInstance, MAKEINTRESOURCE( IDD_STAT_SPLASH ), NULL,
+				(DLGPROC)SplashProc );
+	if (hWnd) {
+		::ShowWindow( hWnd, SW_SHOW );
+		::UpdateWindow( hWnd );
+	}
+	return hWnd;
 }
 
-void CSplash::OnPaint(void)
+void SplashDestroy(HWND hWnd)
 {
-	if (!m_hbm || !paintHDC) return;
-
-	BITMAP bm;
-	HDC hdcMem = ::CreateCompatibleDC( paintHDC );
-	if (!hdcMem) return;
-	::GetObject( m_hbm, sizeof( bm ), &bm );
-	HBITMAP hOld = (HBITMAP)::SelectObject( hdcMem, m_hbm );
-	::BitBlt( paintHDC, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY );
-	::SelectObject( hdcMem, hOld );
-	::DeleteDC( hdcMem );
+	if (hWnd) ::DestroyWindow( hWnd );
+	if (hbmSplash) ::DeleteObject( hbmSplash );
+	hbmSplash = NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // Blue screen behind the summary
 
-CBlue::CBlue()
+BOOL CALLBACK __export BlueProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	LoadNativeDialog( NULL, (char *)MAKEINTRESOURCE( IDD_STAT_BLUESCREEN ), FALSE );
-	::MoveWindow( GetHWND(), 0, 0, ::GetSystemMetrics( SM_CXSCREEN ),
-			::GetSystemMetrics( SM_CYSCREEN ), TRUE );
-	Show( TRUE );
-	::UpdateWindow( GetHWND() );
-}
-
-void CBlue::OnPaint(void)
-{
+	PAINTSTRUCT ps;
 	RECT rc;
 	int i, xInc, yInc;
 
-	if (!paintHDC) return;
-	::GetClientRect( GetHWND(), &rc );
-	xInc = (rc.right - rc.left) / 10;
-	yInc = (rc.bottom - rc.top) / 10;
+	switch (msg) {
+	case WM_INITDIALOG:
+		::MoveWindow( hWnd, 0, 0, ::GetSystemMetrics( SM_CXSCREEN ),
+				::GetSystemMetrics( SM_CYSCREEN ), TRUE );
+		return TRUE;
 
-	// Six nested rectangles, lighter towards the middle
-	for (i = 0; i < 6; i++, ::InflateRect( &rc, -xInc, -yInc )) {
-		HBRUSH hbr = ::CreateSolidBrush( RGB( 0, 10 + i * 4, 127 + i + 16 ) );
-		if (!hbr) continue;
-		::FillRect( paintHDC, &rc, hbr );
-		::DeleteObject( hbr );
-	} // for all colors
+	case WM_ERASEBKGND:
+		return TRUE;		// WM_PAINT covers all of it
+
+	case WM_PAINT:
+		::BeginPaint( hWnd, &ps );
+		::GetClientRect( hWnd, &rc );
+		xInc = (rc.right - rc.left) / 10;
+		yInc = (rc.bottom - rc.top) / 10;
+
+		// Six nested rectangles, lighter towards the middle
+		for (i = 0; i < 6; i++, ::InflateRect( &rc, -xInc, -yInc )) {
+			HBRUSH hbr = ::CreateSolidBrush( RGB( 0, 10 + i * 4, 127 + i + 16 ) );
+			if (!hbr) continue;
+			::FillRect( ps.hdc, &rc, hbr );
+			::DeleteObject( hbr );
+		} // for all colors
+		::EndPaint( hWnd, &ps );
+		return TRUE;
+	}
+	return FALSE;
+}
+
+HWND BlueCreate(void)
+{
+	HWND hWnd = ::CreateDialog( g_hInstance, MAKEINTRESOURCE( IDD_STAT_BLUESCREEN ), NULL,
+				(DLGPROC)BlueProc );
+	if (hWnd) {
+		::ShowWindow( hWnd, SW_SHOW );
+		::UpdateWindow( hWnd );
+	}
+	return hWnd;
 }

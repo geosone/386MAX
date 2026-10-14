@@ -43,8 +43,8 @@
 #define IDM_SEARCHPREV                  3003
 #define IDM_WINDOWTILE                  4001
 #define IDM_WINDOWCASCADE               4002
-#define IDM_WINDOWCLOSEALL              4010
-#define IDM_WINDOWICONS                 4003
+#define IDM_WINDOWCLOSEALL              4003
+#define IDM_WINDOWICONS                 4004
 #define IDM_WINDOWCHILD                 4100
 #define IDM_HELPHELP                    5001
 #define IDM_HELPSEARCH			5002

@@ -8,8 +8,3 @@
 	url = https://github.com/geosone/jwlink.git
 	branch = 386max
 	ignore = dirty
-[submodule "wxWindows"]
-	path = wxWindows
-	url = https://github.com/geosone/wxWindows.git
-	branch = main
-	ignore = dirty

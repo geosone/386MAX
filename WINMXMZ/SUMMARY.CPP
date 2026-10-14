@@ -1,4 +1,4 @@
-// SUMMARY.CPP - Maximize summary dialog (Open 386MAX 9, wxWindows 1.68E)
+// SUMMARY.CPP - Maximize summary dialog (Win16 API, formerly MFC)
 //
 // Same contents as the MFC version (Henry Groover, Qualitas 1995-96):
 // what Maximize moved into high DOS memory and what stayed low, from
@@ -7,7 +7,6 @@
 // Copyright (C) 1995-96 Qualitas, Inc.  GNU General Public License version 3.
 // Open 386MAX contributors 2022-2026.
 
-#include "wx.h"
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -37,15 +37,10 @@
 #                 Microsoft C conventions (QUILIB, TEXT/*.LIB)
 #   MSHINST       programs that use _hInstance of the Microsoft C start up
 #                 code (linux/mk/owhinst.c; WinMain becomes owc_WinMain)
-#   WX            1: wxWindows 1.68E (submodule wxWindows): large model C++
-#                 with the library's options (no -ecc/-zp, no owwin.h),
-#                 resource script includes wx.rc; linked against WX.DLL
-#                 (wxdll.lib, wxdllmain.obj; WX.DLL goes to build/bin)
-#   WXSTATIC      1: wxWindows linked into the program (wx.lib) instead
-#                 of WX.DLL (the installer, which runs before it exists)
 #   CCONV         calling convention (default -ecc, Microsoft C's cdecl);
-#                 empty: OpenWatcom's, for libraries of the wxWindows
-#                 programs (STATUTIL)
+#                 empty: OpenWatcom's, for C++ programs (WINMXMZ: the C++
+#                 run time needs it) and their libraries (STATUTIL); headers
+#                 of -ecc libraries mark their functions __cdecl (QUILIB)
 #   LIBRARIES     static libraries to build (build/$(PROJ)/<lib>)
 #   <lib>_OBJS    their objects
 #   <lib>_EXTRA   further objects made elsewhere (paths)
@@ -96,35 +91,8 @@ endif
 ifneq ($(MSHINST),)
 CDEFS   += WinMain=owc_WinMain _hInstance=owc_hInstance
 endif
-ifeq ($(WX),1)
-# as wxWindows/GNUmakefile builds the library: calling convention, packing
-# and data threshold must match
-WXDIR   := $(ROOT)/wxWindows
-WXRTL   := $(WATCOM)/lib286/win/plibl.lib commdlg mmsystem shell ddeml ctl3dv2
-CMODEL  := l
-INCDIRS += $(WXDIR)/include/msw $(WXDIR)/include/base $(WXDIR)/contrib/fafa
-ifeq ($(WXSTATIC),1)
-WXLIB   := $(WXDIR)/build/lib/wx.lib
-WXMODE  := -zw
-else
-# the DLL calls the program's functions with its DS: they load their DS
-# (owdll.h), no stack check before that (-s); WinMain, new/delete from
-# wxdllmain.obj (one instance per program)
-WXLIB   := $(WXDIR)/build/lib/wxdll.lib
-WXMAIN  := $(WXDIR)/build/lib/wxdllmain.obj
-WXDLL   := $(WXDIR)/build/dll/WX.DLL
-WXMODE  := -s -fi=$(WXDIR)/src/msw/owdll.h -dWXUSINGDLL
-endif
-CFLAGS  := -bt=windows -ml -zt256 -zq -fr -w1 $(WXMODE) -dwx_msw -dLANG_$(MAXLANG) $(VERDEFS_C) $(foreach d,$(CDEFS),-d$(d)) \
-           -i=$(CINCDIR) $(foreach d,$(INCDIRS) $(OWINC),-i=$(d)) $(CFLAGS_EXTRA)
-RCFLAGS += -i=$(WXDIR)/include/msw -i=$(WXDIR)/contrib/fafa
-# one segment per library module would give more than the 254 segments the
-# Windows loader takes: pack code and far data into 64 KB segments
-WXLINKOPTS := option packcode=65520 option packdata=65520
-else
 CFLAGS  += -fr -fi=$(LX)/mk/owwin.h -i=$(LX)/mk -dLANG_$(MAXLANG) $(VERDEFS_C) $(foreach d,$(CDEFS),-d$(d)) -i=$(CINCDIR) \
            $(foreach d,$(INCDIRS) $(OWINC),-i=$(d)) $(CFLAGS_EXTRA)
-endif
 
 ALLOBJS := $(sort $(foreach p,$(PROGS) $(LIBRARIES),$($(p)_OBJS)))
 srcof    = $(firstword $(foreach d,$(SRCDIRS),$(wildcard $(d)/$(basename $(1)).C $(d)/$(basename $(1)).CPP $(d)/$(basename $(1)).ASM $(d)/$(basename $(1)).c $(d)/$(basename $(1)).cpp)))
@@ -136,25 +104,6 @@ RCSRCS  := $(foreach p,$(PROGS),$($(p)_RC))
 
 all: $(addprefix $(OUT)/,$(LIBRARIES)) $(addprefix $(BINDIR)/,$(PROGS))
 
-ifeq ($(WX),1)
-ifeq ($(WXSTATIC),1)
-$(WXLIB): wxlib-force
-	@:
-.PHONY: wxlib-force
-wxlib-force:
-	$(MAKE) -C $(WXDIR) lib
-else
-# always asked: wxWindows' makefile knows when its DLL is out of date
-$(WXLIB) $(WXMAIN) $(WXDLL): wxdll-force
-	@:
-.PHONY: wxdll-force
-wxdll-force:
-	$(MAKE) -C $(WXDIR) dll
-all: $(BINDIR)/WX.DLL
-$(BINDIR)/WX.DLL: $(WXDLL) | $(BINDIR)
-	cp $< $@
-endif
-endif
 
 define LIBRULE
 $(OUT)/$(1): $(addprefix $(OUT)/,$($(1)_OBJS)) $($(1)_EXTRA)
@@ -176,7 +125,7 @@ $(CINCDIR)/.done: $(MAKEFILE_LIST) $(foreach o,$(ALLOBJS),$(call srcof,$(o))) $(
 	touch $@
 
 define OBJRULE
-$(OUT)/$(1): $(call srcof,$(1)) $(CINCDIR)/.done $(VERSION_FILE) $(LX)/mk/owwin.h $(if $(WX),$(WXLIB)) | $(OUT)
+$(OUT)/$(1): $(call srcof,$(1)) $(CINCDIR)/.done $(VERSION_FILE) $(LX)/mk/owwin.h | $(OUT)
 	$$(if $$(filter %.ASM,$$<),$(JWASM) -q -Zm -Cu -c -DLANG_$(MAXLANG) $(VERDEFS_ASM) $(addprefix -D,$(ASMDEFS)) -Fo$$@ $$(foreach d,$(INCDIRS),-I$$(d)) $$<,\
 	  $$(if $$(filter %.CPP %.cpp,$$<),$(CC_CPP),$(CC_C)) $(CFLAGS) $$($(1)_CFLAGS) -fo=$$@ $$<)
 endef
@@ -235,7 +184,7 @@ $(OUT)/$(1).res: $($(1)_RC) $(CINCDIR)/.done $(VERSION_FILE) $(LX)/tools/rcprep.
 $(OUT)/$(1).lnk: $($(1)_DEF) $($(1)_STUB) $(LX)/tools/def2wlink.py $(if $(filter win32,$(TARGET)),$(addprefix $(OUT)/,$($(1)_OBJS))) | $(OUT)
 	$(PYTHON) $(LX)/tools/def2wlink.py $(if $($(1)_STUB),--stub=$($(1)_STUB)) $$< $(TARGET) $(if $(filter win32,$(TARGET)),$(addprefix $(OUT)/,$($(1)_OBJS))) > $$@
 
-$(OUT)/$(1): $(filter %.LIB %.lib,$($(1)_LIBS)) $(addprefix $(OUT)/,$($(1)_OBJS) $(MSCOBJS) $(if $(filter $(1),$(MSHINST)),OWHINST.OBJ)) $(if $(WX),$(WXLIB) $(WXMAIN)) $(if $(MSCOBJS),$(OUT)/msclib/.done) $(if $($(1)_RC),$(OUT)/$(1).res) $(if $($(1)_DEF),$(OUT)/$(1).lnk)
+$(OUT)/$(1): $(filter %.LIB %.lib,$($(1)_LIBS)) $(addprefix $(OUT)/,$($(1)_OBJS) $(MSCOBJS) $(if $(filter $(1),$(MSHINST)),OWHINST.OBJ)) $(if $(MSCOBJS),$(OUT)/msclib/.done) $(if $($(1)_RC),$(OUT)/$(1).res) $(if $($(1)_DEF),$(OUT)/$(1).lnk)
 	cd $(OUT) && $(or $($(1)_LINKER),$(WLINK)) option quiet \
 	  $$(if $$(shell grep -q '^# kind dll' $(OUT)/$(1).lnk 2>/dev/null && echo dll),\
 	    $(if $(filter win32,$(TARGET)),format windows nt dll,format windows dll),\
@@ -243,12 +192,12 @@ $(OUT)/$(1): $(filter %.LIB %.lib,$($(1)_LIBS)) $(addprefix $(OUT)/,$($(1)_OBJS)
 	  name $(1) \
 	  $(if $(filter win32,$(TARGET)),libpath $(WATCOM)/lib386/nt libpath $(WATCOM)/lib386 library kernel32 library user32 library gdi32,\
 	    libpath $(WATCOM)/lib286/win libpath $(WATCOM)/lib286 library windows option nocaseexact) \
-	  $(foreach o,$($(1)_FIRST) $(WXMAIN) $($(1)_OBJS) $(MSCOBJS) $(if $(filter $(1),$(MSHINST)),OWHINST.OBJ),file $(o)) $(if $(MSCOBJS),libpath msclib) \
-	  $(foreach l,$($(1)_LIBS) $(WXLIB) $(WXRTL),library $(l)) \
+	  $(foreach o,$($(1)_FIRST) $($(1)_OBJS) $(MSCOBJS) $(if $(filter $(1),$(MSHINST)),OWHINST.OBJ),file $(o)) $(if $(MSCOBJS),libpath msclib) \
+	  $(foreach l,$($(1)_LIBS),library $(l)) \
 	  $(if $(filter win32,$(TARGET)),,option stack=8k option version=3.10) \
 	  $(if $($(1)_DEF),@$(1).lnk) \
 	  $(if $($(1)_RC),option resource=$(1).res) \
-	  option map=$(1).map $($(1)_LINKOPTS) $(WXLINKOPTS)
+	  option map=$(1).map $($(1)_LINKOPTS)
 
 $(BINDIR)/$(1): $(OUT)/$(1) | $(BINDIR)
 	cp $$< $$@

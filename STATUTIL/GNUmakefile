@@ -5,7 +5,7 @@ PROJ     := STATUTIL
 ROOT     := $(abspath ..)
 CMODEL   := l
 CPACK    := 1
-# called from WINMAXIM, a wxWindows program: OpenWatcom's convention
+# called from WINMAXIM (C++): OpenWatcom's convention
 CCONV    :=
 INCDIRS  := . ../INCLUDE ../INC
 CDEFS    := _WIN16

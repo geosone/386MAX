@@ -1,9 +1,8 @@
-// MXDLGS.H - WINMAXIM dialogs on wxWindows 1.68E (Open 386MAX 9)
+// MXDLGS.H - WINMAXIM dialogs (Win16 API, formerly MFC)
 //
-// The dialogs are the DIALOG resources of WINMXMZ.RC / WINMXMZ.GR, loaded
-// by wxDialogBox::LoadNativeDialog; MxDialog takes the place of MFC's
-// CDialog (DoModal, EndDialog, OnInitDialog, OnOK, OnCancel, data
-// exchange).
+// The dialogs are the DIALOG resources of WINMXMZ.RC / WINMXMZ.GR;
+// MxDialog takes the place of MFC's CDialog (DoModal, EndDialog,
+// OnInitDialog, OnOK, OnCancel, data exchange) on DialogBoxParam.
 //
 // Copyright (C) 1995 Qualitas, Inc.  GNU General Public License version 3.
 // Open 386MAX contributors 2022-2026.
@@ -11,25 +10,13 @@
 #ifndef _MXDLGS_INCLUDED
 #define	_MXDLGS_INCLUDED
 
-class MxDialog;
-
-// the wxWindows window of a dialog: passes commands to the MxDialog
-class MxDialogBox : public wxDialogBox
-{
-public:
-	MxDialogBox(MxDialog *pDlg) { m_pDlg = pDlg; }
-	Bool OnNativeCommand(int id, int notify);
-	Bool OnClose(void);
-	MxDialog *m_pDlg;
-};
-
 class MxDialog
 {
 public:
 	MxDialog(int nID);
 	virtual ~MxDialog() {}
 
-	int DoModal(wxWindow *pParent = NULL);	// IDOK, IDCANCEL, ...
+	int DoModal(HWND hParent = NULL);	// IDOK, IDCANCEL, ...
 	void EndDialog(int nResult);
 
 	virtual BOOL OnInitDialog(void);
@@ -47,9 +34,7 @@ public:
 
 	HWND m_hWnd;
 	int m_nID;		// IDD_...
-	int m_nResult;
-	BOOL m_bEnded;
-	MxDialogBox *m_pBox;
+	MxDialog *m_pNext;	// open dialogs (MxDlgProc)
 };
 
 class CCustomOpts : public MxDialog
@@ -117,23 +102,11 @@ public:
 };
 
 // Splash screen (bitmap IDB_STAT_SPLASHSCRN) while starting
-class CSplash : public wxDialogBox
-{
-public:
-	CSplash();
-	~CSplash();
-	void OnPaint(void);
-	HBITMAP m_hbm;
-};
+HWND SplashCreate(void);
+void SplashDestroy(HWND hWnd);
 
 // Blue background of the summary
-class CBlue : public wxDialogBox
-{
-public:
-	CBlue();
-	void OnPaint(void);
-	Bool OnClose(void) { return FALSE; }
-};
+HWND BlueCreate(void);
 
 void CenterDialog(HWND hWnd);
 

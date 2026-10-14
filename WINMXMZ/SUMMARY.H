@@ -1,4 +1,4 @@
-// SUMMARY.H - Maximize complete summary dialog (Open 386MAX 9, wxWindows)
+// SUMMARY.H - Maximize complete summary dialog (Win16 API, formerly MFC)
 //
 // Copyright (C) 1995 Qualitas, Inc.  GNU General Public License version 3.
 // Open 386MAX contributors 2022-2026.
