@@ -35,7 +35,7 @@ endif
 JWASM_SRC  := $(wildcard linux/jwasm/src/*.c linux/jwasm/src/H/*.h)
 JWLINK_SRC := $(shell find linux/jwlink -name '*.[ch]' -not -path '*/build/*')
 
-.PHONY: all tools $(PROJECTS) $(NEWPROJECTS) $(WINPROJECTS) clean distclean
+.PHONY: all tools wxwin $(PROJECTS) $(NEWPROJECTS) $(WINPROJECTS) clean distclean
 
 all: $(PROJECTS) $(NEWPROJECTS) $(WINPROJECTS)
 
@@ -56,6 +56,11 @@ linux/bin/jwlink: $(JWLINK_SRC) linux/jwlink/GccUnix.mak
 $(PROJECTS) $(NEWPROJECTS) $(WINPROJECTS): tools
 	$(MAKE) -C $@
 
+# wxWindows 1.68E (submodule wxWindows, OpenWatcom 16-bit Windows): the
+# class library of the 9.x Windows programs -> wxWindows/build/lib/wx.lib
+wxwin:
+	$(MAKE) -C wxWindows lib
+
 # libraries used by other projects
 ASQ: QUILIB ASQENG HELPENG VERLIB
 QSHELL: QUILIB HELPENG
@@ -72,4 +77,4 @@ clean:
 	$(MAKE) -C linux/mfc clean
 
 distclean:
-	rm -rf build linux/bin linux/jwasm/build linux/jwlink/build
+	rm -rf build linux/bin linux/jwasm/build linux/jwlink/build wxWindows/build
