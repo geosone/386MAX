@@ -37,6 +37,9 @@
 #                 Microsoft C conventions (QUILIB, TEXT/*.LIB)
 #   MSHINST       programs that use _hInstance of the Microsoft C start up
 #                 code (linux/mk/owhinst.c; WinMain becomes owc_WinMain)
+#   WX            1: wxWindows 1.68E (submodule wxWindows, wxWindows/build/
+#                 lib/wx.lib): large model C++ with the library's options
+#                 (no -ecc/-zp, no owwin.h), resource script includes wx.rc
 #   MFC           1: Microsoft Foundation Classes 2.5 (build/mfc, made by
 #                 linux/mfc: headers, owmfc.h, -zf, LAFXCW.LIB; large model).
 #                 All modules then use OpenWatcom's convention (no -ecc);
@@ -103,8 +106,24 @@ INCDIRS += $(MFCOUT)/include $(LX)/mk/owwin16
 CPPFLAGS_MFC := -zf
 CFLAGS  := $(filter-out -ecc,$(CFLAGS))
 endif
+ifeq ($(WX),1)
+# as wxWindows/GNUmakefile builds the library: calling convention, packing
+# and data threshold must match
+WXDIR   := $(ROOT)/wxWindows
+WXLIB   := $(WXDIR)/build/lib/wx.lib
+WXRTL   := $(WATCOM)/lib286/win/plibl.lib commdlg mmsystem shell ddeml ctl3dv2
+CMODEL  := l
+INCDIRS += $(WXDIR)/include/msw $(WXDIR)/include/base $(WXDIR)/contrib/fafa
+CFLAGS  := -bt=windows -zw -ml -zt256 -zq -fr -w1 -dwx_msw -dLANG_$(MAXLANG) $(VERDEFS_C) $(foreach d,$(CDEFS),-d$(d)) \
+           -i=$(CINCDIR) $(foreach d,$(INCDIRS) $(OWINC),-i=$(d)) $(CFLAGS_EXTRA)
+RCFLAGS += -i=$(WXDIR)/include/msw -i=$(WXDIR)/contrib/fafa
+# one segment per library module would give more than the 254 segments the
+# Windows loader takes: pack code and far data into 64 KB segments
+WXLINKOPTS := option packcode=65520 option packdata=65520
+else
 CFLAGS  += -fr -fi=$(LX)/mk/owwin.h -i=$(LX)/mk -dLANG_$(MAXLANG) $(VERDEFS_C) $(foreach d,$(CDEFS),-d$(d)) -i=$(CINCDIR) \
            $(foreach d,$(INCDIRS) $(OWINC),-i=$(d)) $(CFLAGS_EXTRA)
+endif
 
 ALLOBJS := $(sort $(foreach p,$(PROGS) $(LIBRARIES),$($(p)_OBJS)))
 srcof    = $(firstword $(foreach d,$(SRCDIRS),$(wildcard $(d)/$(basename $(1)).C $(d)/$(basename $(1)).CPP $(d)/$(basename $(1)).ASM $(d)/$(basename $(1)).c $(d)/$(basename $(1)).cpp)))
@@ -119,6 +138,10 @@ all: $(addprefix $(OUT)/,$(LIBRARIES)) $(addprefix $(BINDIR)/,$(PROGS))
 ifeq ($(MFC),1)
 $(MFCLIB):
 	$(MAKE) -C $(LX)/mfc
+endif
+ifeq ($(WX),1)
+$(WXLIB):
+	$(MAKE) -C $(WXDIR) lib
 endif
 
 define LIBRULE
@@ -141,7 +164,7 @@ $(CINCDIR)/.done: $(MAKEFILE_LIST) $(foreach o,$(ALLOBJS),$(call srcof,$(o))) $(
 	touch $@
 
 define OBJRULE
-$(OUT)/$(1): $(call srcof,$(1)) $(CINCDIR)/.done $(VERSION_FILE) $(LX)/mk/owwin.h $(if $(MFC),$(LX)/mk/owmfc.h $(MFCLIB)) | $(OUT)
+$(OUT)/$(1): $(call srcof,$(1)) $(CINCDIR)/.done $(VERSION_FILE) $(LX)/mk/owwin.h $(if $(MFC),$(LX)/mk/owmfc.h $(MFCLIB)) $(if $(WX),$(WXLIB)) | $(OUT)
 	$$(if $$(filter %.ASM,$$<),$(JWASM) -q -Zm -Cu -c -DLANG_$(MAXLANG) $(VERDEFS_ASM) $(addprefix -D,$(ASMDEFS)) -Fo$$@ $$(foreach d,$(INCDIRS),-I$$(d)) $$<,\
 	  $$(if $$(filter %.CPP %.cpp,$$<),$(CC_CPP) $(CPPFLAGS_MFC),$(CC_C)) $(CFLAGS) $$($(1)_CFLAGS) -fo=$$@ $$<)
 endef
@@ -209,11 +232,11 @@ $(OUT)/$(1): $(filter %.LIB %.lib,$($(1)_LIBS)) $(addprefix $(OUT)/,$($(1)_OBJS)
 	  $(if $(filter win32,$(TARGET)),libpath $(WATCOM)/lib386/nt libpath $(WATCOM)/lib386 library kernel32 library user32 library gdi32,\
 	    libpath $(WATCOM)/lib286/win libpath $(WATCOM)/lib286 library windows option nocaseexact) \
 	  $(foreach o,$($(1)_FIRST) $($(1)_OBJS) $(MSCOBJS) $(if $(filter $(1),$(MSHINST)),OWHINST.OBJ),file $(o)) $(if $(MSCOBJS),libpath msclib) \
-	  $(foreach l,$($(1)_LIBS) $(MFCLIB) $(MFCRTL),library $(l)) \
+	  $(foreach l,$($(1)_LIBS) $(MFCLIB) $(MFCRTL) $(WXLIB) $(WXRTL),library $(l)) \
 	  $(if $(filter win32,$(TARGET)),,option stack=8k option version=3.10) \
 	  $(if $($(1)_DEF),@$(1).lnk) \
 	  $(if $($(1)_RC),option resource=$(1).res) \
-	  option map=$(1).map $($(1)_LINKOPTS)
+	  option map=$(1).map $($(1)_LINKOPTS) $(WXLINKOPTS)
 
 $(BINDIR)/$(1): $(OUT)/$(1) | $(BINDIR)
 	cp $$< $$@
