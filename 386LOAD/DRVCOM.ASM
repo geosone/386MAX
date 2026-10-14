@@ -4060,6 +4060,72 @@ SES_090:
 	 assume  ds:nothing,es:nothing,ss:nothing
 
 SET_END_SEG endp		; End SET_END_SEG
+	 NPPROC  FDOS_LASTHDR -- FreeDOS: End Our Device Header Chain
+	 assume  ds:nothing,es:nothing,ss:nothing
+COMMENT|
+
+The FreeDOS kernel allocates the memory of a driver file only at the
+header whose next offset is -1, and it ends the file at a header that
+does not stay installed (config.c, init_device).  Under MS-DOS our next
+header cuts the loader headers out of the device chain (DECHAIN_LOADER)
+and ends as a block device with no units (DEV_CLEANUP): on FreeDOS the
+memory was then never allocated, our linked header was overwritten by
+the FILES table and the device chain broke (the system hung after
+CONFIG.SYS).
+
+So on the FreeDOS kernel, when the last target driver has been
+initialized, the current header ends the file: DOS links it and
+allocates up to the ending address we return.  It keeps passing all
+calls to the target driver, through the resident handlers in the LSEG
+(as DEV_CLEANUP sets them up for MS-DOS).
+
+INT 21h AX=33FFh returns the kernel name in DX:AX on FreeDOS (and on
+Enhanced DR-DOS, which answers AX=4452h as well).
+
+|
+
+	 REGSAVE <ax,dx,si,ds>	; Save registers
+
+	 mov	 ax,4452h	; DR DOS version call
+	 stc			; CF=0 on return
+	 int	 21h		; AX = DR DOS version code
+	 jnc	 short FDOS_LASTHDR_EXIT ; Jump if DR DOS (the MS-DOS way)
+
+	 mov	 ax,33FFh	; FreeDOS: kernel name
+	 sub	 dx,dx		; (unchanged elsewhere)
+	 int	 21h		; DX:AX ==> name
+	 and	 dx,dx		; Izit the FreeDOS kernel?
+	 jz	 short FDOS_LASTHDR_EXIT ; Jump if not
+
+	 lds	 si,DH_PTR	; Get pointer to our current header
+	 assume  ds:RGROUP	; Tell assembler
+
+	 mov	 RGROUP:[si].DH_NEXT.VOFF,-1 ; Last device in this file
+	 mov	 RGROUP:[si].DH_NEXT.VSEG,-1 ; ...
+
+	 mov	 ax,EXEC_INTMAC ; Get pseudo-interrupt MAC segment
+	 inc	 ax		; Account for MAC
+
+; Fixup header strategy jump vector to point to the resident handler
+
+	 lea	 si,LOW_STRA_COM ; Get pointer to resident jump vector
+	 mov	 RGROUP:[si].FJ_ADDR.VSEG,ax
+	 mov	 RGROUP:[si].FJ_ADDR.VOFF,offset PGROUP:RES_STRA_COM
+
+; Fixup header interrupt jump vector to point to the resident handler
+
+	 lea	 si,LOW_INTR_COM ; Get pointer to resident jump vector
+	 mov	 RGROUP:[si].FJ_ADDR.VSEG,ax
+	 mov	 RGROUP:[si].FJ_ADDR.VOFF,offset PGROUP:RES_INTR_COM
+FDOS_LASTHDR_EXIT:
+	 REGREST <ds,si,dx,ax>	; Restore
+	 assume  ds:nothing	; Tell assembler
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,ss:nothing
+
+FDOS_LASTHDR endp		; End FDOS_LASTHDR procedure
 	 NPPROC  INITIAL -- Device Driver Initialization
 	 assume  ds:RGROUP,es:nothing,ss:nothing
 COMMENT|
@@ -4102,6 +4168,8 @@ Entry:
 	 jne	 short @F	; Yep, keep going
 
 	 or	 DRV_FLAG,@DF_LAST ; Flag its the last device to install
+
+	 call	 FDOS_LASTHDR	; FreeDOS kernel: our header is the last one
 @@:
 	 push	 cs		; Set DS to ..
 	 pop	 ds		; point to PGROUP for get size
