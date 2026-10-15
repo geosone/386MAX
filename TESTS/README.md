@@ -18,6 +18,11 @@ check (OK / FAIL) and ends with errorlevel 0 when all checks passed.
 | DPMI | STKFLT  | a 32-bit client with an invalid stack calls INT 21h (must not reset the machine) |
 | DPMI | MOUSE12, MOUSE18 | INT 33h 0Ch/12h/18h/19h handlers (need a mouse driver) |
 | QPI  | QPITEST | QEMM programming interface (INT 2Fh D201h, INT 67h 3Fh) |
+| QPI  | QPITRAP | port trapping with callback (1A06h-1A0Ah), default callback, 1A05h |
+| QPI  | QPIMISC | 1B07h, 1E03h/1E04h, 22h (DESQview/X pool block), 23h (VCPI quota), 28h, 2Ah |
+| QPI  | QPICTX  | mapping contexts 04h-08h, 0Ah, 0Bh (EMS handle), 0Fh (DESQview's per-task address spaces) |
+| QPI  | QPIIRQ  | IRQ calldowns 1C00h-1C04h |
+| QPI  | QPITIMER | timer channel 0 virtualization 15h |
 
 `MAX.LST` lists the tests with what they need (`needs=xms,ems,dpmi,...`)
 and their timeout; `INC/TESTLIB.INC` has the output and counting macros.
@@ -68,7 +73,7 @@ accept their behaviour, and the majority of them is the target:
 | XMS | MS HIMEM.SYS, HimemX, Jemm | all |
 | EMS, VCPI, VDS | MS EMM386.EXE, Jemm386/JemmEx | games, DOS extenders (DOS/4GW, CWSDPMI over VCPI) |
 | DPMI | CWSDPMI, HDPMI, the Windows 3.x/9x DOS box | DJGPP and Watcom games, HX programs |
-| QPI (QEMM API) | QEMM, Jemm's QPIEMU | SBEMU, VSBHDA (port trapping for Sound Blaster emulation) |
+| QPI (QEMM API) | QEMM, Jemm's QPIEMU | SBEMU, VSBHDA (port trapping for Sound Blaster emulation), DESQview-like multitaskers (Open MaxView), programs written for QEMM |
 
 A deviation of 386MAX from the majority of the reference columns in the
 matrix counts as an error.

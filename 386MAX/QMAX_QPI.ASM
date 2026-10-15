@@ -87,6 +87,7 @@ ECODE	 segment use16 dword public 'ecode' ; Start ECODE segment
 	 extrn	 FVCPI_COUNT:far
 	 extrn	 FWRAP_DISABLE:far
 	 extrn	 FSET_PPL0STK:far
+	 extrn	 QPI_TMRSTUB:near
 
 ECODE	 ends			; End ECODE segment
 
@@ -126,6 +127,7 @@ EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 extrn	 PLINKBASE:dword
 	 extrn	 NEWIMR1:word
 	 extrn	 NEWIMR2:word
+	 extrn	 PCHECKER_OUT:dword
 
 	 public  QPI_CDFLG
 QPI_CDFLG db	 0		; IRQ calldowns enabled (QPI 1Ch, read in INTCOM)
@@ -154,6 +156,14 @@ QPI_DRVNAME db	 '386MAX.SYS'   ; Driver file name, for 1E04h
 QPI_DVX  dd	 0		; 22h:  DV/X shared pool control block (Seg:Off)
 QPI_QUOTA dd	 0		; 23h:  VCPI quota DWORD (Seg:Off), 0 = unlimited
 QPI_W28  dw	 0		; 28h:  EMM import structure word
+
+QPI_CTXON db	 0		; 08h:  1 = a page table other than ours active
+QPI_TMRBUF dd	 0		; 15h:  linear address of the divisor WORD
+QPI_TMRON db	 0		; 15h:  1 = ports 40h/43h trapped for it
+QPI_TMRMODE db	 3		; ...  channel 0 access mode (3 = LSB/MSB)
+QPI_TMRIDX db	 0		; ...  next byte of the WORD (0 = low)
+QPI_TMRIOP db	 2 dup (0)	; ...  1 = IOPM bit of 40h/43h was set already
+QPI_TMROLD dw	 2 dup (?)	; ...  previous CHECKER_OUT entries of 40h/43h
 
 QPI_CDTAB dd	 8 dup (0)	; 1C01h:  V86 handlers of IRQ0-7
 	 dd	 8 dup (0)	; 1C03h:  ...		  IRQ8-15
@@ -661,6 +671,83 @@ EBX	 =	 linear address
 QPI_SEG2LIN endp		; End QPI_SEG2LIN procedure
 
 
+	 FPPROC  QPI_TMROUT -- Record An OUT To Port 40h/43h (QPI 15h)
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:PGROUP
+COMMENT|
+
+Called from QPI_TMRSTUB (QMAX_IOP), the CHECKER_OUT entry of ports 40h
+and 43h while QPI 15h is on.  See QPI_API_TIMER.
+
+On entry:
+
+DX	 =	 I/O port # (40h or 43h)
+AL	 =	 value written (the low byte for word/dword OUTs)
+
+On exit:
+
+BX	 =	 offset in PGROUP of the port's previous CHECKER_OUT handler
+All other registers preserved.
+
+|
+
+	 REGSAVE <eax,edi,es,fs> ; Save registers
+
+	 mov	 es,SEL_DSJG3	; Get JGROUP data selector at PL3
+	 assume  es:JGROUP	; Tell the assembler about it
+
+	 cmp	 dx,43h 	; Izit the mode port?
+	 jne	 short QPI_TMROUT_40 ; Jump if not
+
+	 mov	 bx,QPI_TMROLD[2] ; Its previous handler
+
+	 test	 al,0C0h	; Izit channel 0?
+	 jnz	 short QPI_TMROUT_EXIT ; Jump if not
+
+	 mov	 ah,al		; Copy the control word
+	 shr	 ah,4		; Shift down the access mode
+	 and	 ah,03h 	; Isolate it
+	 jz	 short QPI_TMROUT_EXIT ; Jump if latch command
+
+	 mov	 QPI_TMRMODE,ah ; Save the access mode
+	 mov	 QPI_TMRIDX,0	; Low byte next
+
+	 cmp	 ah,02h 	; Izit MSB only?
+	 jne	 short QPI_TMROUT_EXIT ; Jump if not
+
+	 mov	 QPI_TMRIDX,1	; High byte next
+
+	 jmp	 short QPI_TMROUT_EXIT ; Join common exit code
+
+QPI_TMROUT_40:
+	 mov	 bx,QPI_TMROLD[0] ; Its previous handler
+
+	 mov	 edi,QPI_TMRBUF ; Get the WORD's linear address
+
+	 push	 ax		; Save the value
+	 movzx	 eax,QPI_TMRIDX ; Get the byte index
+	 add	 edi,eax	; Plus it
+	 pop	 ax		; Restore
+
+	 mov	 fs,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  fs:AGROUP	; Tell the assembler about it
+
+	 mov	 AGROUP:[edi],al ; Save the byte
+
+	 cmp	 QPI_TMRMODE,03h ; Izit LSB/MSB?
+	 jne	 short QPI_TMROUT_EXIT ; Jump if not
+
+	 xor	 QPI_TMRIDX,1	; Next byte
+QPI_TMROUT_EXIT:
+	 REGREST <fs,es,edi,eax> ; Restore
+	 assume  es:nothing,fs:nothing ; Tell the assembler about it
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_TMROUT endp 		; End QPI_TMROUT procedure
+
+
 	 FPPROC  QPI_CDVEC -- Vector Of An IRQ Calldown
 	 assume  ds:AGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
@@ -908,6 +995,12 @@ Caller's CF =	 0 if successful
 
 	 cmp	 ah,1Ch 	; Izit IRQ calldowns?
 	 je	 near ptr QPI_API_CD ; Jump if so
+
+	 cmp	 ah,15h 	; Izit timer channel 0 virtualization?
+	 je	 near ptr QPI_API_TIMER ; Jump if so
+
+	 cmp	 ax,0FF00h	; Izit our own context check (QMAX_OVR)?
+	 je	 near ptr QPI_API_CTXCHK ; Jump if so
 
 	 cmp	 ah,22h 	; Izit DV/X shared pool?
 	 je	 near ptr QPI_API_DVX ; Jump if so
@@ -1880,6 +1973,9 @@ S32  rep movs	 <AGROUP:[edi].EDD,PGROUP:[esi].EDD> ; Copy them
 	 pop	 es		; Restore
 	 assume  es:JGROUP	; Tell the assembler about it
 
+	 cmp	 edx,PaDIR2	; Izit our own table?
+	 setne	 es:QPI_CTXON	; Remember if not (Windows is refused then)
+
 	 mov	 eax,edx	; Get the new table's physical address
 	 or	 ax,@PTE_URP	; Present, writable, user
 	 mov	 edi,OFFCR3	; Get offset of the page directory
@@ -2175,6 +2271,106 @@ S32  rep stos	 AGROUP:[edi].EDD ; Clear it
 	 assume  es:JGROUP	; Tell the assembler about it
 
 	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 15:  Timer channel 0 virtualization:  ES:BX ==> WORD (0:0 = off)
+; As QEMM 97 (DESQview emulates a program's tick rate with it):  while
+; on, OUTs to 40h/43h from VM are recorded (QPI_TMROUT, through the
+; CHECKER_OUT entries of the ports) and still go to the hardware:  a
+; channel 0 mode set (43h) sets the access mode and the byte index, each
+; byte written to 40h goes to the WORD at the index (toggled in LSB/MSB
+; mode), so the WORD holds the divisor the program wrote.  Off keeps
+; the address; the mode and index are never reset.
+
+QPI_API_TIMER:
+	 movzx	 eax,[ebp].INTXX_ES ; Get caller's ES
+	 shl	 eax,4-0	; Convert from paras to bytes
+	 movzx	 edx,[ebp].INTXX_EBX.ELO ; Get caller's BX
+	 add	 eax,edx	; Linear address of the WORD
+
+	 mov	 dx,[ebp].INTXX_ES ; Get caller's ES
+	 or	 dx,[ebp].INTXX_EBX.ELO ; Izit 0:0?
+	 jz	 short QPI_API_TIMER_OFF ; Jump if so
+
+	 mov	 es:QPI_TMRBUF,eax ; Save the address
+
+	 cmp	 es:QPI_TMRON,0 ; Izit on already?
+	 jne	 near ptr QPI_API_OK ; Jump if so
+
+	 pushf			; Save flags
+	 cli			; Disallow interrupts
+
+	 mov	 edi,PCHECKER_OUT ; Get offset in PGROUP of CHECKER_OUT
+	 mov	 ax,PGROUP:[edi+40h*2].ELO ; Get the handler of port 40h
+	 mov	 es:QPI_TMROLD[0],ax ; Save it
+	 mov	 ax,PGROUP:[edi+43h*2].ELO ; Get the handler of port 43h
+	 mov	 es:QPI_TMROLD[2],ax ; Save it
+	 mov	 PGROUP:[edi+40h*2].ELO,offset PGROUP:QPI_TMRSTUB ; Ours
+	 mov	 PGROUP:[edi+43h*2].ELO,offset PGROUP:QPI_TMRSTUB ; ...
+
+	 mov	 ebx,PIOBIT	; Get offset in PGROUP of I/O bit map
+	 mov	 esi,40h	; Port 40h
+	 bts	 PGROUP:[ebx],esi ; Trap it
+	 setc	 es:QPI_TMRIOP[0] ; Remember whether it was already
+	 mov	 esi,43h	; Port 43h
+	 bts	 PGROUP:[ebx],esi ; Trap it
+	 setc	 es:QPI_TMRIOP[1] ; Remember whether it was already
+
+	 mov	 es:QPI_TMRON,1 ; Mark as on
+
+	 popf			; Restore flags
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_TIMER_OFF:
+	 cmp	 es:QPI_TMRON,0 ; Izit on?
+	 je	 near ptr QPI_API_OK ; Jump if not
+
+	 pushf			; Save flags
+	 cli			; Disallow interrupts
+
+	 mov	 edi,PCHECKER_OUT ; Get offset in PGROUP of CHECKER_OUT
+	 mov	 ax,QPI_TMROLD[0] ; Get the previous handler of port 40h
+	 mov	 PGROUP:[edi+40h*2].ELO,ax ; Restore it
+	 mov	 ax,QPI_TMROLD[2] ; Get the previous handler of port 43h
+	 mov	 PGROUP:[edi+43h*2].ELO,ax ; Restore it
+
+; Clear the IOPM bits we set unless the port is trapped via 1A09h too
+
+	 mov	 ebx,PIOBIT	; Get offset in PGROUP of I/O bit map
+
+	 cmp	 QPI_TMRIOP[0],0 ; Was it set already?
+	 jne	 short @F	; Jump if so
+	 mov	 dx,40h 	; Port 40h
+	 call	 QPI_FIND	; Is it trapped via QPI?
+	 jnc	 short @F	; Jump if so
+	 mov	 esi,40h	; Port 40h
+	 btr	 PGROUP:[ebx],esi ; Untrap it
+@@:
+	 cmp	 QPI_TMRIOP[1],0 ; Was it set already?
+	 jne	 short @F	; Jump if so
+	 mov	 dx,43h 	; Port 43h
+	 call	 QPI_FIND	; Is it trapped via QPI?
+	 jnc	 short @F	; Jump if so
+	 mov	 esi,43h	; Port 43h
+	 btr	 PGROUP:[ebx],esi ; Untrap it
+@@:
+	 mov	 es:QPI_TMRON,0 ; Mark as off
+
+	 popf			; Restore flags
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; FF00:  Internal (only from our own code, see INTFE):  CF=1 if a QPI
+;	 mapping context other than ours is active (QMAX_OVR refuses
+;	 Windows then)
+
+QPI_API_CTXCHK:
+	 cmp	 QPI_CTXON,0	; Izit ours?
+	 je	 near ptr QPI_API_OK ; Jump if so
+
+	 jmp	 QPI_API_EXIT	; Return with CF=1
 
 
 ; 1C00:  Disable the IRQ0-7 calldowns

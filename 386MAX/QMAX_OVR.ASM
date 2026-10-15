@@ -1063,6 +1063,20 @@ DX	 =	 flags
 RESINT2F_WIN3_BEGINIT:		; AX = 1605h
 	 popf			; Restore flags
 
+; Open 386MAX:  Windows takes over our page table for 0-4MB, so refuse it
+; while a QPI mapping context (08h) other than ours is active
+
+	 push	 ax		; Save for a moment
+	 mov	 ax,0FF00h	; QPI (internal):  CF=1 if another context
+	 int	 0FEh		; QMAX_QPI
+	 pop	 ax		; Restore
+	 jnc	 short @F	; Jump if ours
+
+	 or	 cx,-1		; Fail Windows initialization
+
+	 jmp	 short RESINT2F_WIN3_BEGINIT_STD ; Return
+@@:
+
 ; Due to a bug in our code or in Windows, if our VxD is not present
 ; (it's been erased), somebody hoses the hard disk.
 ; Our bandaid fix of the moment is to check for the VxD here and now

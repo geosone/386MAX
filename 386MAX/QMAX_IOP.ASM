@@ -61,6 +61,7 @@ if @OEM_SOFT
 	 extrn	 CLR_BITMAP:far
 	 extrn	 SET_BITMAP:far
 	 extrn	 QPI_CHECK:far
+	 extrn	 QPI_TMROUT:far
 endif				; IF @OEM_SOFT
 
 JCODE	 ends			; End JCODE segment
@@ -2701,6 +2702,15 @@ CHECK_OUT_QPI:
 	 jnc	 short CHECK_OUT_NOQPI ; Jump if not
 
 	 ret			; Return to caller with CF=1
+
+; Open 386MAX:  the CHECKER_OUT entry of ports 40h and 43h while QPI 15h
+; (timer channel 0 virtualization) is on:  record, then the previous
+; handler (whose offset QPI_TMROUT returns in BX) does the rest
+
+	 public  QPI_TMRSTUB
+QPI_TMRSTUB:
+	 FIXICALL JGROUP:QPI_TMROUT,DTE_CSJG ; Record it, BX = previous handler
+	 jmp	 bx		; Continue there
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
