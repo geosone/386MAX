@@ -54,7 +54,10 @@ Because PGROUP is full, all but the hooks lives here in JGROUP.
 
 	 include QMAX_DTE.INC
 	 include QMAX_OEM.INC
+	 include QMAX_EMM.INC
 .list
+
+@MAX_EHNDLCNT equ 255		; Maximum # EMS handles (as QMAX_I67)
 
 PGROUP	 group	 CODE,ECODE,EDATA
 JGROUP	 group	 JCODE,JDATA
@@ -64,6 +67,8 @@ CODE	 segment use16 byte public 'prog' ; Start CODE segment
 	 assume  cs:PGROUP,ds:PGROUP
 
 	 extrn	 GLB_FLAG:word
+	 extrn	 LCL_FLAG:word
+	 include QMAX_LCL.INC
 	 extrn	 HARDRET:far
 
 CODE	 ends			; End CODE segment
@@ -108,6 +113,16 @@ EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 extrn	 EMMSIZE:dword
 	 extrn	 PRGSIZE:word
 	 extrn	 OVRSIZE:word
+	 extrn	 OFFCR3:dword
+	 extrn	 PDTDIR2:dword
+	 extrn	 PPDT1MB:dword
+	 extrn	 PPDTPDIR:dword
+	 extrn	 PaDIR2:dword
+	 extrn	 HMAP:byte
+	 extrn	 HP_LAST:dword
+	 extrn	 PHNDLPAGE:dword
+	 extrn	 PPAGELINK:dword
+	 extrn	 PLINKBASE:dword
 
 EDATA	 ends			; End EDATA segment
 
@@ -132,6 +147,10 @@ QPI_DVX  dd	 0		; 22h:  DV/X shared pool control block (Seg:Off)
 QPI_QUOTA dd	 0		; 23h:  VCPI quota DWORD (Seg:Off), 0 = unlimited
 QPI_W28  dw	 0		; 28h:  EMM import structure word
 
+@QPI_NDEF equ	 110h		; # pages with a default PTE (0-10FFFFh)
+QPI_DEFOK db	 0		; 1 = QPI_DEFPTE is filled in
+QPI_DEFPTE dd	 @QPI_NDEF dup (?) ; Default PTEs (0Fh), taken at the first call
+
 ; 22h control block
 DVX_STR  struc
 DVX_PREV dd	 ?		; 00:  Previous block (Seg:Off)
@@ -150,6 +169,8 @@ JDATA	 ends			; End JDATA segment
 
 JCODE	 segment use16 dword public 'jcode' ; Start JCODE segment
 	 assume  cs:JGROUP
+
+	 extrn	 PHYS2LIN:near
 
 	 public  @QMAX_QPI_JCODE
 @QMAX_QPI_JCODE:		; Mark module start in .MAP file
@@ -533,6 +554,72 @@ QPI_UNTRAPOUT_EXIT:
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 QPI_UNTRAPOUT endp		; End QPI_UNTRAPOUT procedure
+	 NPPROC  QPI_DEFSNAP -- Take The Default PTEs
+	 assume  ds:PGROUP,es:JGROUP,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Copy the PTEs of 0-10FFFFh (with the 1MB wrap disabled) into QPI_DEFPTE
+for 0Fh.  Called at the first QPI call, i.e. with 386MAX's own mapping
+(we keep no other copy of it).
+
+|
+
+	 REGSAVE <eax,ecx,esi,edi> ; Save registers
+
+	 FIXICALL PGROUP:FWRAP_DISABLE,DTE_CS2 ; Disable the 1MB wrap (pages 100-10F)
+
+	 mov	 esi,PRGPDT	; DS:ESI ==> the PTEs
+	 lea	 edi,QPI_DEFPTE ; ES:EDI ==> the copy
+	 mov	 ecx,@QPI_NDEF	; # PTEs
+S32  rep movs	 <QPI_DEFPTE[edi],PGROUP:[esi].EDD> ; Copy them
+
+	 mov	 es:QPI_DEFOK,1 ; Mark as filled in
+
+	 REGREST <edi,esi,ecx,eax> ; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_DEFSNAP endp		; End QPI_DEFSNAP procedure
+
+
+	 NPPROC  QPI_PT2LIN -- Linear Address Of A Page Table
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+On entry:
+
+EBX	 =	 physical address of a page table
+
+On exit:
+
+CF	 =	 0 if addressable, EBX = its linear address
+	 =	 1 if not
+
+Our own table for 0-4MB (PaDIR2) is outside the range PHYS2LIN
+searches; it's always mapped at PPDTPDIR shl 10.
+
+|
+
+	 cmp	 ebx,PaDIR2	; Izit our own table?
+	 jne	 short @F	; Jump if not
+
+	 mov	 ebx,PPDTPDIR	; Get offset in PDT of its PTE
+	 shl	 ebx,12-2	; Convert from 4KB in dwords to bytes (CF=0)
+
+	 ret			; Return to caller
+
+@@:
+	 call	 PHYS2LIN	; EBX = linear address, CF=1 if none
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_PT2LIN endp 		; End QPI_PT2LIN procedure
+
+
 	 NPPROC  QPI_SEG2LIN -- Convert Seg:Off To Linear Address
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
@@ -625,6 +712,12 @@ Caller's CF =	 0 if successful
 
 	 or	 [ebp].INTXX_EFL,mask $CF ; Assume failure
 
+	 cmp	 es:QPI_DEFOK,0 ; Do we have the default PTEs?
+	 jne	 short @F	; Jump if so
+
+	 call	 QPI_DEFSNAP	; Take them now
+@@:
+	 mov	 ax,[ebp].INTXX_EAX.ELO ; Get the function # again
 	 mov	 dx,[ebp].INTXX_EDX.ELO ; Get the I/O port #
 
 	 cmp	 ah,@MV_API	; Izit Open MaxView extension?
@@ -646,6 +739,16 @@ Caller's CF =	 0 if successful
 	 je	 near ptr QPI_API_GETFRM ; Jump if so
 	 cmp	 ah,0Ah 	; Izit Set PTE Frame?
 	 je	 near ptr QPI_API_SETFRM ; Jump if so
+	 cmp	 ah,06h 	; Izit Clone Page Table?
+	 je	 near ptr QPI_API_CLONE ; Jump if so
+	 cmp	 ah,07h 	; Izit Get Mapping Context?
+	 je	 near ptr QPI_API_GETCTX ; Jump if so
+	 cmp	 ah,08h 	; Izit Set Mapping Context?
+	 je	 near ptr QPI_API_SETCTX ; Jump if so
+	 cmp	 ah,0Bh 	; Izit Map EMS Handle?
+	 je	 near ptr QPI_API_MAPH ; Jump if so
+	 cmp	 ah,0Fh 	; Izit Restore Default Mapping?
+	 je	 near ptr QPI_API_UNMAP ; Jump if so
 
 	 cmp	 ah,0Ch 	; Izit Get Available Memory?
 	 je	 near ptr QPI_API_AVAIL ; Jump if so
@@ -1539,6 +1642,212 @@ QPI_PTEADDR_ERR:
 	 stc			; Indicate it's out of range
 
 	 retn			; Return to caller
+
+
+; Mapping contexts as QEMM 97 has them (DESQview's per-task address
+; spaces):  a mapping context is a page table for linear 0-4MB in a
+; physical page the caller allocated (04h).  We switch it the way the
+; EMS alternate map register sets do (SET_AMRS in QMAX_OSE):  PDE 0 and
+; the PTE of our page table alias (PRGPDT), so all of 386MAX's PTE code
+; works on the active table.
+
+; 06:  Clone the active page table into the physical page DX
+;      (QEMM 97 checks nothing; we refuse pages we can't address)
+
+QPI_API_CLONE:
+	 movzx	 ebx,[ebp].INTXX_EDX.ELO ; Get page frame
+	 shl	 ebx,12 	; Convert to physical address
+	 mov	 edx,ebx	; Save it
+	 call	 QPI_PT2LIN	; EBX = its linear address, CF=1 if none
+	 jc	 near ptr QPI_API_EXIT ; Jump if not addressable
+
+	 FIXICALL PGROUP:FWRAP_DISABLE,DTE_CS2 ; Disable the 1MB wrap (pages 100-10F)
+
+	 push	 es		; Save for a moment
+
+	 mov	 es,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  es:AGROUP	; Tell the assembler about it
+
+	 mov	 edi,ebx	; ES:EDI ==> the new table
+	 mov	 esi,PRGPDT	; DS:ESI ==> the active table
+	 mov	 ecx,4096/4	; # PTEs in a page table
+S32  rep movs	 <AGROUP:[edi].EDD,PGROUP:[esi].EDD> ; Copy it
+
+; If our page table alias is within the first 4MB, the clone must map
+; itself there (as EMS 5B03h does)
+
+	 test	 LCL_FLAG,@LCL_4MB ; Izit beyond the first 4MB?
+	 jnz	 short @F	; Jump if so
+
+	 mov	 edi,PDTDIR2	; Get offset of its PTE
+	 mov	 eax,edx	; Get the new table's physical address
+	 or	 ax,@PTE_RP	; Present, writable, supervisor
+	 mov	 AGROUP:[ebx+edi].EDD,eax ; Map itself
+@@:
+	 pop	 es		; Restore
+	 assume  es:JGROUP	; Tell the assembler about it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 07:  Get the physical page of the active page table (DX)
+
+QPI_API_GETCTX:
+	 mov	 ebx,OFFCR3	; Get offset of the page directory
+	 mov	 eax,PGROUP:[ebx].EDD ; Get PDE 0
+	 shr	 eax,12 	; Isolate the page frame
+	 mov	 [ebp].INTXX_EDX.ELO,ax ; Return in caller's DX
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 08:  Make the page table in the physical page DX active (one made by
+;      06h; the HMA PTEs are carried over as A20 is global)
+
+QPI_API_SETCTX:
+	 movzx	 ebx,[ebp].INTXX_EDX.ELO ; Get page frame
+	 shl	 ebx,12 	; Convert to physical address
+	 mov	 edx,ebx	; Save it
+	 call	 QPI_PT2LIN	; EBX = its linear address, CF=1 if none
+	 jc	 near ptr QPI_API_EXIT ; Jump if not addressable
+
+	 FIXICALL PGROUP:FWRAP_DISABLE,DTE_CS2 ; Disable the 1MB wrap (pages 100-10F)
+
+	 pushf			; Save flags
+	 cli			; Disallow interrupts
+
+	 push	 es		; Save for a moment
+
+	 mov	 es,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  es:AGROUP	; Tell the assembler about it
+
+	 mov	 esi,PPDT1MB	; Get offset of the HMA PTEs
+	 lea	 edi,[ebx+esi]	; ES:EDI ==> those in the new table
+	 add	 esi,PRGPDT	; DS:ESI ==> those in the active one
+	 mov	 ecx,64/4	; # 4KB pages in the HMA
+S32  rep movs	 <AGROUP:[edi].EDD,PGROUP:[esi].EDD> ; Copy them
+
+	 pop	 es		; Restore
+	 assume  es:JGROUP	; Tell the assembler about it
+
+	 mov	 eax,edx	; Get the new table's physical address
+	 or	 ax,@PTE_URP	; Present, writable, user
+	 mov	 edi,OFFCR3	; Get offset of the page directory
+	 mov	 PGROUP:[edi].EDD,eax ; PDE 0
+
+	 test	 LCL_FLAG,@LCL_4MB ; Izit our alias beyond the first 4MB?
+	 jz	 short @F	; Jump if not (the table maps itself)
+
+	 and	 ax,not (mask $PTE_US) ; Supervisor only
+	 mov	 edi,PDTDIR2	; Get offset of the alias PTE
+	 add	 edi,PRGPDT	; Plus offset in PGROUP of PDT
+	 mov	 PGROUP:[edi].EDD,eax ; Point the alias to the new table
+@@:
+	 mov	 eax,cr3	; Flush the TLB
+	 mov	 cr3,eax	; ...
+
+	 popf			; Restore flags
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 0B:  Map the 16KB pages of EMS handle DX at the linear 4KB page CX on,
+;      BX pages (0 = all)
+; As QEMM 97:  always AH=0 and CF=0, an invalid handle maps nothing.  We
+; stop at the end of the first 4MB.
+
+QPI_API_MAPH:
+	 mov	 [ebp].INTXX_EAX.ELO.HI,0 ; AH = 0
+
+	 movzx	 edx,[ebp].INTXX_EDX.ELO ; Get the handle
+	 cmp	 dx,@MAX_EHNDLCNT-1 ; Izit a handle?
+	 ja	 near ptr QPI_API_OK ; Jump if not (nothing to do)
+
+	 bt	 HMAP.ELO,dx	; Izit allocated?
+	 jnc	 near ptr QPI_API_OK ; Jump if not (nothing to do)
+
+	 FIXICALL PGROUP:FWRAP_DISABLE,DTE_CS2 ; Disable the 1MB wrap (pages 100-10F)
+
+	 movzx	 ecx,[ebp].INTXX_EBX.ELO ; Get # 16KB pages (0 = all)
+	 movzx	 edi,[ebp].INTXX_ECX.ELO ; Get first linear 4KB page
+	 shl	 edi,2		; Convert to offset in PDT
+
+	 mov	 ebx,edx	; Copy the handle
+	 shl	 ebx,2		; Times four to index table of dwords
+	 add	 ebx,PHNDLPAGE	; EBX ==> HNDLPAGE[handle]
+	 mov	 edx,PRGPDT	; Get offset in PGROUP of PDT
+QPI_API_MAPH_NXT:
+	 mov	 ebx,PGROUP:[ebx].PL_NEXT ; Get the next logical page
+
+	 cmp	 ebx,HP_LAST	; Izit the end?
+	 je	 short QPI_API_MAPH_DONE ; Jump if so
+
+	 cmp	 edi,4096-16	; Izit beyond the first 4MB?
+	 ja	 short QPI_API_MAPH_DONE ; Jump if so
+
+; Offset in the PDT of the 4 PTEs of this 16KB page (as PGMAP_COM)
+
+	 mov	 esi,ebx	; Copy the link
+	 sub	 esi,PPAGELINK	; Convert to (size PL_STR) * 16KB page #
+	 mov	 eax,esi	; Copy it
+	 add	 eax,PLINKBASE	; Plus base of the PDT offsets
+	 shl	 esi,4-2	; Convert from dword to four-dword index
+	 add	 esi,PGROUP:[eax].EDD ; Plus the corresponding offset
+
+	 REGSAVE <ecx>		; Save # pages
+	 mov	 ecx,4		; # 4KB pages in 16KB
+@@:
+	 mov	 eax,PGROUP:[esi+edx].EDD ; Get the PTE
+	 or	 ax,@PTE_URP	; Present, writable, user
+	 mov	 PGROUP:[edi+edx].EDD,eax ; Map it
+	 add	 esi,4		; Next PTE
+	 add	 edi,4		; ...
+	 loop	 @B		; Jump if more
+	 REGREST <ecx>		; Restore
+
+	 jecxz	 QPI_API_MAPH_NXT ; Jump if all pages wanted
+
+	 loop	 QPI_API_MAPH_NXT ; Jump if more pages wanted
+QPI_API_MAPH_DONE:
+	 mov	 eax,cr3	; Flush the TLB
+	 mov	 cr3,eax	; ...
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 0F:  Restore the default mapping of DX pages from the linear 4KB page CX
+;      on; AL = 1 if one of them was written to (dirty), else 0
+; The default PTEs (0-10FFFFh) were taken at the first QPI call.  We
+; restore nothing beyond them (QEMM 97 uses garbage) and nothing for DX=0
+; (QEMM 97 hangs).
+
+QPI_API_UNMAP:
+	 FIXICALL PGROUP:FWRAP_DISABLE,DTE_CS2 ; Disable the 1MB wrap (pages 100-10F)
+
+	 movzx	 esi,[ebp].INTXX_ECX.ELO ; Get first page
+	 movzx	 ecx,[ebp].INTXX_EDX.ELO ; Get # pages
+	 mov	 edx,PRGPDT	; Get offset in PGROUP of PDT
+	 xor	 bl,bl		; Nothing dirty yet
+	 jecxz	 QPI_API_UNMAP_DONE ; Jump if none
+QPI_API_UNMAP_NXT:
+	 cmp	 esi,@QPI_NDEF	; Izit one with a default?
+	 jae	 short QPI_API_UNMAP_DONE ; Jump if not
+
+	 mov	 eax,QPI_DEFPTE[esi*4] ; Get the default PTE
+	 xchg	 eax,PGROUP:[edx+esi*4].EDD ; Restore it, get the old one
+	 test	 al,mask $PTE_D ; Was it written to?
+	 setnz	 al		; AL = 1 if so
+	 or	 bl,al		; Remember
+
+	 inc	 esi		; Next page
+	 loop	 QPI_API_UNMAP_NXT ; Jump if more
+QPI_API_UNMAP_DONE:
+	 mov	 [ebp].INTXX_EAX.ELO.LO,bl ; AL = dirty flag
+
+	 mov	 eax,cr3	; Flush the TLB
+	 mov	 cr3,eax	; ...
+
+	 jmp	 QPI_API_OK	; Join common exit code
 
 
 ; 2000:  Get VirtualHDIRQ information (not supported:  0)
