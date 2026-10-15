@@ -87,7 +87,11 @@ ECODE	 segment use16 dword public 'ecode' ; Start ECODE segment
 	 extrn	 FVCPI_COUNT:far
 	 extrn	 FWRAP_DISABLE:far
 	 extrn	 FSET_PPL0STK:far
-	 extrn	 QPI_TMRSTUB:near
+	 extrn	 QPI_OUTSTUB:near
+	 extrn	 QPI_INSTUB:near
+	 extrn	 QPI_PORTDONE:near
+	 extrn	 CHECK_XOUT:near
+	 extrn	 CHECK_XINP:near
 
 ECODE	 ends			; End ECODE segment
 
@@ -128,6 +132,7 @@ EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 extrn	 NEWIMR1:word
 	 extrn	 NEWIMR2:word
 	 extrn	 PCHECKER_OUT:dword
+	 extrn	 PCHECKER_INP:dword
 
 	 public  QPI_CDFLG
 QPI_CDFLG db	 0		; IRQ calldowns enabled (QPI 1Ch, read in INTCOM)
@@ -159,11 +164,39 @@ QPI_W28  dw	 0		; 28h:  EMM import structure word
 
 QPI_CTXON db	 0		; 08h:  1 = a page table other than ours active
 QPI_TMRBUF dd	 0		; 15h:  linear address of the divisor WORD
-QPI_TMRON db	 0		; 15h:  1 = ports 40h/43h trapped for it
+QPI_IO05 db	 0		; 1 = 1A05h (through 15h/0Dh), 0 = 1A00h-1A04h
+QPI_TMRON db	 0		; 15h:  1 = ports 40h/43h hooked for it
 QPI_TMRMODE db	 3		; ...  channel 0 access mode (3 = LSB/MSB)
 QPI_TMRIDX db	 0		; ...  next byte of the WORD (0 = low)
-QPI_TMRIOP db	 2 dup (0)	; ...  1 = IOPM bit of 40h/43h was set already
-QPI_TMROLD dw	 2 dup (?)	; ...  previous CHECKER_OUT entries of 40h/43h
+
+QPI_CRTMODE db	 0		; 0Dh:  CRTC/DAC trapping mode
+QPI_IDXC db	 0		; ...  last colour CRTC index (3D4h)
+QPI_IDXM db	 0		; ...  last mono   CRTC index (3B4h)
+QPI_RTS  db	 09h		; ...  3DAh:  display enable/retrace bits
+QPI_RTD  db	 0Fh		; ...	      steady reads left
+QPI_RTN  db	 0FFh		; ...	      alternating reads left
+QPI_CURGET dd	 0		; 0Eh:  GET cursor address callback
+QPI_CURSET dd	 0		; ...  SET ...
+QPI_CRTALL dw	 3B4h,3B5h,3B8h,3D4h,3D5h,3DAh ; Ports of 0Dh, any mode
+QPI_CRTDAC dw	 3C6h,3C8h,3C9h,0 ; ...  both modes
+QPI_CRTP1 dw	 3B4h,3B5h,3B8h,3C6h,3C8h,3C9h,0 ; ...  mode 1 (mono)
+QPI_CRTP2 dw	 3D4h,3D5h,3DAh,3C6h,3C8h,3C9h,0 ; ...  mode 2 (colour)
+
+; Ports QPI virtualizes (15h, 0Dh):  their CHECKER_xxx entries point to
+; QPI_OUTSTUB/QPI_INSTUB (QPI_VPHOOK)
+VP_STR	 struc
+VP_PORT  dw	 ?		; I/O port #
+VP_OUT	 dw	 ?		; Previous CHECKER_OUT entry
+VP_IN	 dw	 ?		; ...	   CHECKER_INP ...
+VP_OWN	 db	 ?		; Owners (@VP_xxx), 0 = entry free
+VP_IOP	 db	 ?		; 1 = I/O permission bit was set already
+VP_STR	 ends
+
+@VP_TMR  equ	 01h		; Owner:  15h timer virtualization
+@VP_CRT  equ	 02h		; ...	  0Dh CRTC/DAC trapping
+@VP_MAX  equ	 12		; # entries
+
+QPI_VPTAB VP_STR @VP_MAX dup (<0,0,0,0,0>) ; Hooked ports
 
 QPI_CDTAB dd	 8 dup (0)	; 1C01h:  V86 handlers of IRQ0-7
 	 dd	 8 dup (0)	; 1C03h:  ...		  IRQ8-15
@@ -236,6 +269,8 @@ BX	 =	 undefined
 	 or	 cl,bl		; Include the direction
 
 	 mov	 eax,[ebp].INTXX_EAX ; Pass caller's EAX (the value if output)
+	 mov	 ebx,[ebp].INTXX_EBX ; ...	    EBX
+	 mov	 edi,QPI_CB	; The callback
 	 call	 QPI_CALLVM	; Call the callback, EAX = value
 
 ; As QEMM 97, the callback's CF is ignored:  the callback does the I/O
@@ -405,9 +440,9 @@ All other registers preserved.
 	 or	 eax,(mask $VMHI) or (@VMIOPL shl $IOPL) ; VM=1, IOPL=@VMIOPL
 	 push	 eax		; Pass EFL
 
-	 movzx	 eax,QPI_CB.VSEG ; Get callback's segment
+	 movzx	 eax,ss:[ebx+0*4].VSEG ; Get callback's segment (EDI)
 	 push	 eax		; Pass CS as dword
-	 movzx	 eax,QPI_CB.VOFF ; Get callback's offset
+	 movzx	 eax,ss:[ebx+0*4].VOFF ; Get callback's offset
 	 push	 eax		; Pass EIP
 
 ; Setup the callback's registers
@@ -418,8 +453,7 @@ All other registers preserved.
 	 or	 ecx,eax	; Pass it in CH bit 1
 	 mov	 edx,ss:[ebx+5*4] ; Get the I/O port # (EDX)
 	 mov	 eax,ss:[ebx+7*4] ; Get the value (EAX)
-
-	 mov	 ebx,[ebp].INTXX_EBX ; Pass caller's remaining registers
+	 mov	 ebx,ss:[ebx+4*4] ; Get the callback's EBX
 	 mov	 esi,[ebp].INTXX_ESI ; ...
 	 mov	 edi,[ebp].INTXX_EDI ; ...
 	 mov	 ebp,[ebp].INTXX_EBP ; ...
@@ -432,6 +466,7 @@ QPI_CALLVM_RET:
 ; INTFF returns here with the callback's EAX and flags
 
 	 mov	 [esp+7*4],eax	; Return callback's EAX
+	 mov	 [esp+4*4],ebx	; ...		   EBX
 
 	 popad			; Restore all EGP registers
 
@@ -460,6 +495,17 @@ AL/AX/EAX =	 value read
 |
 
 	 REGSAVE <ebx,ecx,edx,esi,edi,ds,es,fs,gs> ; Save registers
+
+; Ports hooked by 15h/0Dh:  1A00h-1A04h go to the hardware (QPI_IO05)
+
+	 cmp	 QPI_IO05,0	; Izit 1A05h?
+	 jne	 short @F	; Jump if so (through the virtualization)
+
+	 push	 esi		; Save for a moment
+	 call	 QPI_VPFIND	; Izit hooked (CF=0)?
+	 pop	 esi		; Restore
+	 jnc	 short QPI_UNTRAPIN_HW ; Jump if so
+@@:
 
 	 mov	 IOTRAP_TYP,ecx ; Mark as input of this width
 
@@ -525,6 +571,17 @@ SS:EBP	 ==>	 Caller's INTXX_STR
 
 	 push	 [ebp].INTXX_EAX ; Save caller's EAX
 	 mov	 [ebp].INTXX_EAX,eax ; Pass the value as the caller's
+
+; Ports hooked by 15h/0Dh:  1A00h-1A04h go to the hardware (QPI_IO05)
+
+	 cmp	 QPI_IO05,0	; Izit 1A05h?
+	 jne	 short @F	; Jump if so (through the virtualization)
+
+	 push	 esi		; Save for a moment
+	 call	 QPI_VPFIND	; Izit hooked (CF=0)?
+	 pop	 esi		; Restore
+	 jnc	 short QPI_UNTRAPOUT_HW ; Jump if so
+@@:
 
 	 mov	 IOTRAP_TYP,ecx ; Mark as I/O of this width
 
@@ -671,55 +728,413 @@ EBX	 =	 linear address
 QPI_SEG2LIN endp		; End QPI_SEG2LIN procedure
 
 
-	 FPPROC  QPI_TMROUT -- Record An OUT To Port 40h/43h (QPI 15h)
-	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:PGROUP
+	 NPPROC  QPI_VPFIND -- Find A Hooked Port
+	 assume  ds:nothing,es:JGROUP,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
-
-Called from QPI_TMRSTUB (QMAX_IOP), the CHECKER_OUT entry of ports 40h
-and 43h while QPI 15h is on.  See QPI_API_TIMER.
 
 On entry:
 
-DX	 =	 I/O port # (40h or 43h)
-AL	 =	 value written (the low byte for word/dword OUTs)
+DX	 =	 I/O port #
 
 On exit:
 
-BX	 =	 offset in PGROUP of the port's previous CHECKER_OUT handler
-All other registers preserved.
+CF	 =	 0 if hooked, ESI = offset of its entry in QPI_VPTAB
+	 =	 1 if not
 
 |
 
-	 REGSAVE <eax,edi,es,fs> ; Save registers
+	 xor	 esi,esi	; Start with the first entry
+@@:
+	 cmp	 QPI_VPTAB[esi].VP_OWN,0 ; Izit in use?
+	 je	 short QPI_VPFIND_NXT ; Jump if not
+
+	 cmp	 QPI_VPTAB[esi].VP_PORT,dx ; Izit this port?
+	 je	 short QPI_VPFIND_EXIT ; Jump if so (note CF=0)
+QPI_VPFIND_NXT:
+	 add	 esi,size VP_STR ; Next entry
+
+	 cmp	 esi,@VP_MAX*(size VP_STR) ; Izit the end?
+	 jb	 short @B	; Jump if not
+
+	 stc			; Indicate not found
+QPI_VPFIND_EXIT:
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_VPFIND endp 		; End QPI_VPFIND procedure
+
+
+	 NPPROC  QPI_VPHOOK -- Hook A Port For QPI Virtualization
+	 assume  ds:PGROUP,es:JGROUP,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Point the CHECKER_OUT and CHECKER_INP entries of the port to QPI_OUTSTUB
+and QPI_INSTUB (QMAX_IOP) and set its bit in the I/O permission bit map;
+the previous entries and whether the bit was set are kept for
+QPI_VPUNHOOK and to pass accesses on.  Several owners (15h, 0Dh) may
+hook the same port.
+
+On entry:
+
+DX	 =	 I/O port # (below 400h)
+AL	 =	 owner (@VP_xxx)
+
+|
+
+	 REGSAVE <ebx,ecx,esi,edi> ; Save registers
+
+	 pushf			; Save flags
+	 cli			; Disallow interrupts
+
+	 call	 QPI_VPFIND	; ESI = its entry if hooked
+	 jc	 short @F	; Jump if not
+
+	 or	 QPI_VPTAB[esi].VP_OWN,al ; One more owner
+
+	 jmp	 short QPI_VPHOOK_EXIT ; Join common exit code
+
+@@:
+	 xor	 esi,esi	; Find a free entry
+@@:
+	 cmp	 QPI_VPTAB[esi].VP_OWN,0 ; Izit free?
+	 je	 short @F	; Jump if so
+
+	 add	 esi,size VP_STR ; Next entry
+
+	 cmp	 esi,@VP_MAX*(size VP_STR) ; Izit the end?
+	 jb	 short @B	; Jump if not
+
+	 jmp	 short QPI_VPHOOK_EXIT ; None (can't happen)
+
+@@:
+	 mov	 QPI_VPTAB[esi].VP_PORT,dx ; Save the port
+	 mov	 QPI_VPTAB[esi].VP_OWN,al ; ...  owner
+
+	 movzx	 edi,dx 	; Copy the I/O port #
+	 shl	 edi,1		; Times two to index tables of words
+
+	 mov	 ebx,PCHECKER_OUT ; Get offset in PGROUP of CHECKER_OUT
+	 mov	 cx,PGROUP:[ebx+edi].ELO ; Get the previous handler
+	 mov	 QPI_VPTAB[esi].VP_OUT,cx ; Save it
+	 mov	 PGROUP:[ebx+edi].ELO,offset PGROUP:QPI_OUTSTUB ; Ours
+
+	 mov	 ebx,PCHECKER_INP ; Get offset in PGROUP of CHECKER_INP
+	 mov	 cx,PGROUP:[ebx+edi].ELO ; Get the previous handler
+	 mov	 QPI_VPTAB[esi].VP_IN,cx ; Save it
+	 mov	 PGROUP:[ebx+edi].ELO,offset PGROUP:QPI_INSTUB ; Ours
+
+	 movzx	 edi,dx 	; Copy the I/O port #
+	 mov	 ebx,PIOBIT	; Get offset in PGROUP of I/O bit map
+	 bts	 PGROUP:[ebx],edi ; Trap the port
+	 setc	 QPI_VPTAB[esi].VP_IOP ; Remember whether it was already
+QPI_VPHOOK_EXIT:
+	 popf			; Restore flags
+
+	 REGREST <edi,esi,ecx,ebx> ; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_VPHOOK endp 		; End QPI_VPHOOK procedure
+
+
+	 NPPROC  QPI_VPUNHOOK -- Unhook A Port For QPI Virtualization
+	 assume  ds:PGROUP,es:JGROUP,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Undo QPI_VPHOOK for the owner AL; when the last owner is gone, the
+previous CHECKER_xxx entries are restored and the I/O permission bit is
+cleared unless it was set before or the port is trapped via 1A09h.
+
+On entry:
+
+DX	 =	 I/O port #
+AL	 =	 owner (@VP_xxx)
+
+|
+
+	 REGSAVE <ebx,ecx,esi,edi> ; Save registers
+
+	 pushf			; Save flags
+	 cli			; Disallow interrupts
+
+	 call	 QPI_VPFIND	; ESI = its entry if hooked
+	 jc	 short QPI_VPUNHOOK_EXIT ; Jump if not
+
+	 mov	 cl,al		; Copy the owner
+	 not	 cl		; Mask to remove it
+	 and	 QPI_VPTAB[esi].VP_OWN,cl ; Remove it
+	 jnz	 short QPI_VPUNHOOK_EXIT ; Jump if others remain
+
+	 movzx	 edi,dx 	; Copy the I/O port #
+	 shl	 edi,1		; Times two to index tables of words
+
+	 mov	 ebx,PCHECKER_OUT ; Get offset in PGROUP of CHECKER_OUT
+	 mov	 cx,QPI_VPTAB[esi].VP_OUT ; Get the previous handler
+	 mov	 PGROUP:[ebx+edi].ELO,cx ; Restore it
+
+	 mov	 ebx,PCHECKER_INP ; Get offset in PGROUP of CHECKER_INP
+	 mov	 cx,QPI_VPTAB[esi].VP_IN ; Get the previous handler
+	 mov	 PGROUP:[ebx+edi].ELO,cx ; Restore it
+
+	 cmp	 QPI_VPTAB[esi].VP_IOP,0 ; Was the bit set before?
+	 jne	 short QPI_VPUNHOOK_EXIT ; Jump if so
+
+	 call	 QPI_FIND	; Is it trapped via 1A09h?
+	 jnc	 short QPI_VPUNHOOK_EXIT ; Jump if so
+
+	 movzx	 edi,dx 	; Copy the I/O port #
+	 mov	 ebx,PIOBIT	; Get offset in PGROUP of I/O bit map
+	 btr	 PGROUP:[ebx],edi ; Untrap the port
+QPI_VPUNHOOK_EXIT:
+	 popf			; Restore flags
+
+	 REGREST <edi,esi,ecx,ebx> ; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_VPUNHOOK endp		; End QPI_VPUNHOOK procedure
+
+
+	 FPPROC  QPI_VPOUT -- OUT To A Port QPI Virtualizes
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:PGROUP
+COMMENT|
+
+Called from QPI_OUTSTUB (QMAX_IOP), the CHECKER_OUT entry of a port
+hooked by QPI_VPHOOK.
+
+On entry:
+
+DX	 =	 I/O port #
+AL/AX/EAX =	 value written
+IOTRAP_TYP =	 I/O width
+SS:EBP	 ==>	 Caller's INTXX_STR
+
+On exit:
+
+DI	 =	 offset in PGROUP of the handler to continue with:  the port's
+		 previous one, CHECK_XOUT (do the OUT) or QPI_PORTDONE (suppressed)
+All other registers preserved (EBX = 2 * port for the handler).
+
+|
+
+	 REGSAVE <eax,ebx,ecx,esi,es,fs> ; Save registers
 
 	 mov	 es,SEL_DSJG3	; Get JGROUP data selector at PL3
 	 assume  es:JGROUP	; Tell the assembler about it
 
-	 cmp	 dx,43h 	; Izit the mode port?
-	 jne	 short QPI_TMROUT_40 ; Jump if not
+	 mov	 di,offset PGROUP:QPI_PORTDONE ; Assume suppressed (port gone meanwhile)
 
-	 mov	 bx,QPI_TMROLD[2] ; Its previous handler
+	 call	 QPI_VPFIND	; ESI = its entry
+	 jc	 short QPI_VPOUT_EXIT ; Jump if none (can't happen)
+
+	 mov	 di,offset PGROUP:CHECK_XOUT ; Assume the hardware (the port
+				; wasn't trapped before, its handler was idle)
+	 cmp	 QPI_VPTAB[esi].VP_IOP,0 ; Was it trapped before?
+	 je	 short @F	; Jump if not
+
+	 mov	 di,QPI_VPTAB[esi].VP_OUT ; The previous handler
+@@:
+
+	 test	 QPI_VPTAB[esi].VP_OWN,@VP_TMR ; Izit timer virtualization?
+	 jz	 short @F	; Jump if not
+
+	 call	 QPI_TMRREC	; Record it
+@@:
+	 test	 QPI_VPTAB[esi].VP_OWN,@VP_CRT ; Izit CRTC/DAC trapping?
+	 jz	 short QPI_VPOUT_EXIT ; Jump if not
+
+	 call	 QPI_CRTOUT	; CF=1 if suppressed
+	 jnc	 short QPI_VPOUT_EXIT ; Jump if not
+
+	 mov	 di,offset PGROUP:QPI_PORTDONE ; Suppressed
+QPI_VPOUT_EXIT:
+	 REGREST <fs,es,esi,ecx,ebx,eax> ; Restore
+	 assume  es:nothing	; Tell the assembler about it
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_VPOUT endp			; End QPI_VPOUT procedure
+
+
+	 FPPROC  QPI_VPIN -- IN From A Port QPI Virtualizes
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:PGROUP
+COMMENT|
+
+Called from QPI_INSTUB (QMAX_IOP), the CHECKER_INP entry of a port
+hooked by QPI_VPHOOK.  Only 0Dh (CRTC) virtualizes inputs, byte only:
+3DAh gets a synthetic retrace pattern (as QEMM 97:  16 reads with
+display enable and retrace set, then 255 alternating, again), the
+cursor registers 0Eh/0Fh of 3D5h/3B5h come from the GET callback.
+
+On entry:
+
+DX	 =	 I/O port #
+IOTRAP_TYP =	 I/O width
+SS:EBP	 ==>	 Caller's INTXX_STR
+
+On exit:
+
+DI	 =	 offset in PGROUP of the handler to continue with:  the port's
+		 previous one, CHECK_XINP (do the IN) or QPI_PORTDONE (value in AL)
+AL	 =	 value (if QPI_PORTDONE)
+All other registers preserved.
+
+|
+
+	 push	 eax		; Save (AL replaced if we supply it)
+	 REGSAVE <ebx,ecx,esi,es> ; Save registers
+@VPINEAX equ	 4+4+4+2	; Offset of the saved EAX
+
+	 mov	 es,SEL_DSJG3	; Get JGROUP data selector at PL3
+	 assume  es:JGROUP	; Tell the assembler about it
+
+	 call	 QPI_VPFIND	; ESI = its entry
+	 mov	 di,offset PGROUP:QPI_PORTDONE ; Assume nothing to do (can't happen)
+	 jc	 near ptr QPI_VPIN_EXIT ; Jump if none
+
+	 mov	 di,offset PGROUP:CHECK_XINP ; Assume the hardware (the port
+				; wasn't trapped before, its handler was idle)
+	 cmp	 QPI_VPTAB[esi].VP_IOP,0 ; Was it trapped before?
+	 je	 short @F	; Jump if not
+
+	 mov	 di,QPI_VPTAB[esi].VP_IN ; The previous handler
+@@:
+
+	 test	 QPI_VPTAB[esi].VP_OWN,@VP_CRT ; Izit CRTC/DAC trapping?
+	 jz	 near ptr QPI_VPIN_EXIT ; Jump if not
+
+	 mov	 ecx,IOTRAP_TYP ; Get the I/O type
+	 and	 ecx,@IOTRAP_WID ; Isolate the width
+	 cmp	 cl,@IOTRAP_DB	; Izit byte I/O?
+	 jne	 near ptr QPI_VPIN_EXIT ; Jump if not
+
+	 cmp	 dx,3DAh	; Izit input status 1?
+	 je	 short QPI_VPIN_RT ; Jump if so
+
+	 mov	 cl,QPI_IDXC	; Colour CRTC index
+	 mov	 ch,02h 	; Its mode
+	 cmp	 dx,3D5h	; Izit the colour CRTC data?
+	 je	 short @F	; Jump if so
+
+	 mov	 cl,QPI_IDXM	; Mono CRTC index
+	 mov	 ch,01h 	; Its mode
+	 cmp	 dx,3B5h	; Izit the mono CRTC data?
+	 jne	 near ptr QPI_VPIN_EXIT ; Jump if not
+@@:
+	 cmp	 ch,QPI_CRTMODE ; Izit the CRTC of the mode?
+	 jne	 near ptr QPI_VPIN_EXIT ; Jump if not (real IN)
+
+	 cmp	 cl,0Eh 	; Izit cursor address high?
+	 je	 short @F	; Jump if so
+
+	 cmp	 cl,0Fh 	; Izit cursor address low?
+	 jne	 near ptr QPI_VPIN_EXIT ; Jump if not (real IN)
+@@:
+	 mov	 edi,QPI_CURGET ; Get the GET callback
+	 or	 edi,edi	; Izit set?
+	 jz	 short QPI_VPIN_NOCB ; Jump if not (AL unchanged, as QEMM)
+
+	 push	 ebx		; Save
+	 mov	 eax,[ebp].INTXX_EAX ; Pass caller's registers
+	 mov	 ebx,[ebp].INTXX_EBX ; ...
+	 push	 ecx		; Save index
+	 call	 QPI_CALLVM	; EBX = cursor address
+	 pop	 ecx		; Restore index
+	 mov	 al,bh		; Assume high
+	 cmp	 cl,0Eh 	; Izit high?
+	 je	 short @F	; Jump if so
+
+	 mov	 al,bl		; Low
+@@:
+	 pop	 ebx		; Restore
+	 mov	 [esp+@VPINEAX].LO,al ; Return the value
+QPI_VPIN_NOCB:
+	 mov	 di,offset PGROUP:QPI_PORTDONE ; Supplied
+
+	 jmp	 short QPI_VPIN_EXIT ; Join common exit code
+
+QPI_VPIN_RT:
+	 in	 al,dx		; Read the real port
+	 and	 al,0F6h	; Clear display enable and retrace
+	 or	 al,QPI_RTS	; Use ours
+	 mov	 [esp+@VPINEAX].LO,al ; Return the value
+
+	 cmp	 QPI_RTD,0	; Izit still in the steady phase?
+	 je	 short @F	; Jump if not
+
+	 dec	 QPI_RTD	; Count it out
+
+	 jmp	 short QPI_VPIN_NOCB ; Join common code
+
+@@:
+	 xor	 QPI_RTS,09h	; Toggle both bits
+	 dec	 QPI_RTN	; Count it out
+	 jnz	 short QPI_VPIN_NOCB ; Jump if not the end of the cycle
+
+	 mov	 QPI_RTS,09h	; Start again
+	 mov	 QPI_RTD,0Fh	; ...
+	 mov	 QPI_RTN,0FFh	; ...
+
+	 jmp	 short QPI_VPIN_NOCB ; Join common code
+
+QPI_VPIN_EXIT:
+	 REGREST <es,esi,ecx,ebx> ; Restore
+	 assume  es:nothing	; Tell the assembler about it
+	 pop	 eax		; Restore (with the value)
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_VPIN endp			; End QPI_VPIN procedure
+
+
+	 NPPROC  QPI_TMRREC -- Record An OUT To Port 40h/43h (QPI 15h)
+	 assume  ds:nothing,es:JGROUP,fs:nothing,gs:nothing,ss:PGROUP
+COMMENT|
+
+See QPI_API_TIMER.
+
+On entry:
+
+DX	 =	 I/O port #
+AL	 =	 value written (the low byte for word/dword OUTs)
+
+|
+
+	 REGSAVE <eax,edi,fs>	; Save registers
+
+	 cmp	 dx,43h 	; Izit the mode port?
+	 jne	 short QPI_TMRREC_40 ; Jump if not
 
 	 test	 al,0C0h	; Izit channel 0?
-	 jnz	 short QPI_TMROUT_EXIT ; Jump if not
+	 jnz	 short QPI_TMRREC_EXIT ; Jump if not
 
 	 mov	 ah,al		; Copy the control word
 	 shr	 ah,4		; Shift down the access mode
 	 and	 ah,03h 	; Isolate it
-	 jz	 short QPI_TMROUT_EXIT ; Jump if latch command
+	 jz	 short QPI_TMRREC_EXIT ; Jump if latch command
 
 	 mov	 QPI_TMRMODE,ah ; Save the access mode
 	 mov	 QPI_TMRIDX,0	; Low byte next
 
 	 cmp	 ah,02h 	; Izit MSB only?
-	 jne	 short QPI_TMROUT_EXIT ; Jump if not
+	 jne	 short QPI_TMRREC_EXIT ; Jump if not
 
 	 mov	 QPI_TMRIDX,1	; High byte next
 
-	 jmp	 short QPI_TMROUT_EXIT ; Join common exit code
+	 jmp	 short QPI_TMRREC_EXIT ; Join common exit code
 
-QPI_TMROUT_40:
-	 mov	 bx,QPI_TMROLD[0] ; Its previous handler
+QPI_TMRREC_40:
+	 cmp	 dx,40h 	; Izit the channel 0 port?
+	 jne	 short QPI_TMRREC_EXIT ; Jump if not
 
 	 mov	 edi,QPI_TMRBUF ; Get the WORD's linear address
 
@@ -734,18 +1149,197 @@ QPI_TMROUT_40:
 	 mov	 AGROUP:[edi],al ; Save the byte
 
 	 cmp	 QPI_TMRMODE,03h ; Izit LSB/MSB?
-	 jne	 short QPI_TMROUT_EXIT ; Jump if not
+	 jne	 short QPI_TMRREC_EXIT ; Jump if not
 
 	 xor	 QPI_TMRIDX,1	; Next byte
-QPI_TMROUT_EXIT:
-	 REGREST <fs,es,edi,eax> ; Restore
-	 assume  es:nothing,fs:nothing ; Tell the assembler about it
+QPI_TMRREC_EXIT:
+	 REGREST <fs,edi,eax>	; Restore
+	 assume  fs:nothing	; Tell the assembler about it
 
 	 ret			; Return to caller
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
-QPI_TMROUT endp 		; End QPI_TMROUT procedure
+QPI_TMRREC endp 		; End QPI_TMRREC procedure
+
+
+	 NPPROC  QPI_CRTOUT -- OUT To A Port Trapped By QPI 0Dh
+	 assume  ds:nothing,es:JGROUP,fs:nothing,gs:nothing,ss:PGROUP
+COMMENT|
+
+As QEMM 97 (see QPI_API_CRT):
+3D4h/3B4h	 index remembered, passed on; a word OUT is also a write
+		 of AH to the data port with that index
+3D5h/3B5h	 index 0Eh/0Fh (cursor address):  suppressed, the GET
+		 callback's BX gets the byte (BH/BL) and goes to SET (only
+		 if the mode is that of the CRTC);  colour:  0Ah/0Bh
+		 (cursor shape) passed on, all others suppressed;  mono:
+		 the others passed on
+3B8h		 passed on (the Hercules callback of 1309h is not done)
+3C6h, 3C8h, 3C9h, 3DAh
+		 suppressed (DESQview's DAC buffer of 130Ah is not done:
+		 those writes are lost, as with QEMM without the buffer)
+
+On entry:
+
+DX	 =	 I/O port #
+AL/AX	 =	 value written
+IOTRAP_TYP =	 I/O width
+SS:EBP	 ==>	 Caller's INTXX_STR
+
+On exit:
+
+CF	 =	 1 if suppressed
+	 =	 0 if to be done
+All registers preserved.
+
+|
+
+	 REGSAVE <eax,ecx>	; Save registers
+
+	 mov	 ch,02h 	; Colour CRTC
+	 cmp	 dx,3D4h	; Izit its index?
+	 je	 short QPI_CRTOUT_IDX ; Jump if so
+
+	 cmp	 dx,3D5h	; Izit its data?
+	 je	 short QPI_CRTOUT_DATA ; Jump if so
+
+	 mov	 ch,01h 	; Mono CRTC
+	 cmp	 dx,3B4h	; Izit its index?
+	 je	 short QPI_CRTOUT_IDX ; Jump if so
+
+	 cmp	 dx,3B5h	; Izit its data?
+	 je	 short QPI_CRTOUT_DATA ; Jump if so
+
+	 cmp	 dx,3B8h	; Izit the Hercules mode control?
+	 je	 short QPI_CRTOUT_PASS ; Jump if so
+QPI_CRTOUT_SUPP:
+	 stc			; Suppressed
+
+	 jmp	 short QPI_CRTOUT_EXIT ; Join common exit code
+
+QPI_CRTOUT_IDX:
+	 cmp	 ch,02h 	; Izit the colour CRTC?
+	 jne	 short @F	; Jump if not
+
+	 mov	 QPI_IDXC,al	; Remember the index
+
+	 jmp	 short QPI_CRTOUT_IDX1 ; Join common code
+
+@@:
+	 mov	 QPI_IDXM,al	; Remember the index
+QPI_CRTOUT_IDX1:
+	 mov	 ecx,IOTRAP_TYP ; Get the I/O type
+	 and	 ecx,@IOTRAP_WID ; Isolate the width
+	 cmp	 cl,@IOTRAP_DB	; Izit byte I/O?
+	 je	 short QPI_CRTOUT_PASS ; Jump if so (the index goes through)
+
+	 mov	 cl,al		; The index
+	 mov	 al,ah		; The data
+	 mov	 ch,02h 	; Assume colour
+	 cmp	 dx,3D4h	; Izit the colour CRTC?
+	 je	 short QPI_CRTOUT_DATA1 ; Jump if so
+
+	 mov	 ch,01h 	; Mono
+
+	 jmp	 short QPI_CRTOUT_DATA1 ; Join common code
+
+QPI_CRTOUT_DATA:
+	 mov	 cl,QPI_IDXC	; Colour index
+	 cmp	 ch,02h 	; Izit the colour CRTC?
+	 je	 short QPI_CRTOUT_DATA1 ; Jump if so
+
+	 mov	 cl,QPI_IDXM	; Mono index
+QPI_CRTOUT_DATA1:
+	 cmp	 cl,0Eh 	; Izit cursor address high?
+	 je	 short QPI_CRTOUT_CUR ; Jump if so
+
+	 cmp	 cl,0Fh 	; Izit cursor address low?
+	 je	 short QPI_CRTOUT_CUR ; Jump if so
+
+	 cmp	 ch,01h 	; Izit the mono CRTC?
+	 je	 short QPI_CRTOUT_PASS ; Jump if so (only 0Eh/0Fh filtered)
+
+	 cmp	 cl,0Ah 	; Izit cursor start?
+	 je	 short QPI_CRTOUT_PASS ; Jump if so
+
+	 cmp	 cl,0Bh 	; Izit cursor end?
+	 je	 short QPI_CRTOUT_PASS ; Jump if so
+
+	 jmp	 QPI_CRTOUT_SUPP ; Others suppressed
+
+QPI_CRTOUT_CUR:
+	 cmp	 ch,QPI_CRTMODE ; Izit the CRTC of the mode?
+	 jne	 short QPI_CRTOUT_SUPP ; Jump if not (dropped)
+
+	 call	 QPI_CURSET1	; GET, patch, SET
+
+	 jmp	 short QPI_CRTOUT_SUPP ; Suppressed
+
+QPI_CRTOUT_PASS:
+	 clc			; To be done
+QPI_CRTOUT_EXIT:
+	 REGREST <ecx,eax>	; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_CRTOUT endp 		; End QPI_CRTOUT procedure
+
+
+	 NPPROC  QPI_CURSET1 -- Set A Cursor Address Byte Via The Callbacks
+	 assume  ds:nothing,es:JGROUP,fs:nothing,gs:nothing,ss:PGROUP
+COMMENT|
+
+As QEMM 97:  GET returns the cursor address in BX, BH (index 0Eh) or BL
+(0Fh) is replaced by the byte written, then SET gets that register set.
+
+On entry:
+
+AL	 =	 byte written
+CL	 =	 CRTC index (0Eh or 0Fh)
+SS:EBP	 ==>	 Caller's INTXX_STR
+
+|
+
+	 REGSAVE <eax,ebx,ecx,edx,edi> ; Save registers
+
+	 cmp	 QPI_CURGET,0	; Izit GET set?
+	 je	 short QPI_CURSET1_EXIT ; Jump if not
+	 cmp	 QPI_CURSET,0	; Izit SET set?
+	 je	 short QPI_CURSET1_EXIT ; Jump if not
+
+	 mov	 ch,al		; Save the byte
+	 push	 ecx		; Save byte and index
+
+	 mov	 edi,QPI_CURGET ; The GET callback
+	 mov	 eax,[ebp].INTXX_EAX ; Pass caller's registers
+	 mov	 ebx,[ebp].INTXX_EBX ; ...
+	 call	 QPI_CALLVM	; EBX = cursor address
+
+	 pop	 ecx		; Restore byte and index
+
+	 cmp	 cl,0Eh 	; Izit high?
+	 jne	 short @F	; Jump if not
+
+	 mov	 bh,ch		; Replace the high byte
+
+	 jmp	 short QPI_CURSET1_SET ; Join common code
+
+@@:
+	 mov	 bl,ch		; Replace the low byte
+QPI_CURSET1_SET:
+	 mov	 edi,QPI_CURSET ; The SET callback
+	 call	 QPI_CALLVM	; Pass GET's EAX and the new BX
+QPI_CURSET1_EXIT:
+	 REGREST <edi,edx,ecx,ebx,eax> ; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_CURSET1 endp		; End QPI_CURSET1 procedure
 
 
 	 FPPROC  QPI_CDVEC -- Vector Of An IRQ Calldown
@@ -999,6 +1593,12 @@ Caller's CF =	 0 if successful
 	 cmp	 ah,15h 	; Izit timer channel 0 virtualization?
 	 je	 near ptr QPI_API_TIMER ; Jump if so
 
+	 cmp	 ah,0Dh 	; Izit CRTC/DAC trapping?
+	 je	 near ptr QPI_API_CRT ; Jump if so
+
+	 cmp	 ah,0Eh 	; Izit cursor callbacks?
+	 je	 near ptr QPI_API_CURCB ; Jump if so
+
 	 cmp	 ax,0FF00h	; Izit our own context check (QMAX_OVR)?
 	 je	 near ptr QPI_API_CTXCHK ; Jump if so
 
@@ -1020,6 +1620,13 @@ Caller's CF =	 0 if successful
 
 	 cmp	 ah,1Ah 	; Izit I/O trapping?
 	 jne	 short QPI_API_EXIT ; Jump if not
+
+; 1A00h-1A04h reach the hardware past our 15h/0Dh virtualization (as
+; QEMM:  that's how DESQview gets at the real PIT and CRTC), 1A05h goes
+; through it
+
+	 cmp	 al,05h 	; Izit virtualized I/O?
+	 sete	 es:QPI_IO05	; Remember (QPI_UNTRAPIN, QPI_UNTRAPOUT)
 
 	 cmp	 al,00h 	; Izit untrapped input?
 	 je	 near ptr QPI_API_IN ; Jump if so
@@ -2275,10 +2882,10 @@ S32  rep stos	 AGROUP:[edi].EDD ; Clear it
 
 ; 15:  Timer channel 0 virtualization:  ES:BX ==> WORD (0:0 = off)
 ; As QEMM 97 (DESQview emulates a program's tick rate with it):  while
-; on, OUTs to 40h/43h from VM are recorded (QPI_TMROUT, through the
-; CHECKER_OUT entries of the ports) and still go to the hardware:  a
-; channel 0 mode set (43h) sets the access mode and the byte index, each
-; byte written to 40h goes to the WORD at the index (toggled in LSB/MSB
+; on, OUTs to 40h/43h from VM are recorded (QPI_TMRREC, through the
+; port hooks, QPI_VPHOOK) and still go to the hardware:  a channel 0
+; mode set (43h) sets the access mode and the byte index, each byte
+; written to 40h goes to the WORD at the index (toggled in LSB/MSB
 ; mode), so the WORD holds the divisor the program wrote.  Off keeps
 ; the address; the mode and index are never reset.
 
@@ -2297,28 +2904,13 @@ QPI_API_TIMER:
 	 cmp	 es:QPI_TMRON,0 ; Izit on already?
 	 jne	 near ptr QPI_API_OK ; Jump if so
 
-	 pushf			; Save flags
-	 cli			; Disallow interrupts
-
-	 mov	 edi,PCHECKER_OUT ; Get offset in PGROUP of CHECKER_OUT
-	 mov	 ax,PGROUP:[edi+40h*2].ELO ; Get the handler of port 40h
-	 mov	 es:QPI_TMROLD[0],ax ; Save it
-	 mov	 ax,PGROUP:[edi+43h*2].ELO ; Get the handler of port 43h
-	 mov	 es:QPI_TMROLD[2],ax ; Save it
-	 mov	 PGROUP:[edi+40h*2].ELO,offset PGROUP:QPI_TMRSTUB ; Ours
-	 mov	 PGROUP:[edi+43h*2].ELO,offset PGROUP:QPI_TMRSTUB ; ...
-
-	 mov	 ebx,PIOBIT	; Get offset in PGROUP of I/O bit map
-	 mov	 esi,40h	; Port 40h
-	 bts	 PGROUP:[ebx],esi ; Trap it
-	 setc	 es:QPI_TMRIOP[0] ; Remember whether it was already
-	 mov	 esi,43h	; Port 43h
-	 bts	 PGROUP:[ebx],esi ; Trap it
-	 setc	 es:QPI_TMRIOP[1] ; Remember whether it was already
+	 mov	 al,@VP_TMR	; Owner:  timer virtualization
+	 mov	 dx,40h 	; Port 40h
+	 call	 QPI_VPHOOK	; Hook it
+	 mov	 dx,43h 	; Port 43h
+	 call	 QPI_VPHOOK	; Hook it
 
 	 mov	 es:QPI_TMRON,1 ; Mark as on
-
-	 popf			; Restore flags
 
 	 jmp	 QPI_API_OK	; Join common exit code
 
@@ -2326,38 +2918,72 @@ QPI_API_TIMER_OFF:
 	 cmp	 es:QPI_TMRON,0 ; Izit on?
 	 je	 near ptr QPI_API_OK ; Jump if not
 
-	 pushf			; Save flags
-	 cli			; Disallow interrupts
-
-	 mov	 edi,PCHECKER_OUT ; Get offset in PGROUP of CHECKER_OUT
-	 mov	 ax,QPI_TMROLD[0] ; Get the previous handler of port 40h
-	 mov	 PGROUP:[edi+40h*2].ELO,ax ; Restore it
-	 mov	 ax,QPI_TMROLD[2] ; Get the previous handler of port 43h
-	 mov	 PGROUP:[edi+43h*2].ELO,ax ; Restore it
-
-; Clear the IOPM bits we set unless the port is trapped via 1A09h too
-
-	 mov	 ebx,PIOBIT	; Get offset in PGROUP of I/O bit map
-
-	 cmp	 QPI_TMRIOP[0],0 ; Was it set already?
-	 jne	 short @F	; Jump if so
+	 mov	 al,@VP_TMR	; Owner:  timer virtualization
 	 mov	 dx,40h 	; Port 40h
-	 call	 QPI_FIND	; Is it trapped via QPI?
-	 jnc	 short @F	; Jump if so
-	 mov	 esi,40h	; Port 40h
-	 btr	 PGROUP:[ebx],esi ; Untrap it
-@@:
-	 cmp	 QPI_TMRIOP[1],0 ; Was it set already?
-	 jne	 short @F	; Jump if so
+	 call	 QPI_VPUNHOOK	; Unhook it
 	 mov	 dx,43h 	; Port 43h
-	 call	 QPI_FIND	; Is it trapped via QPI?
-	 jnc	 short @F	; Jump if so
-	 mov	 esi,43h	; Port 43h
-	 btr	 PGROUP:[ebx],esi ; Untrap it
-@@:
+	 call	 QPI_VPUNHOOK	; Unhook it
+
 	 mov	 es:QPI_TMRON,0 ; Mark as off
 
-	 popf			; Restore flags
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 0D:  CRTC/DAC trapping mode AL (0 = off, 1 = mono, 2 = colour)
+; 0E:  Cursor callbacks:  ES:BX = GET (returns the cursor address in BX),
+;      DS:DX = SET (gets it in BX)
+; As QEMM 97 (DESQview keeps a background program off the real CRTC and
+; DAC with it):  mode 2 traps 3D4h/3D5h/3DAh, mode 1 (and any other
+; non-zero value, without callbacks then) 3B4h/3B5h/3B8h, both 3C6h,
+; 3C8h, 3C9h (see QPI_CRTOUT and QPI_VPIN for what happens with them).
+; The previous mode is undone first.  AL is returned unchanged.
+
+QPI_API_CRT:
+	 mov	 cl,al		; Save the new mode
+
+	 mov	 al,@VP_CRT	; Owner:  CRTC/DAC trapping
+	 lea	 si,QPI_CRTALL	; All ports any mode may have hooked
+@@:
+	 mov	 dx,es:[si]	; Get the next port
+	 or	 dx,dx		; Izit the end?
+	 jz	 short @F	; Jump if so
+
+	 call	 QPI_VPUNHOOK	; Unhook it (nothing if not hooked)
+	 add	 si,2		; Next port
+
+	 jmp	 short @B	; Go around again
+
+@@:
+	 mov	 es:QPI_CRTMODE,cl ; Save the new mode
+
+	 or	 cl,cl		; Izit off?
+	 jz	 near ptr QPI_API_OK ; Jump if so
+
+	 lea	 si,QPI_CRTP1	; Mono ports
+	 cmp	 cl,02h 	; Izit colour?
+	 jne	 short @F	; Jump if not
+
+	 lea	 si,QPI_CRTP2	; Colour ports
+@@:
+	 mov	 dx,es:[si]	; Get the next port
+	 or	 dx,dx		; Izit the end?
+	 jz	 near ptr QPI_API_OK ; Jump if so
+
+	 call	 QPI_VPHOOK	; Hook it
+	 add	 si,2		; Next port
+
+	 jmp	 short @B	; Go around again
+
+QPI_API_CURCB:
+	 mov	 ax,[ebp].INTXX_ES ; Get caller's ES
+	 shl	 eax,16 	; Shift to segment position
+	 mov	 ax,[ebp].INTXX_EBX.ELO ; Get caller's BX
+	 mov	 es:QPI_CURGET,eax ; Save as GET
+
+	 mov	 ax,[ebp].INTXX_DS ; Get caller's DS
+	 shl	 eax,16 	; Shift to segment position
+	 mov	 ax,[ebp].INTXX_EDX.ELO ; Get caller's DX
+	 mov	 es:QPI_CURSET,eax ; Save as SET
 
 	 jmp	 QPI_API_OK	; Join common exit code
 

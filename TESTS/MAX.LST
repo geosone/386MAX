@@ -22,3 +22,4 @@ QPI/QPIMISC   needs=qpi
 QPI/QPICTX    needs=qpi,ems
 QPI/QPIIRQ    needs=qpi
 QPI/QPITIMER  needs=qpi
+QPI/QPICRT    needs=qpi

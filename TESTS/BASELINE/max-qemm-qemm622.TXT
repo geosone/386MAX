@@ -4,6 +4,7 @@ max/DPMI10               SKIP
 max/EMSFUNC              CRASH
 max/MOUSE12              SKIP
 max/MOUSE18              SKIP
+max/QPICRT               PASS
 max/QPICTX               PASS
 max/QPIIRQ               PASS
 max/QPIMISC              PASS

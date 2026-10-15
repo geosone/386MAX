@@ -26,7 +26,7 @@ DOS 7 volume lock before INT 26h) are passed through instead of running
 the next action stream (hang on EDR-DOS and MS-DOS 7.1, DOS memory
 corrupted on FreeDOS); 440Dh 46h/66h/68h (media ID, media type) are
 translated; the QEMM API (QPI) beyond SBEMU's subset:  mapping
-contexts, IRQ calldowns, timer channel 0 virtualization and the smaller
+contexts, IRQ calldowns, timer channel 0 virtualization, CRTC/DAC trapping and the smaller
 QEMM 97 functions, each test with the same result on QEMM 97.  `maxhdpmi` (HDPMI as VCPI client of 386MAX NODPMI) gives the
 same results as HDPMI on HimemX.
 
@@ -162,6 +162,7 @@ the value around old DOS extenders), DE06h accepts page 100h (as QEMM).
 | MOUSE12 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
 | MOUSE18 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
 | PM26 |  |  |  |  |  |  | PASS |  |  | PASS | PASS | PASS | PASS | PASS | PASS |
+| QPICRT |  |  | PASS |  |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS |
 | QPICTX |  |  | PASS |  |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS |
 | QPIIRQ |  |  | PASS |  |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS |
 | QPIMISC |  |  | PASS |  |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS |

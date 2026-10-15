@@ -5,6 +5,7 @@ max/EMSFUNC              PASS
 max/MOUSE12              SKIP
 max/MOUSE18              SKIP
 max/PM26                 PASS
+max/QPICRT               PASS
 max/QPICTX               PASS
 max/QPIIRQ               PASS
 max/QPIMISC              PASS

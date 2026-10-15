@@ -23,6 +23,7 @@ check (OK / FAIL) and ends with errorlevel 0 when all checks passed.
 | QPI  | QPICTX  | mapping contexts 04h-08h, 0Ah, 0Bh (EMS handle), 0Fh (DESQview's per-task address spaces) |
 | QPI  | QPIIRQ  | IRQ calldowns 1C00h-1C04h |
 | QPI  | QPITIMER | timer channel 0 virtualization 15h |
+| QPI  | QPICRT  | CRTC/DAC trapping 0Dh with cursor callbacks 0Eh, 3DAh retrace pattern, 1A02h/1A03h past it |
 
 `MAX.LST` lists the tests with what they need (`needs=xms,ems,dpmi,...`)
 and their timeout; `INC/TESTLIB.INC` has the output and counting macros.
