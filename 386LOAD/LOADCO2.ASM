@@ -106,6 +106,9 @@ DTAIL	 segment use16 para public 'zdata' ; Start DTAIL segment
 ; Note that INFO_STR *MUST* be the last data item in this segment
 ; to allow for future growth
 
+	 public  ORG_POVR
+ORG_POVR dw	 -1		; 386MAX's POVR_MAC (see INFO_READ)
+
 	 public  INFO_CTL,INFO,INFOSIZE
 	 include QMAXINFO.INC
 	 include QMAX_CTL.INC

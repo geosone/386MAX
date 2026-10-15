@@ -18,7 +18,7 @@ ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 SRC=$1
 [ -f "$ROOT/build/dosdisk/$1.img" ] && SRC=$ROOT/build/dosdisk/$1.img
 [ -f "$SRC" ] || { echo "no $SRC (linux/test/mkdosdisk.sh)"; exit 1; }
-OUT=$ROOT/build/test-dosboot
+OUT=${TESTDIR:-$ROOT/build/test-dosboot}
 rm -rf "$OUT"; mkdir -p "$OUT"
 cp "$SRC" "$OUT/test.img"
 P="$OUT/test.img@@32256"
