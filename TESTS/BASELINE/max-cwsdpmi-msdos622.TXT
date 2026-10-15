@@ -1,0 +1,13 @@
+max/DISKIO               SKIP
+max/DOSXLAT              SKIP
+max/DPMI10               SKIP
+max/EMSFUNC              SKIP
+max/MOUSE12              SKIP
+max/MOUSE18              SKIP
+max/QPITEST              SKIP
+max/STKFLT               SKIP
+max/V86FUNC              PASS
+max/VCPIFUNC             SKIP
+max/VDSFUNC              SKIP
+max/XLAT32               SKIP
+max/XMSFUNC              PASS

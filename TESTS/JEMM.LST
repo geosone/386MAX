@@ -1,0 +1,31 @@
+# Test programs of Jemm (github.com/Baron-von-Riedesel/Jemm, directory Test).
+# Most of them carry no license, so they stay outside this repository:
+# JEMM_TEST=<Jemm>/Test linux/test/suite/run.py -s jemm -p ...
+# What they check is covered by own tests in tests/ (see README.md).
+BMINTRM   timeout=60
+EMS4E     needs=ems
+EMS4F     needs=ems keys
+EMS56     needs=ems keys
+EMS57     needs=ems
+EMS57A    needs=ems
+EMS5B     needs=ems
+EXC00     timeout=20
+EXC06     timeout=20
+FRAMERES  needs=ems
+HLTTEST   keys
+HLTTEST2  keys
+I15MOVE
+INT67     needs=ems
+INT88
+TESTDMA   floppy needs=vds
+TESTDMA2  floppy needs=vds
+TESTDMA3  floppy needs=vds
+TESTVCPI  needs=vcpi
+TESTVDS   needs=vds
+TESTVDS2  needs=vds
+TESTVDS3  needs=vds
+XMSTEST   needs=xms keys
+XMSTEST2  needs=xms
+XMSTEST3  needs=xms
+XMSTEST4  needs=xms
+XMSTEST5  needs=xms

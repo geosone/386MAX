@@ -33,6 +33,7 @@ RMREGS	ends
 rmseg	dw ?
 entry	dd ?
 nfail	dw 0
+dosmaj	db 0
 rm	RMREGS <>
 hexbuf	db '00000000 $'
 crlf	db 13,10,'$'
@@ -345,8 +346,19 @@ f25:	NL
 	call	cmpbuf
 	NL
 
-; INT 26h packet form: write the 20 sectors back unchanged, then read again
-	mov	word ptr pkt+6,offset single
+; INT 26h packet form: write the 20 sectors back unchanged, then read again.
+; DOS 7+ refuses direct writes (and halts) without a volume lock.
+	mov	ah,30h
+	int	21h
+	mov	dosmaj,al
+	cmp	al,7
+	jb	@F
+	mov	ax,440Dh
+	mov	bx,0003h			; level 0, drive C:
+	mov	cx,084Ah			; lock logical volume
+	xor	dx,dx
+	int	21h
+@@:	mov	word ptr pkt+6,offset single
 	mov	al,2
 	mov	cx,-1
 	mov	bx,offset pkt
@@ -354,6 +366,13 @@ f25:	NL
 	pop	cx
 	RES	'INT 26h packet 20 sectors'
 	NL
+	cmp	dosmaj,7
+	jb	@F
+	mov	ax,440Dh
+	mov	bx,0003h
+	mov	cx,086Ah			; unlock logical volume
+	int	21h
+@@:
 	mov	word ptr pkt+6,offset bulk
 	call	clrbulk
 	mov	al,2

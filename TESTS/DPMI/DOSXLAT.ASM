@@ -70,6 +70,8 @@ newname	db 'C:\Long Directory Name\Another long name.txt',0
 pattern	db 'C:\Long Directory Name\*.txt',0
 rootdir	db 'C:\',0
 lfnstr	db 'abcxyz',0
+nolfn	db 'no LFN API (7100h): 71xx skipped',13,10,'$'
+nofat32	db 'no FAT32 functions (7300h): 7302/7303 skipped',13,10,'$'
 fhandle	dw ?
 srchh	dw ?
 strbuf	db 300 dup (0)
@@ -244,6 +246,21 @@ rmexit:	mov	ah,9
 
 pm:	push	ds
 	pop	es
+
+; without an LFN API (71xxh returns AX=7100h) the 71xx part is skipped
+	mov	ax,71A0h
+	mov	dx,offset rootdir
+	mov	di,offset outbuf
+	mov	cx,32
+	stc
+	int	21h
+	jnc	@F
+	cmp	ax,7100h
+	jne	@F
+	mov	dx,offset nolfn
+	call	print
+	jmp	nolfnapi
+@@:
 
 ; 7139h mkdir
 	mov	ax,7139h
@@ -431,8 +448,22 @@ nfx:	NL
 	call	printz
 @@:	NL
 
-; 7303h extended free space
+nolfnapi:
+; 7303h extended free space (without FAT32 support: AX=7300h, skipped)
 	mov	ax,7303h
+	mov	dx,offset rootdir
+	mov	di,offset outbuf
+	mov	cx,44
+	mov	word ptr outbuf+2,0
+	stc
+	int	21h
+	jnc	@F
+	cmp	ax,7300h
+	jne	@F
+	mov	dx,offset nofat32
+	call	print
+	jmp	nofat32api
+@@:	mov	ax,7303h
 	mov	dx,offset rootdir
 	mov	di,offset outbuf
 	mov	cx,44
@@ -461,6 +492,7 @@ nfx:	NL
 	BAD
 @@:	NL
 
+nofat32api:
 ; 6501h extended country information into ES:DI
 	mov	ax,6501h
 	mov	bx,-1
