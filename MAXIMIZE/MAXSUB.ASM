@@ -361,6 +361,7 @@ CSOVR	 macro	 INSTR,ARGS
 	 extrn	 __spawnl:proc	; C library function to execute and return
 	 extrn	 _exit:proc	; C library function to return to DOS
 	 extrn	 _cstdwind:proc ; Procedure to shut down windowing
+	 extrn	 _dbg_puts:proc ; EMUDET.ASM: log to port E9h
 
 	 public  OLDINT1C_VEC
 OLDINT1C_VEC dd  ?		; Save area for old INT 1Ch handler
@@ -608,6 +609,11 @@ if (ASYS NE MOVEM)
 	 cmp	 REBOOT_VEC.VSEG,0E000h ; Izit a reboot to system ROM?
 	 jne	 short REBOOT_NOPROB ; No, so we can assume it's to 386MAX
 REBOOT_ALT:
+	 push	 cs		; Log for the development tests (port E9h)
+	 mov	 ax,offset MSG_RB_GOREAL
+	 push	 ax
+	 call	 _dbg_puts
+	 add	 sp,4
 	 cli			; Disallow interrupts
 	 mov	 al,0		; Subfunction to exit unconditionally
 	 EMMOUT  @EMM2_GOREAL	; Request 386MAX service
@@ -627,6 +633,12 @@ REBOOT_NOPROB:
 	 smsw	 ax		; Machine status word
 	 test	 al,1		; Protected/V86 mode?
 	 jnz	 short REBOOT_JMP ; Yes, leave it to the jump
+
+	 push	 cs		; Log for the development tests (port E9h)
+	 mov	 ax,offset MSG_RB_KBC
+	 push	 ax
+	 call	 _dbg_puts
+	 add	 sp,4
 
 	 in	 al,92h		; System control port A
 	 and	 al,not 03h	; A20 off, no fast reset
@@ -655,7 +667,16 @@ REBOOT_NOPROB:
 	 loop	 @B
 .8086
 REBOOT_JMP:
+	 push	 cs		; Log for the development tests (port E9h)
+	 mov	 ax,offset MSG_RB_JMP
+	 push	 ax
+	 call	 _dbg_puts
+	 add	 sp,4
 	 jmp	 REBOOT 	; Reboot the system
+
+MSG_RB_GOREAL db 'MAXIMIZE: reset: 386MAX returns to real mode (GOREAL)',10,0
+MSG_RB_KBC db	 'MAXIMIZE: reset: real mode, A20 off, CMOS 0Fh=0, keyboard controller FEh (warm flag 1234h)',10,0
+MSG_RB_JMP db	 'MAXIMIZE: reset: jump to the REBOOT vector (warm flag 1234h)',10,0
 
 KBC_WAIT:
 	 push	 cx

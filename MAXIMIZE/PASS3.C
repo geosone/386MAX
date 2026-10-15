@@ -27,6 +27,9 @@
 #include <maxvar.h>		/* MAXIMIZE global variables */
 #undef PASS3_C
 
+/* EMUDET.ASM */
+void dbg_puts (char far *text);
+
 #ifndef PROTO
 #include "reboot.pro"
 #include "maximize.pro"
@@ -183,6 +186,7 @@ WRITE_FILES:
 			write_lastphase (Pass); /* Write out the last phase # */
 			if (!AnyError) {
 				/* If still no error */
+				dbg_puts ("MAXIMIZE: phase 3 done, final reboot\n");
 				reboot();	/* Reboot the system */
 			}
 		} /* End IF */

@@ -32,6 +32,9 @@ int _getch(void);
 #include <stacker.h>
 #endif
 
+/* EMUDET.ASM */
+void dbg_puts (char far *text);
+
 #ifndef PROTO
 #include "reboot.pro"
 #include "maximize.pro"
@@ -110,6 +113,12 @@ int doreboot (void)
 			write_lastphase (Pass); /* Write out last phase # */
 			if (AnyError)
 				return (-1);
+			{
+				char line[48];
+
+				sprintf (line, "MAXIMIZE: phase %d done, reboot\n", Pass);
+				dbg_puts (line);
+			}
 			reboot();
 			/* If user specified REBOOTCMD=, return to DOS */
 		} /* End IF */

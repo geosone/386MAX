@@ -53,6 +53,11 @@
 #include <ins_var.h>
 #endif
 
+/* EMUDET.ASM */
+int emu_detect (char far *name);
+int dbg_avail (void);
+void dbg_puts (char far *text);
+
 #ifndef PROTO
 #include "maximize.pro"
 #include <maxsub.pro>
@@ -342,6 +347,17 @@ int _cdecl main (int argc, char **argv)
 			restbatcreate();
 
 		if (!AnyError) {
+			/* development tests: phase and machine on the emulator's
+			   debug console (port E9h, see EMUDET.ASM) */
+			if (dbg_avail ()) {
+				char emu[16], line[96];
+				unsigned far *resetflag = (unsigned far *) 0x00400072L;
+
+				emu_detect (emu);
+				sprintf (line, "MAXIMIZE: phase %d start, machine %s, BIOS reset flag %04X\n",
+					Pass, *emu ? emu : "unknown", *resetflag);
+				dbg_puts (line);
+			}
 			switch (Pass) {
 			case 1:
 				pass1 ();
@@ -356,6 +372,8 @@ int _cdecl main (int argc, char **argv)
 		} /* if (!AnyError) */
 	} /* if */
 
+	if (AnyError)
+		dbg_puts ("MAXIMIZE: error or abort\n");
 	if (AnyError)
 		restmsg ();
 	else if (BootDrive < 1) {
