@@ -10,6 +10,8 @@
 	.stack	1024
 
 	.data
+free0	dw	?
+page4	dd	?
 qpi	dd	0
 nfail	dw	0
 hexbuf	db	'0000 $'
@@ -183,6 +185,60 @@ d67x:	NL
 	call	hex
 	cmp	ax,bx
 	OKIF	e
+	NL
+
+; 04 allocate a 4KB page, 05 free it (free count of 0Ch -1, back)
+	mov	ah,0Ch
+	call	qpi
+	mov	free0,dx
+	mov	ah,04h
+	call	qpi
+	HDR	'04 allocate page'
+	jc	a04f
+	mov	page4,edx
+	mov	eax,edx
+	shr	eax,16
+	call	hex
+	mov	ax,dx
+	call	hex
+	mov	ah,0Ch
+	call	qpi
+	inc	dx
+	cmp	dx,free0
+	jne	a04f
+	call	ok
+	jmp	short a04x
+a04f:	call	fail
+a04x:	NL
+	mov	ah,05h
+	mov	dx,word ptr page4
+	call	qpi
+	HDR	'05 free page'
+	jc	a05f
+	mov	ah,0Ch
+	call	qpi
+	cmp	dx,free0
+	jne	a05f
+	call	ok
+	jmp	short a05x
+a05f:	call	fail
+a05x:	NL
+
+; 09 page frame of PTE B8h = B8h, 0A write it back
+	mov	ah,09h
+	mov	cx,0B8h
+	call	qpi
+	HDR	'09 frame of page B8 = B8'
+	jc	@F
+	cmp	dx,0B8h
+@@:	OKIF	e
+	NL
+	mov	ah,0Ah
+	mov	cx,0B8h
+	mov	dx,0B8h
+	call	qpi
+	HDR	'0A set frame of page B8'
+	OKIF	nc
 	NL
 
 ; 0C available memory, against VCPI DE03h

@@ -2306,6 +2306,26 @@ VCPI_DEALLOC_EXIT:
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 VCPI_DEALLOC endp		; End VCPI_DEALLOC procedure
+	 FPPROC  FVCPI_ALLOC -- Far VCPI_ALLOC (QPI 04h in JGROUP)
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+	 call	 VCPI_ALLOC	; CF=1 if none, else EDX = physical address
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+FVCPI_ALLOC endp		; End FVCPI_ALLOC procedure
+	 FPPROC  FVCPI_DEALLOC -- Far VCPI_DEALLOC (QPI 05h in JGROUP)
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+	 call	 VCPI_DEALLOC	; EDX = physical address, CF=1 if unknown
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+FVCPI_DEALLOC endp		; End FVCPI_DEALLOC procedure
 	 NPPROC  VCPI_SET -- Set System Variables
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|

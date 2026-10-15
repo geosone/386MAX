@@ -76,6 +76,8 @@ ECODE	 segment use16 dword public 'ecode' ; Start ECODE segment
 	 extrn	 FCHECK_INP_NOQPI:far
 	 extrn	 FCHECK_OUT_NOQPI:far
 	 extrn	 FWRAP_ENABLE:far
+	 extrn	 FVCPI_ALLOC:far
+	 extrn	 FVCPI_DEALLOC:far
 	 extrn	 FWRAP_DISABLE:far
 	 extrn	 FSET_PPL0STK:far
 
@@ -95,6 +97,8 @@ EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 extrn	 IOTRAP_TYP:dword
 	 extrn	 QPI_NPORT:word
 	 extrn	 FRAME:word
+	 extrn	 NPHYS16S:byte
+	 extrn	 PPHYS2SEG:dword
 	 extrn	 PRGPDT:dword
 	 extrn	 PDTLEN:dword
 	 extrn	 POVR_MAC:word
@@ -516,6 +520,10 @@ AX=1684h, BX=4354h and by INT 2Fh AX=D201h.  Supported:
 AH	 =	 00h	 Get state (AL = 0:  ON)
 	 =	 01h	 Set state (OFF refused)
 	 =	 03h	 Get version (AX = BX = 0703h)
+	 =	 04h	 Allocate a 4KB page (EDX = physical page #)
+	 =	 05h	 Free the 4KB page DX
+	 =	 09h	 Get the page frame of PTE CX (DX)
+	 =	 0Ah	 Set ...		 (PTE = DX shl 12 or 7)
 	 =	 0Ch	 Get available memory (QMAX_VCP, the old 0Ch too)
 	 =	 11h	 Get memory type map (256 bytes at ES:DI)
 	 =	 12h	 Get HIRAM chain (BX = first high DOS MCB)
@@ -576,6 +584,14 @@ Caller's CF =	 0 if successful
 
 	 cmp	 ah,03h 	; Izit Get Version?
 	 je	 near ptr QPI_API_VER ; Jump if so
+	 cmp	 ah,04h 	; Izit Allocate 4KB Page?
+	 je	 near ptr QPI_API_ALLOC ; Jump if so
+	 cmp	 ah,05h 	; Izit Free 4KB Page?
+	 je	 near ptr QPI_API_FREE ; Jump if so
+	 cmp	 ah,09h 	; Izit Get PTE Frame?
+	 je	 near ptr QPI_API_GETFRM ; Jump if so
+	 cmp	 ah,0Ah 	; Izit Set PTE Frame?
+	 je	 near ptr QPI_API_SETFRM ; Jump if so
 
 	 cmp	 ah,0Ch 	; Izit Get Available Memory?
 	 je	 near ptr QPI_API_AVAIL ; Jump if so
@@ -607,7 +623,7 @@ Caller's CF =	 0 if successful
 	 cmp	 ah,20h 	; Izit VirtualHDIRQ?
 	 je	 near ptr QPI_API_VHI ; Jump if so
 
-; Others (02h, 04h-0Bh, 0Dh-0Fh, 13h-15h, 19h, 1Ch, 1Dh, 21h and up):
+; Others (02h, 06h-08h, 0Bh, 0Dh-0Fh, 13h-15h, 19h, 1Ch, 1Dh, 21h and up):
 ; CF set as QEMM 7 does for those it doesn't support
 
 	 cmp	 ah,1Ah 	; Izit I/O trapping?
@@ -869,12 +885,13 @@ QPI_API_TYPES_NXT:
 	 mov	 esi,ecx	; Copy page #
 	 shl	 esi,12 	; Convert to linear address
 
-	 mov	 al,0Bh 	; Assume conventional
+	 mov	 al,04h 	; Conventional:  excluded (the EMS-mappable pages
+				; become 00h below, as QEMM 97 reports them)
 
 	 cmp	 esi,edx	; Izit below the end of conventional memory?
 	 jb	 short QPI_API_TYPES_SET ; Jump if so
 
-	 mov	 al,09h 	; Assume page frame
+	 mov	 al,09h 	; Page frame (00h below, as QEMM 97)
 
 	 or	 ebx,ebx	; Izit an EMS page frame?
 	 jz	 short @F	; Jump if not
@@ -946,7 +963,7 @@ QPI_API_TYPES_ROM:
 	 cmp	 AGROUP:[edi+eax].LO,04h ; Izit identity-mapped (excluded)?
 	 jne	 short QPI_API_TYPES_MR ; Jump if not
 
-	 mov	 AGROUP:[edi+eax].LO,07h ; Adapter ROM
+	 mov	 AGROUP:[edi+eax].LO,06h ; Adapter ROM:  06h (ROM), as QEMM 97
 
 	 jmp	 short QPI_API_TYPES_XPG ; Join common code
 
@@ -965,6 +982,25 @@ QPI_API_TYPES_XROM:
 
 	 cmp	 esi,0F0000h	; Izit the end of the adapter area?
 	 jb	 short QPI_API_TYPES_ROM ; Jump if not
+
+; The EMS-mappable 16KB pages, the frame as well as the conventional
+; memory we map, are 00h ("mappable"), as QEMM 97 reports them
+
+	 mov	 esi,PPHYS2SEG	; Get offset in PGROUP of PHYS2SEG
+	 movzx	 ecx,NPHYS16S.ELO ; Get # physical 16KB pages in EMS system
+	 jcxz	 QPI_API_TYPES_XEMS ; Jump if none
+QPI_API_TYPES_EMS:
+	 movzx	 eax,PGROUP:[esi].ELO ; Get its segment
+	 shr	 eax,8		; Convert from paras to 4KB pages
+
+	 cmp	 eax,256-4	; Izit within the first MB?
+	 ja	 short @F	; Jump if not
+
+	 mov	 AGROUP:[edi+eax].EDD,0 ; Its four 4KB pages are mappable
+@@:
+	 add	 esi,2		; Skip to the next one
+	 loop	 QPI_API_TYPES_EMS ; Jump if more physical pages
+QPI_API_TYPES_XEMS:
 
 	 pop	 es		; Restore JGROUP selector
 	 assume  es:JGROUP	; Tell the assembler about it
@@ -1306,6 +1342,85 @@ QPI_API_PTE1:
 	 mov	 cr3,eax	; ...
 
 	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 04:  Allocate a 4KB page:  EDX = physical page # (address shr 12), 0 and
+;      CF=1 if there is none (QEMM 97:  EDX 32 bits)
+; 05:  Free the 4KB page DX (QEMM 97:  always CF=0)
+
+QPI_API_ALLOC:
+	 FIXICALL PGROUP:FVCPI_ALLOC,DTE_CS2 ; EDX = physical address
+	 jnc	 short @F	; Jump if we got one
+
+	 mov	 [ebp].INTXX_EDX,0 ; None
+	 jmp	 QPI_API_EXIT	; Join common error code
+@@:
+	 shr	 edx,12 	; Convert to page #
+	 mov	 [ebp].INTXX_EDX,edx ; Return in caller's EDX
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_FREE:
+	 movzx	 edx,[ebp].INTXX_EDX.ELO ; Get page #
+	 shl	 edx,12 	; Convert to physical address
+	 FIXICALL PGROUP:FVCPI_DEALLOC,DTE_CS2 ; Free it (an unknown page:  CF=1)
+
+	 jmp	 QPI_API_OK	; Join common exit code (always CF=0)
+
+; 09:  Get the page frame of PTE CX into DX
+; 0A:  Set the PTE CX to the page frame DX (present, writable, user)
+; As QEMM 97 without checks of the frame; CX within our page table
+
+QPI_API_GETFRM:
+	 call	 QPI_PTEADDR	; ESI = offset in PGROUP of the PTE, CF=1 if none
+	 jc	 near ptr QPI_API_EXIT ; Jump if out of range
+
+	 mov	 eax,PGROUP:[esi].PDT_PTE ; Get the PTE
+	 shr	 eax,12 	; Isolate the page frame
+	 mov	 [ebp].INTXX_EDX.ELO,ax ; Return in caller's DX
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_SETFRM:
+	 call	 QPI_PTEADDR	; ESI = offset in PGROUP of the PTE, CF=1 if none
+	 jc	 near ptr QPI_API_EXIT ; Jump if out of range
+
+	 movzx	 eax,[ebp].INTXX_EDX.ELO ; Get page frame
+	 shl	 eax,12 	; Convert to physical address
+	 or	 al,07h 	; Present, writable, user
+	 mov	 PGROUP:[esi].PDT_PTE,eax ; Set it
+
+	 mov	 eax,cr3	; Flush the TLB
+	 mov	 cr3,eax	; ...
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+; ESI = offset in PGROUP of the PTE of page CX (caller's), CF=1 if beyond
+; the first 4MB or our page table
+
+QPI_PTEADDR:
+	 movzx	 esi,[ebp].INTXX_ECX.ELO ; Get page #
+
+	 cmp	 esi,3FFh	; Izit within the first 4MB?
+	 ja	 short QPI_PTEADDR_ERR ; Jump if not
+
+	 shl	 esi,2		; Convert to offset in PDT
+
+	 cmp	 esi,PDTLEN	; Izit within our page table?
+	 jae	 short QPI_PTEADDR_ERR ; Jump if not
+
+	 FIXICALL PGROUP:FWRAP_DISABLE,DTE_CS2 ; Disable the 1MB wrap (pages 100-10F)
+
+	 add	 esi,PRGPDT	; Plus offset in PGROUP of PDT
+
+	 clc			; Indicate it's valid
+
+	 retn			; Return to caller
+
+QPI_PTEADDR_ERR:
+	 stc			; Indicate it's out of range
+
+	 retn			; Return to caller
 
 
 ; 2000:  Get VirtualHDIRQ information (not supported:  0)
