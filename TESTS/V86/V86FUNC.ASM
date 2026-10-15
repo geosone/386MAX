@@ -177,20 +177,17 @@ start:
 	push	es
 	push	40h
 	pop	es
-	mov	eax,es:[6Ch]
 	sti
-	hlt			; returns with the next interrupt
-	mov	ecx,es:[6Ch]
-	mov	bx,5
-@@:	sti
-	hlt
-	dec	bx
+	hlt			; returns (QEMM: at once, without a tick)
+	mov	eax,es:[6Ch]
+	mov	ecx,10000000h	; the timer runs: wait for a tick
+@@:	cmp	eax,es:[6Ch]
+	jne	@F
+	dec	ecx
 	jnz	@B
-	mov	edx,es:[6Ch]
-	pop	es
-	sub	edx,eax
-	cmp	edx,1		; 6 HLTs: at least one timer tick passed
-	CHECK	'HLT with IF=1 returns, timer runs', ae
+@@:	pop	es
+	or	ecx,ecx
+	CHECK	'HLT with IF=1 returns, timer runs', nz
 
 	TITLE_	'software interrupts'
 	mov	hits,0

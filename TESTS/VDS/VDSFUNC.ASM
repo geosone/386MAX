@@ -249,16 +249,14 @@ cpy1:
 	CHECK	'release (8108h)', nc
 	mov	di,offset vd
 	xor	dx,dx
-	vds	8108h
-	pushf
-	cmp	al,0Ah
-	je	@F
-	popf
-	clc
-	pushf
-@@:	popf
-	call	pal
-	CHECK	'release again: 0Ah', c
+	vds	8108h		; 0Ah by the spec; QEMM does not check it
+	jc	@F
+	INFO	'release again: no error (as QEMM)'
+	jmp	rel2
+@@:	NOTE_	'release again: AL='
+	call	phex8
+	call	pcrlf
+rel2:
 	; larger than the buffer
 	mov	eax,maxbuf
 	add	eax,1000h

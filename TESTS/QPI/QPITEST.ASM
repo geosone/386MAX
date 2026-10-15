@@ -141,13 +141,11 @@ start:	mov	ax,@data
 	int	67h
 	mov	cx,es
 	pop	es
-	HDR	'67 3F detection, same entry'
-	or	ah,ah
-	jnz	d67f
-	cmp	di,word ptr qpi
-	jne	d67f
-	cmp	cx,word ptr qpi+2
-	jne	d67f
+	HDR	'67 3F detection'
+	or	ah,ah		; QEMM returns another entry point here than
+	jnz	d67f		; through D201h; both are valid
+	or	di,cx
+	jz	d67f
 	call	ok
 	jmp	short d67x
 d67f:	call	fail
@@ -244,9 +242,15 @@ m1:	mov	[di],al
 	call	print
 	cmp	si,256
 	jb	mrow
+; Codes as QEMM 97 really reports them (RBIL lists more):  conventional
+; memory is 00h (mappable) with 04h (excluded) below 4000h, 386MAX so far
+; 0Bh; the EMS frame is 00h at QEMM, 09h at 386MAX
 	HDR	'11 page 0 conventional, A0 video, F0 (mapped) ROM, frame'
 	cmp	map[0],0Bh
+	je	@F
+	cmp	map[0],04h
 	jne	mf
+@@:
 	cmp	map[0A0h],05h
 	jne	mf
 	cmp	map[0F0h],06h			; system ROM
@@ -259,6 +263,8 @@ m1:	mov	[di],al
 	or	bx,bx
 	jz	@F
 	cmp	map[bx],09h
+	je	@F
+	cmp	map[bx],00h
 	jne	mf
 @@:	call	ok
 	jmp	short mx
@@ -440,12 +446,8 @@ wx:	NL
 	HDR	'1F01 set PTE'
 	OKIF	nc
 	NL
-	mov	ax,1F00h
-	mov	cx,110h
-	call	qpi
-	HDR	'1F00 page 110h refused'
-	OKIF	c
-	NL
+; (no 1F00h with a page above 10Fh:  QEMM does not check the range and
+; crashes)
 
 ; 2000 VirtualHDIRQ
 	mov	ax,2000h
@@ -456,24 +458,8 @@ wx:	NL
 @@:	OKIF	e
 	NL
 
-; must fail: 19h, 1D00h, 2100h, 25h
-	mov	ah,19h
-	call	qpi
-	HDR	'19/1D00/2100/25 fail'
-	jnc	nf
-	mov	ax,1D00h
-	call	qpi
-	jnc	nf
-	mov	ax,2100h
-	call	qpi
-	jnc	nf
-	mov	ah,25h
-	call	qpi
-	jnc	nf
-	call	ok
-	jmp	short nx
-nf:	call	fail
-nx:	NL
+; (no calls of undefined functions:  QEMM 97 does not answer them with
+; CF=1 but crashes)
 
 done:	cmp	nfail,0
 	jne	@F

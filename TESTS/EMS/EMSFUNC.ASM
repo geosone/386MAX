@@ -324,9 +324,7 @@ rl:	mov	al,bl
 	je	@F
 	cmp	ah,88h
 @@:	CHECK	'too many pages: 87h/88h', e
-	ems	4F05h
-	cmp	ah,8Fh
-	CHECK	'invalid subfunction: 8Fh', e
+	; (no invalid subfunction test:  4F05h with this DX crashes QEMM 97)
 
 	TITLE_	'save/restore page map'
 	mov	al,0
@@ -366,6 +364,19 @@ rl:	mov	al,bl
 	mov	di,offset mapbuf
 	ems	4E00h
 	CHECK	'get map (4E00h)', e
+	NOTE_	'context: '
+	mov	si,offset mapbuf
+	mov	cx,mapsz
+	shr	cx,1
+	cmp	cx,24
+	jbe	@F
+	mov	cx,24
+@@:	jcxz	@F
+	lodsw
+	call	phex16
+	NOTE_	' '
+	loop	@B
+@@:	call	pcrlf
 	mov	al,0
 	mov	bx,6
 	call	mapp

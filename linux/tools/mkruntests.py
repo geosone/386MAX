@@ -32,8 +32,10 @@ for line in open(lst):
     # no redirection inside IF (SvarCOM ignores it there)
     lines += ['ECHO RUN %s >> RESULT.TXT' % name,
               'ECHO %s' % name,
-              '%s.EXE %s > %s.TXT' % (name, args.strip(), name),
-              'IF ERRORLEVEL 1 GOTO F%d' % n,
+              '%s.EXE %s > %s.TXT' % (name, args.strip(), name)]
+    if 'term' in w[1:]:   # errorlevel 255: terminated by the host = PASS
+        lines += ['IF ERRORLEVEL 255 GOTO P%d' % n]
+    lines += ['IF ERRORLEVEL 1 GOTO F%d' % n, ':P%d' % n,
               'ECHO PASS %s >> RESULT.TXT' % name,
               'ECHO   PASS',
               'GOTO N%d' % n,

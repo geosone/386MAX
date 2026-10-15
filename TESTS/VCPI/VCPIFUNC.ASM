@@ -168,7 +168,17 @@ novcpi:	INFO	'no VCPI server'
 @@:	NOTE_	'top of RAM (CMOS) '
 	call	phex32
 	cmp	edx,eax
-	CHECK	', highest page below it', b
+	jb	de02ok
+	jne	de02bad
+	; = end of RAM: 386MAX (Qualitas) returns the end on purpose, its
+	; DE02h value is tuned around bugs of the Phar Lap and Ergo extenders
+	INFO	', DE02h = end of RAM (386MAX compatibility, spec: last page)'
+	cmp	eax,eax
+	jmp	de02chk
+de02ok:	cmp	eax,eax
+	jmp	de02chk
+de02bad: or	eax,eax		; above the RAM: wrong (ZF=0 as RAM size > 0)
+de02chk: CHECK	', highest page not above it', e
 	vcpi	0DE03h
 	NOTE_	'free pages '
 	mov	eax,edx
@@ -238,10 +248,12 @@ fr1:	add	si,4
 	and	edx,0FFFFF000h
 	cmp	edx,0B8000h
 	CHECK	' (DE06h) = B8000h', e
-	mov	cx,100h
-	vcpi	0DE06h
-	cmp	ah,8Bh
-	CHECK	'page 100h refused: 8Bh', e
+	mov	cx,100h		; outside the first MB:  EMM386 and Jemm refuse
+	vcpi	0DE06h		; it (8Bh), QEMM and 386MAX return the HMA page
+	NOTE_	'page 100h (DE06h): status '
+	mov	al,ah
+	call	phex8
+	INFO	' (8Bh: EMM386/Jemm, 00h: QEMM/386MAX)'
 	vcpi	0DE07h
 	NOTE_	'CR0 '
 	mov	eax,ebx

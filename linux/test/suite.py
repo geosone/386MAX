@@ -14,11 +14,14 @@ on the screen; the runner reads the screen through the QEMU monitor:
     CRASH         the machine reset (QEMU runs with -no-reboot)
 
 After a HANG or CRASH the runner boots again and continues with the next test.
+QEMU runs with TCG (ACCEL="-accel kvm" for a quick run: KVM is unreliable on
+hosts that also load VirtualBox's modules).
 Results: build/suite/<suite>-<profile>-<dos>/result.txt and out/<SUITE>_<TEST>.TXT
 (the redirected output of each test).
 
 Suites (TESTS/<SUITE>.LST, one test per line:
-    NAME [timeout=S] [keys] [floppy] [needs=ems,vcpi,...] [-- ARGS]):
+    NAME [timeout=S] [keys] [floppy] [term] [needs=ems,vcpi,...] [-- ARGS];
+    term: errorlevel 255, the client terminated by the host, is a PASS):
     max    the own tests (TESTS/<DIR>/<NAME>.ASM, listed as DIR/NAME)
     jemm   the test programs of Jemm (directory JEMM_TEST, local only)
     hx     the HDPMI regression tests of HX (directory HX_REG, local only)
@@ -73,12 +76,21 @@ PROFILES = {
     'cwsdpmi': (['DEVICE=C:\\REF\\HIMEMX.EXE'], ['HIMEMX.EXE', 'CWSDPMI.EXE'], 'xms dpmi32'),
     'maxcws':  (['DEVICE=C:\\MAX\\386MAX.SYS PRO=C:\\MAX\\NODPMI.PRO'], ['CWSDPMI.EXE'],
                 'xms ems vcpi vds dpmi32'),
+    # QEMM 97 with QDPMI: needs a DOS image with QEMM installed in C:\QEMM
+    # (-d qemm622, made locally from the user's own copy)
+    'qemm':    (['DEVICE=C:\\QEMM\\QEMM386.SYS RAM FR=D000 X=E000-EFFF',
+                 'DEVICE=C:\\QEMM\\QDPMI.SYS SWAPFILE=DPMI.SWP SWAPSIZE=1024'], [],
+                'xms ems vcpi vds qpi dpmi dpmi32'),
 }
 PROFILE_FILES = {'maxcws': {'MAX/NODPMI.PRO': ['NODPMI']}}
 AUTOEXTRA = {'hdpmi': ['C:\\REF\\HDPMI16.EXE -r > NUL', 'C:\\REF\\HDPMI32.EXE -r > NUL'],
              'cwsdpmi': ['C:\\REF\\CWSDPMI.EXE -p > NUL'],
              'maxcws': ['C:\\REF\\CWSDPMI.EXE -p > NUL']}
 WORSE = {'FAIL', 'HANG', 'CRASH', 'MISSING'}
+# TCG by default: KVM on this host is unreliable (KVM and VirtualBox modules
+# loaded together), results under KVM only as a quick pre-test
+ACCEL = os.environ.get('ACCEL', '-accel tcg')
+SLOW = 4 if 'tcg' in ACCEL else 1        # timeouts are scaled by this
 GOOD = {'PASS', 'END'}
 
 
@@ -93,6 +105,7 @@ class Test:
         self.path = w[0].upper()
         self.suite, self.name, self.args = suite, os.path.basename(self.path), args.strip()
         self.timeout, self.keys, self.floppy, self.needs = 30, False, False, set()
+        self.term = False   # errorlevel 255 (client terminated by the host) = PASS
         for o in w[1:]:
             k, _, v = o.partition('=')
             if k == 'timeout':
@@ -101,6 +114,8 @@ class Test:
                 self.keys = True
             elif k == 'floppy':
                 self.floppy = True
+            elif k == 'term':
+                self.term = True
             elif k == 'needs':
                 self.needs = set(v.split(','))
         self.id = '%s/%s' % (suite, self.name)
@@ -188,8 +203,10 @@ def run_batch(p, tests):
     for n, t in enumerate(tests):
         d = 'C:\\SUITE\\' + t.suite
         lines += ['CD %s' % d, 'ECHO @@B %s' % t.id, 'ECHO @@B %s >> %s' % (t.id, LOG),
-                  '%s\\%s.EXE %s > C:\\SUITE\\OUT\\%s\\%s.TXT' % (d, t.name, t.args, t.suite, t.name),
-                  'IF ERRORLEVEL 1 GOTO F%d' % n,
+                  '%s\\%s.EXE %s > C:\\SUITE\\OUT\\%s\\%s.TXT' % (d, t.name, t.args, t.suite, t.name)]
+        if t.term:
+            lines += ['IF ERRORLEVEL 255 GOTO P%d' % n]
+        lines += ['IF ERRORLEVEL 1 GOTO F%d' % n, ':P%d' % n,
                   'ECHO @@E %s 0' % t.id, 'ECHO @@E %s 0 >> %s' % (t.id, LOG), 'GOTO N%d' % n,
                   ':F%d' % n,
                   'ECHO @@E %s 1' % t.id, 'ECHO @@E %s 1 >> %s' % (t.id, LOG),
@@ -214,7 +231,7 @@ def boot(img, out, tests, results, log):
     sock = os.path.join(out, 'monitor.sock')
     fda = ['-drive', 'if=floppy,index=0,format=raw,file=' + os.path.join(out, 'floppy.img')]
     qemu = subprocess.Popen(
-        ['qemu-system-i386', '-machine', 'pc'] + os.environ.get('ACCEL', '-accel kvm').split()
+        ['qemu-system-i386', '-machine', 'pc'] + ACCEL.split()
         + ['-m', os.environ.get('MEMSIZE', '64'), '-display', 'none', '-vga', 'std',
            '-monitor', 'unix:%s,server,nowait' % sock, '-no-reboot',
            '-drive', 'if=ide,index=0,format=raw,file=' + img] + fda
@@ -239,7 +256,7 @@ def boot(img, out, tests, results, log):
                 ended.add(w[1])
                 if cur == w[1]:
                     cur = None
-        if not seen and time.time() - booted > 120:
+        if not seen and time.time() - booted > 120 * SLOW:
             killed = 'boot'
             save_screen(out, 'boot', scr)
         elif cur:
@@ -247,7 +264,7 @@ def boot(img, out, tests, results, log):
             if t.keys and time.time() - lastkey > 3:
                 m.cmd('sendkey ret')
                 lastkey = time.time()
-            if time.time() - since > t.timeout:
+            if time.time() - since > t.timeout * SLOW:
                 killed = cur
                 save_screen(out, t.id, scr)
         if killed:
@@ -273,12 +290,15 @@ def boot(img, out, tests, results, log):
             results[w[1]] = (st, w[2])
             log('%s %s' % (w[1], st))
             last = None
-    if killed == 'boot' and not results:
+    if killed == 'boot' and not results and not last:
         results['boot'] = ('HANG', '')
     elif last and last not in results:
         st = 'HANG' if killed == last else 'CRASH'
         results[last] = (st, '')
         log('%s %s' % (last, st))
+    if killed == 'boot' and last and last not in results:
+        results[last] = ('HANG', '')   # its screen covered the @@B line
+        log('%s HANG' % last)
     if killed and killed != 'boot' and killed not in results:
         results[killed] = ('HANG', '')
         log('%s HANG' % killed)
@@ -349,8 +369,8 @@ def read_result(path):
     return r
 
 
-ORDER = ['emm386', 'himem', 'jemmex', 'jemm386', 'himemx', 'hdpmi', 'max']
-DOSORDER = ['msdos622', 'msdos71', 'edrdos', 'svardos', 'freedos']
+ORDER = ['emm386', 'himem', 'qemm', 'jemmex', 'jemm386', 'himemx', 'hdpmi', 'cwsdpmi', 'maxcws', 'max']
+DOSORDER = ['msdos622', 'msdos71', 'edrdos', 'svardos', 'freedos', 'qemm622']
 
 
 def matrix():
