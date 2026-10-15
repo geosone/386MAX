@@ -76,6 +76,7 @@ ECODE	 segment use16 dword public 'ecode' ; Start ECODE segment
 	 extrn	 FCHECK_INP_NOQPI:far
 	 extrn	 FCHECK_OUT_NOQPI:far
 	 extrn	 FWRAP_ENABLE:far
+	 extrn	 FWRAP_DISABLE:far
 	 extrn	 FSET_PPL0STK:far
 
 ECODE	 ends			; End ECODE segment
@@ -93,6 +94,15 @@ EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 extrn	 PIOBIT:dword
 	 extrn	 IOTRAP_TYP:dword
 	 extrn	 QPI_NPORT:word
+	 extrn	 FRAME:word
+	 extrn	 PRGPDT:dword
+	 extrn	 PDTLEN:dword
+	 extrn	 POVR_MAC:word
+	 extrn	 SYSROM_START:word
+	 extrn	 TOTSIZE:dword
+	 extrn	 EMMSIZE:dword
+	 extrn	 PRGSIZE:word
+	 extrn	 OVRSIZE:word
 
 EDATA	 ends			; End EDATA segment
 
@@ -380,6 +390,15 @@ AL/AX/EAX =	 value read
 
 	 mov	 IOTRAP_TYP,ecx ; Mark as input of this width
 
+; 386MAX's own virtualization only applies while the port's bit is set
+; in the I/O permission bit map (e.g. CHECK3B5INP clears it after the
+; first access, from then on the port goes to the hardware)
+
+	 movzx	 esi,dx 	; Copy the I/O port #
+	 mov	 ebx,PIOBIT	; Get offset in PGROUP of I/O bit map
+	 bt	 PGROUP:[ebx],esi ; Izit trapped?
+	 jnc	 short QPI_UNTRAPIN_HW ; Jump if not
+
 	 push	 ecx		; Save width
 	 push	 edx		; ...  port
 	 FIXICALL PGROUP:FCHECK_INP_NOQPI,DTE_CS2 ; Check on I/O port inputs
@@ -387,7 +406,7 @@ AL/AX/EAX =	 value read
 	 pop	 edx		; Restore
 	 pop	 ecx		; ...
 	 jc	 short QPI_UNTRAPIN_EXIT ; Jump if value supplied
-
+QPI_UNTRAPIN_HW:
 	 cmp	 cl,@IOTRAP_DW	; Izit word I/O?
 	 je	 short QPI_UNTRAPIN_DW ; Jump if so
 	 ja	 short QPI_UNTRAPIN_DD ; Jump if dword I/O
@@ -436,6 +455,15 @@ SS:EBP	 ==>	 Caller's INTXX_STR
 
 	 mov	 IOTRAP_TYP,ecx ; Mark as I/O of this width
 
+; 386MAX's own virtualization only applies while the port's bit is set
+; in the I/O permission bit map (e.g. CHECK3B5INP clears it after the
+; first access, from then on the port goes to the hardware)
+
+	 movzx	 esi,dx 	; Copy the I/O port #
+	 mov	 ebx,PIOBIT	; Get offset in PGROUP of I/O bit map
+	 bt	 PGROUP:[ebx],esi ; Izit trapped?
+	 jnc	 short QPI_UNTRAPOUT_HW ; Jump if not
+
 	 push	 ecx		; Save width
 	 push	 edx		; ...  port
 	 push	 eax		; ...  value
@@ -446,6 +474,7 @@ SS:EBP	 ==>	 Caller's INTXX_STR
 	 pop	 ecx		; ...
 	 jc	 short QPI_UNTRAPOUT_EXIT ; Jump if already done
 
+QPI_UNTRAPOUT_HW:
 	 cmp	 cl,@IOTRAP_DW	; Izit word I/O?
 	 je	 short QPI_UNTRAPOUT_DW ; Jump if so
 	 ja	 short QPI_UNTRAPOUT_DD ; Jump if dword I/O
@@ -479,9 +508,28 @@ COMMENT|
 
 QPI functions, jumped to from INTFE (QMAX_VCP), the old VCPI entry
 point returned by INT 67h AH=3Fh, CX='QE', DX='MM' and by INT 2Fh
-AX=1684h, BX=4354h.  Only the functions SBEMU uses are supported:
+AX=1684h, BX=4354h and by INT 2Fh AX=D201h.  Supported:
 
-AH	 =	 03h	 Get version (AX = BX = 0703h)
+AH	 =	 00h	 Get state (AL = 0:  ON)
+	 =	 01h	 Set state (OFF refused)
+	 =	 03h	 Get version (AX = BX = 0703h)
+	 =	 0Ch	 Get available memory (QMAX_VCP, the old 0Ch too)
+	 =	 11h	 Get memory type map (256 bytes at ES:DI)
+	 =	 12h	 Get HIRAM chain (BX = first high DOS MCB)
+AX	 =	 1600h	 Get memory access status (256 bytes at ES:DI)
+	 =	 1601h	 Set ...
+AH	 =	 17h	 Get memory usage statistics (81 bytes at ES:DI)
+	 =	 18h	 Is conventional memory mapped at ES:BX for CX pages?
+AX	 =	 1A02h	 Untrapped OUT DX,BH; IN BL,DX+1
+	 =	 1A03h	 Untrapped OUT DX,BH; OUT DX+1,BL
+	 =	 1B05h	 Is the file DS:DX a Windows driver (.DRV, GDI.EXE)?
+	 =	 1E00h	 Stealth configuration (none)
+	 =	 1E01h	 # Stealth'ed ROMs (none)
+	 =	 1E02h	 Stealth ROM list (none)
+	 =	 1F00h	 Get PTE of page CX (0-10Fh) into EDX
+	 =	 1F01h	 Set ...
+	 =	 2000h	 Get VirtualHDIRQ state (not supported)
+	 =	 2001h	 Set ...		 (ignored)
 AX	 =	 1A00h	 Untrapped IN  AL,DX (result in BL)
 	 =	 1A01h	 Untrapped OUT DX,BL
 	 =	 1A04h	 Untrapped I/O (CX = flags, EBX = value)
@@ -515,8 +563,47 @@ Caller's CF =	 0 if successful
 	 cmp	 ah,@MV_API	; Izit Open MaxView extension?
 	 je	 near ptr QPI_API_MV ; Jump if so
 
+	 cmp	 ah,00h 	; Izit Get State?
+	 je	 near ptr QPI_API_STATE ; Jump if so
+
+	 cmp	 ah,01h 	; Izit Set State?
+	 je	 near ptr QPI_API_SETST ; Jump if so
+
 	 cmp	 ah,03h 	; Izit Get Version?
 	 je	 near ptr QPI_API_VER ; Jump if so
+
+	 cmp	 ah,0Ch 	; Izit Get Available Memory?
+	 je	 near ptr QPI_API_AVAIL ; Jump if so
+
+	 cmp	 ah,11h 	; Izit Get Memory Type Map?
+	 je	 near ptr QPI_API_TYPES ; Jump if so
+
+	 cmp	 ah,12h 	; Izit Get HIRAM Chain?
+	 je	 near ptr QPI_API_HIRAM ; Jump if so
+
+	 cmp	 ah,16h 	; Izit Get/Set Memory Access Status?
+	 je	 near ptr QPI_API_ACC ; Jump if so
+
+	 cmp	 ah,17h 	; Izit Get Memory Usage Statistics?
+	 je	 near ptr QPI_API_STAT17 ; Jump if so
+
+	 cmp	 ah,18h 	; Izit Check Conventional Memory Mapping?
+	 je	 near ptr QPI_API_CONV ; Jump if so
+
+	 cmp	 ah,1Bh 	; Izit Windows support?
+	 je	 near ptr QPI_API_WIN ; Jump if so
+
+	 cmp	 ah,1Eh 	; Izit Stealth information?
+	 je	 near ptr QPI_API_STEALTH ; Jump if so
+
+	 cmp	 ah,1Fh 	; Izit Get/Set PTE?
+	 je	 near ptr QPI_API_PTE ; Jump if so
+
+	 cmp	 ah,20h 	; Izit VirtualHDIRQ?
+	 je	 near ptr QPI_API_VHI ; Jump if so
+
+; Others (02h, 04h-0Bh, 0Dh-0Fh, 13h-15h, 19h, 1Ch, 1Dh, 21h and up):
+; CF set as QEMM 7 does for those it doesn't support
 
 	 cmp	 ah,1Ah 	; Izit I/O trapping?
 	 jne	 short QPI_API_EXIT ; Jump if not
@@ -526,6 +613,12 @@ Caller's CF =	 0 if successful
 
 	 cmp	 al,01h 	; Izit untrapped output?
 	 je	 near ptr QPI_API_OUT ; Jump if so
+
+	 cmp	 al,02h 	; Izit untrapped indexed input?
+	 je	 near ptr QPI_API_INDEX ; Jump if so
+
+	 cmp	 al,03h 	; Izit untrapped indexed output?
+	 je	 near ptr QPI_API_INDEX ; Jump if so
 
 	 cmp	 al,04h 	; Izit untrapped I/O?
 	 je	 near ptr QPI_API_IO ; Jump if so
@@ -693,6 +786,500 @@ QPI_API_UNTRAP:
 	 mov	 es:QPI_PORT[edi*2],ax ; Save in this one's place
 	 mov	 al,QPI_OWN[esi] ; Get its flag
 	 mov	 es:QPI_OWN[edi],al ; Save in this one's place
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+; Caller's ES:DI as linear address in EDI (for AGROUP)
+
+QPI_ESDI macro
+	 movzx	 eax,[ebp].INTXX_ES ; Get caller's ES
+	 shl	 eax,4-0	; Convert from paras to bytes
+	 movzx	 edi,[ebp].INTXX_EDI.ELO ; Get caller's DI
+	 add	 edi,eax	; Plus segment
+	 endm			; QPI_ESDI
+
+
+; 0C:  Get available memory (INTFE has put the free count into EDX, which
+; is what the old VCPI function 0Ch returns, with AH = 0)
+
+QPI_API_AVAIL:
+	 mov	 edx,[ebp].INTXX_EDX ; Get # free 4KB pages
+
+	 cmp	 edx,0FFFFh	; Izit too big for DX?
+	 jbe	 short @F	; Jump if not
+
+	 mov	 edx,0FFFFh	; Use the maximum
+	 mov	 [ebp].INTXX_EDX,edx ; Return in caller's EDX
+@@:
+	 mov	 eax,EMMSIZE	; Get EMS memory size in 1KB
+	 shr	 eax,12-10	; Convert to 4KB pages
+
+	 cmp	 eax,edx	; Izit at least the free count?
+	 jae	 short @F	; Jump if so
+
+	 mov	 eax,edx	; Use the free count
+@@:
+	 cmp	 eax,0FFFFh	; Izit too big for CX?
+	 jbe	 short @F	; Jump if not
+
+	 mov	 eax,0FFFFh	; Use the maximum
+@@:
+	 mov	 [ebp].INTXX_ECX.ELO,ax ; Total 4KB pages
+	 mov	 [ebp].INTXX_EBX.ELO,1 ; BX = 1
+	 mov	 [ebp].INTXX_EAX.ELO.HI,0 ; AH = 0 (old VCPI status)
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+QPI_API_STATE:			; 00:  Get state
+	 mov	 [ebp].INTXX_EAX.ELO.LO,0 ; ON, not AUTO
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_SETST:			; 01:  Set state
+	 test	 al,01h 	; Turn OFF?
+	 jnz	 near ptr QPI_API_EXIT ; Jump if so (386MAX stays on)
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 11:  Get memory type map of the first megabyte (one byte per 4KB page)
+
+QPI_API_TYPES:
+	 FIXICALL PGROUP:FWRAP_DISABLE,DTE_CS2 ; Disable the 1MB wrap
+	 push	 es		; Save JGROUP selector
+
+	 QPI_ESDI		; EDI = linear address of caller's buffer
+	 mov	 es,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  es:AGROUP	; Tell the assembler about it
+
+	 movzx	 edx,AGROUP:[0413h].ELO ; Get BIOS memory size in KB
+	 shl	 edx,10 	; Convert to bytes:  end of conventional memory
+
+	 movzx	 ebx,FRAME	; Get EMS page frame segment
+	 shl	 ebx,4-0	; Convert to bytes
+
+	 xor	 ecx,ecx	; Start with page 0
+QPI_API_TYPES_NXT:
+	 mov	 esi,ecx	; Copy page #
+	 shl	 esi,12 	; Convert to linear address
+
+	 mov	 al,0Bh 	; Assume conventional
+
+	 cmp	 esi,edx	; Izit below the end of conventional memory?
+	 jb	 short QPI_API_TYPES_SET ; Jump if so
+
+	 mov	 al,09h 	; Assume page frame
+
+	 or	 ebx,ebx	; Izit an EMS page frame?
+	 jz	 short @F	; Jump if not
+
+	 mov	 eax,esi	; Copy linear address
+	 sub	 eax,ebx	; Less frame start
+	 cmp	 eax,64*1024	; Izit within the frame?
+	 mov	 al,09h 	; Page frame
+	 jb	 short QPI_API_TYPES_SET ; Jump if so
+@@:
+	 mov	 eax,ecx	; Copy page #
+	 shl	 eax,2		; Convert to offset in PDT
+	 add	 eax,PRGPDT	; Plus offset in PGROUP of PDT
+	 mov	 eax,PGROUP:[eax].PDT_PTE ; Get the PTE
+	 and	 ax,mask $PTE_FRM ; Isolate the frame (a word mask)
+
+	 cmp	 eax,esi	; Izit mapped to itself?
+	 je	 short QPI_API_TYPES_ID ; Jump if so
+
+	 movzx	 eax,SYSROM_START ; Get start of system ROM
+	 shr	 eax,8		; Convert from paras to pages
+	 cmp	 ecx,eax	; Izit system ROM?
+	 mov	 al,02h 	; Mapped ROM (shadowed)
+	 jae	 short QPI_API_TYPES_SET ; Jump if so
+
+	 mov	 al,03h 	; High RAM (option ROMs are set below)
+	 jmp	 short QPI_API_TYPES_SET ; Join common code
+
+QPI_API_TYPES_ID:
+
+	 mov	 al,05h 	; Assume video
+
+	 cmp	 cl,0C0h	; Izit below C000?
+	 jb	 short QPI_API_TYPES_SET ; Jump if so (A000-BFFF)
+
+	 mov	 al,06h 	; Assume system ROM
+
+	 movzx	 eax,SYSROM_START ; Get start of system ROM
+	 shr	 eax,8		; Convert from paras to pages
+	 cmp	 ecx,eax	; Izit system ROM?
+	 mov	 al,06h 	; System ROM
+	 jae	 short QPI_API_TYPES_SET ; Jump if so
+
+	 mov	 al,04h 	; Excluded (adapter ROMs are set below)
+QPI_API_TYPES_SET:
+	 mov	 AGROUP:[edi+ecx],al ; Save type
+
+	 inc	 ecx		; Next page
+
+	 cmp	 ecx,256	; Izit the end?
+	 jb	 short QPI_API_TYPES_NXT ; Jump if not
+
+; Mark adapter ROMs (55AAh, length in 512 bytes) in C000-EFFF
+
+	 mov	 esi,0C0000h	; Start of adapter ROM area
+QPI_API_TYPES_ROM:
+	 cmp	 AGROUP:[esi].ELO,0AA55h ; Izit a ROM signature?
+	 jne	 short QPI_API_TYPES_XROM ; Jump if not
+
+	 movzx	 ecx,AGROUP:[esi+2].LO ; Get length in 512 bytes
+	 shl	 ecx,9		; Convert to bytes
+	 jz	 short QPI_API_TYPES_XROM ; Jump if empty
+
+	 lea	 ecx,[esi+ecx-1] ; Last byte of the ROM
+	 shr	 ecx,12 	; Convert to page #
+	 mov	 eax,esi	; Copy start
+	 shr	 eax,12 	; Convert to page #
+@@:
+	 cmp	 AGROUP:[edi+eax].LO,04h ; Izit identity-mapped (excluded)?
+	 jne	 short QPI_API_TYPES_MR ; Jump if not
+
+	 mov	 AGROUP:[edi+eax].LO,07h ; Adapter ROM
+
+	 jmp	 short QPI_API_TYPES_XPG ; Join common code
+
+QPI_API_TYPES_MR:
+	 cmp	 AGROUP:[edi+eax].LO,03h ; Izit remapped (high RAM)?
+	 jne	 short QPI_API_TYPES_XPG ; Jump if not
+
+	 mov	 AGROUP:[edi+eax].LO,02h ; Mapped ROM (shadowed option ROM)
+QPI_API_TYPES_XPG:
+	 inc	 eax		; Next page
+
+	 cmp	 eax,ecx	; Izit the last?
+	 jbe	 short @B	; Jump if not
+QPI_API_TYPES_XROM:
+	 add	 esi,2048	; Next possible ROM start
+
+	 cmp	 esi,0F0000h	; Izit the end of the adapter area?
+	 jb	 short QPI_API_TYPES_ROM ; Jump if not
+
+	 pop	 es		; Restore JGROUP selector
+	 assume  es:JGROUP	; Tell the assembler about it
+
+	 mov	 [ebp].INTXX_EBX.ELO.LO,0 ; BL = ???
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 12:  Get HIRAM chain
+
+QPI_API_HIRAM:
+	 mov	 ax,POVR_MAC	; Get first MCB in high DOS memory
+
+	 cmp	 ax,-1		; Izit valid?
+	 jne	 short @F	; Jump if so
+
+	 xor	 ax,ax		; No high memory
+@@:
+	 mov	 [ebp].INTXX_EBX.ELO,ax ; Return in caller's BX
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 1600:  Get memory access status (bit 0 read, bit 1 written per 4KB page)
+; 1601:  Set ...
+
+QPI_API_ACC:
+	 cmp	 al,01h 	; Izit a valid subfunction?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+
+	 push	 es		; Save JGROUP selector
+
+	 QPI_ESDI		; EDI = linear address of caller's buffer
+	 mov	 es,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  es:AGROUP	; Tell the assembler about it
+
+	 xor	 ecx,ecx	; Start with page 0
+QPI_API_ACC_NXT:
+	 lea	 esi,[ecx*4]	; Offset of the PTE
+	 add	 esi,PRGPDT	; Plus offset in PGROUP of PDT
+
+	 cmp	 [ebp].INTXX_EAX.ELO.LO,01h ; Izit set?
+	 je	 short QPI_API_ACC_SET ; Jump if so
+
+	 mov	 eax,PGROUP:[esi].PDT_PTE ; Get the PTE
+	 shr	 eax,5		; Shift Accessed (5) to bit 0, Dirty (6) to bit 1
+	 and	 al,03h 	; Isolate them
+	 mov	 AGROUP:[edi+ecx],al ; Save status
+
+	 jmp	 short QPI_API_ACC_LOOP ; Join common code
+
+QPI_API_ACC_SET:
+	 movzx	 eax,AGROUP:[edi+ecx].LO ; Get new status
+	 and	 al,03h 	; Isolate read/written
+	 shl	 eax,5		; Shift to Accessed/Dirty
+	 and	 PGROUP:[esi].PDT_PTE,not (3 shl 5) ; Clear them
+	 or	 PGROUP:[esi].PDT_PTE,eax ; Set new ones
+QPI_API_ACC_LOOP:
+	 inc	 ecx		; Next page
+
+	 cmp	 ecx,256	; Izit the end?
+	 jb	 short QPI_API_ACC_NXT ; Jump if not
+
+	 mov	 eax,cr3	; Flush the TLB
+	 mov	 cr3,eax	; ...
+
+	 pop	 es		; Restore JGROUP selector
+	 assume  es:JGROUP	; Tell the assembler about it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 17:  Get memory usage statistics (81 bytes at ES:DI)
+
+QPI_API_STAT17:
+	 push	 es		; Save JGROUP selector
+
+	 QPI_ESDI		; EDI = linear address of caller's buffer
+	 mov	 es,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  es:AGROUP	; Tell the assembler about it
+
+	 push	 edi		; Save start
+	 mov	 ecx,81 	; Size of the statistics
+	 xor	 al,al		; Fill with zero
+S32  rep stos	 AGROUP:[edi].LO ; Clear them
+	 pop	 edi		; Restore
+
+	 movzx	 eax,AGROUP:[0413h].ELO ; Get BIOS memory size in KB
+	 shl	 eax,10 	; Convert to bytes
+	 mov	 AGROUP:[edi+01h],eax ; Initial conventional memory
+
+	 mov	 eax,TOTSIZE	; Get extended memory size in KB
+	 shl	 eax,10 	; Convert to bytes
+	 mov	 AGROUP:[edi+05h],eax ; Initial extended memory
+
+	 mov	 eax,EMMSIZE	; Get EMS memory size in KB
+	 shl	 eax,10 	; Convert to bytes
+	 mov	 AGROUP:[edi+09h],eax ; Initial expanded memory
+	 mov	 AGROUP:[edi+45h],eax ; EMS/XMS pool provided
+
+	 movzx	 eax,PRGSIZE	; Get program size in KB
+	 shl	 eax,10 	; Convert to bytes
+	 mov	 AGROUP:[edi+21h],eax ; Code size
+
+	 movzx	 eax,OVRSIZE	; Get high DOS memory size in KB
+	 shl	 eax,10 	; Convert to bytes
+	 mov	 AGROUP:[edi+35h],eax ; High RAM
+
+	 pop	 es		; Restore JGROUP selector
+	 assume  es:JGROUP	; Tell the assembler about it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 18:  Is conventional memory mapped into ES:BX for CX pages?
+
+QPI_API_CONV:
+	 movzx	 esi,[ebp].INTXX_ES ; Get caller's ES
+	 shl	 esi,4-0	; Convert from paras to bytes
+	 movzx	 eax,[ebp].INTXX_EBX.ELO ; Get caller's BX
+	 add	 esi,eax	; ESI = linear start
+	 and	 esi,not 0FFFh	; Round down to the page
+
+	 movzx	 ecx,[ebp].INTXX_ECX.ELO ; Get # pages
+	 mov	 [ebp].INTXX_EAX.ELO.LO,01h ; Assume all conventional
+	 jecxz	 QPI_API_CONV_DONE ; Jump if none
+QPI_API_CONV_NXT:
+	 mov	 eax,esi	; Copy linear address
+	 shr	 eax,12-2	; Convert to offset in PDT
+
+	 cmp	 eax,PDTLEN	; Izit within the PDT?
+	 jae	 short QPI_API_CONV_NO ; Jump if not
+
+	 add	 eax,PRGPDT	; Plus offset in PGROUP of PDT
+	 mov	 eax,PGROUP:[eax].PDT_PTE ; Get the PTE
+	 and	 ax,mask $PTE_FRM ; Isolate the frame (a word mask)
+
+	 cmp	 eax,esi	; Izit mapped to itself?
+	 jne	 short QPI_API_CONV_NO ; Jump if not
+
+	 add	 esi,4096	; Next page
+	 loop	 QPI_API_CONV_NXT ; Jump if more
+
+	 jmp	 short QPI_API_CONV_DONE ; Join common code
+
+QPI_API_CONV_NO:
+	 mov	 [ebp].INTXX_EAX.ELO.LO,00h ; Some page is remapped
+QPI_API_CONV_DONE:
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 1A02:  OUT DX,BH; IN BL,DX+1 (untrapped)
+; 1A03:  OUT DX,BH; OUT DX+1,BL (untrapped)
+
+QPI_API_INDEX:
+	 mov	 ecx,@IOTRAP_DB ; Byte I/O
+	 movzx	 eax,[ebp].INTXX_EBX.ELO.HI ; Get caller's BH
+	 call	 QPI_UNTRAPOUT	; Write the index
+
+	 inc	 dx		; Next port
+	 mov	 ecx,@IOTRAP_DB ; Byte I/O
+
+	 cmp	 [ebp].INTXX_EAX.ELO.LO,03h ; Izit write?
+	 je	 short @F	; Jump if so
+
+	 call	 QPI_UNTRAPIN	; Return with AL = value
+	 mov	 [ebp].INTXX_EBX.ELO.LO,al ; Return in caller's BL
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+@@:
+	 movzx	 eax,[ebp].INTXX_EBX.ELO.LO ; Get caller's BL
+	 call	 QPI_UNTRAPOUT	; Write the data
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 1B05:  Is the ASCIIZ filename at DS:DX a Windows driver?
+
+QPI_API_WIN:
+	 cmp	 al,05h 	; Izit determine driver?
+	 jne	 near ptr QPI_API_EXIT ; Jump if not (no QEMM Windows support)
+
+	 push	 es		; Save JGROUP selector
+
+	 movzx	 esi,[ebp].INTXX_DS ; Get caller's DS
+	 shl	 esi,4-0	; Convert from paras to bytes
+	 movzx	 eax,[ebp].INTXX_EDX.ELO ; Get caller's DX
+	 add	 esi,eax	; ESI = linear address of the name
+	 mov	 es,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  es:AGROUP	; Tell the assembler about it
+
+	 mov	 edi,esi	; Find the end
+@@:
+	 cmp	 AGROUP:[edi].LO,0 ; Izit the end?
+	 je	 short @F	; Jump if so
+
+	 inc	 edi		; Next byte
+
+	 mov	 eax,edi	; Copy current
+	 sub	 eax,esi	; Less start
+	 cmp	 eax,128	; Izit too long?
+	 jb	 short @B	; Jump if not
+@@:
+	 mov	 eax,edi	; Copy end
+	 sub	 eax,esi	; Less start = length
+	 mov	 bl,0		; Assume neither
+
+	 cmp	 eax,4		; Long enough for ".DRV"?
+	 jb	 short QPI_API_WIN_DONE ; Jump if not
+
+	 mov	 eax,AGROUP:[edi-4] ; Get the last four bytes
+	 and	 eax,0DFDFDFFFh ; Upper case (not the dot)
+	 cmp	 eax,'VRD.'     ; Izit ".DRV"?
+	 mov	 bl,01h 	; Driver
+	 je	 short QPI_API_WIN_DONE ; Jump if so
+
+	 mov	 bl,0		; Assume neither
+
+	 mov	 eax,edi	; Copy end
+	 sub	 eax,esi	; Less start = length
+	 cmp	 eax,7		; Long enough for "GDI.EXE"?
+	 jb	 short QPI_API_WIN_DONE ; Jump if not
+
+	 mov	 eax,AGROUP:[edi-7] ; Get "GDI."
+	 and	 eax,0FFDFDFDFh ; Upper case (not the dot)
+	 cmp	 eax,'.IDG'     ; Izit "GDI."?
+	 jne	 short QPI_API_WIN_DONE ; Jump if not
+
+	 mov	 eax,AGROUP:[edi-4] ; Get ".EXE"
+	 and	 eax,0DFDFDFFFh ; Upper case (not the dot)
+	 cmp	 eax,'EXE.'     ; Izit ".EXE"?
+	 jne	 short QPI_API_WIN_DONE ; Jump if not
+
+	 cmp	 edi,esi	; Izit just "GDI.EXE" or a path?
+	 je	 short @F	; Jump if just the name
+
+	 mov	 al,AGROUP:[edi-8] ; Get the character before
+	 cmp	 al,'\'         ; Izit a path separator?
+	 je	 short @F	; Jump if so
+
+	 cmp	 al,':'         ; Izit a drive?
+	 jne	 short QPI_API_WIN_DONE ; Jump if not
+@@:
+	 mov	 bl,0FFh	; GDI.EXE
+QPI_API_WIN_DONE:
+	 pop	 es		; Restore JGROUP selector
+	 assume  es:JGROUP	; Tell the assembler about it
+
+	 mov	 [ebp].INTXX_EAX.ELO.LO,bl ; Return status in AL
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 1E00:  Stealth configuration (none)
+; 1E01:  # Stealth'ed ROMs (none)
+; 1E02:  Stealth ROM list (none)
+
+QPI_API_STEALTH:
+	 cmp	 al,02h 	; Izit a valid subfunction?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+
+	 xor	 eax,eax	; Nothing
+	 mov	 [ebp].INTXX_EBX.ELO,ax ; BL = flags, BH = disk buffer flags / BX = count
+	 mov	 [ebp].INTXX_ECX.ELO,ax ; CL = Stealth type, CH = interrupt
+
+	 cmp	 [ebp].INTXX_EAX.ELO.LO,00h ; Izit configuration?
+	 jne	 near ptr QPI_API_OK ; Jump if not
+
+	 mov	 [ebp].INTXX_EDX.ELO,ax ; DL = disk buffer size, DH = reserved
+	 mov	 [ebp].INTXX_ESI.ELO,ax ; Reserved
+	 mov	 [ebp].INTXX_EDI.ELO,ax ; ...
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 1F00:  Get PTE of page CX (0-10Fh) into EDX
+; 1F01:  Set ...		       from EDX
+
+QPI_API_PTE:
+	 cmp	 al,01h 	; Izit a valid subfunction?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+
+	 movzx	 esi,[ebp].INTXX_ECX.ELO ; Get page #
+
+	 cmp	 esi,10Fh	; Izit valid?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+
+	 FIXICALL PGROUP:FWRAP_DISABLE,DTE_CS2 ; Disable the 1MB wrap (pages 100-10F)
+
+	 shl	 esi,2		; Convert to offset in PDT
+	 add	 esi,PRGPDT	; Plus offset in PGROUP of PDT
+
+	 cmp	 [ebp].INTXX_EAX.ELO.LO,01h ; Izit set?
+	 je	 short @F	; Jump if so
+
+	 mov	 eax,PGROUP:[esi].PDT_PTE ; Get the PTE
+	 mov	 [ebp].INTXX_EDX,eax ; Return in caller's EDX
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+@@:
+	 mov	 eax,[ebp].INTXX_EDX ; Get new PTE
+	 mov	 PGROUP:[esi].PDT_PTE,eax ; Set it
+
+	 mov	 eax,cr3	; Flush the TLB
+	 mov	 cr3,eax	; ...
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 2000:  Get VirtualHDIRQ information (not supported:  0)
+; 2001:  Set ...			  (ignored, old = 0)
+
+QPI_API_VHI:
+	 cmp	 al,01h 	; Izit a valid subfunction?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+
+	 mov	 [ebp].INTXX_EBX.ELO.LO,0 ; Not enabled, not respected
 
 	 jmp	 QPI_API_OK	; Join common exit code
 

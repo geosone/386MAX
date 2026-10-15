@@ -673,21 +673,44 @@ if @OEM_VCPI and @VCP_OLD
 	 jne	 short INT2F_XQPI ; Jump if not
 
 	 cmp	 bx,4354h	; Izit QPIEMU's device ID?
-	 jne	 short INT2F_XQPI ; Jump if not
+	 jne	 short INT2F_XQPI2 ; Jump if not
 
 ; QEMM Programming Interface (QPI) entry point the way Jemm's QPIEMU
 ; provides it, as used by SBEMU:  AX=1684h, BX=4354h returns AL=0 and
 ; ES:DI ==> entry point, the same one as INT 67h AH=3Fh returns (see
 ; INTFE in QMAX_VCP and QMAX_QPI)
 
-	 mov	 ax,HIMEM_CS	; Get segment of high DOS memory
-	 mov	 [esp+(size NRM_STR)+2*4],ax ; Return in caller's ES
-	 mov	 di,offset PGROUP:OLDVCPI ; Return offset in DI
 	 mov	 ax,1600h	; Indicate success (AL=0)
+INT2F_QPI:
+	 push	 ax		; Save for a moment
+	 mov	 ax,HIMEM_CS	; Get segment of high DOS memory
+	 mov	 [esp+2+(size NRM_STR)+2*4],ax ; Return in caller's ES
+	 pop	 ax		; Restore
+	 mov	 di,offset PGROUP:OLDVCPI ; Return offset in DI
 
 	 iretd			; Return to caller
 
+; QEMM 7.5's documented QPI detection:  AX=D201h, BX='QE', CX='MM', DX='42'
+; returns BX='OK' and ES:DI ==> the same entry point
+
 INT2F_XQPI:
+	 cmp	 ax,0D201h	; Izit QEMM detection?
+	 jne	 short INT2F_XQPI2 ; Jump if not
+
+	 cmp	 bx,5145h	; Izit 'QE'?
+	 jne	 short INT2F_XQPI2 ; Jump if not
+
+	 cmp	 cx,4D4Dh	; Izit 'MM'?
+	 jne	 short INT2F_XQPI2 ; Jump if not
+
+	 cmp	 dx,3432h	; Izit '42'?
+	 jne	 short INT2F_XQPI2 ; Jump if not
+
+	 mov	 bx,4F4Bh	; Return 'OK'
+
+	 jmp	 short INT2F_QPI ; Join common code
+
+INT2F_XQPI2:
 endif				; IF @OEM_VCPI and @VCP_OLD
 	 cmp	 ax,@IOTRAP_API ; Izit I/O trapping?
 	 jne	 near ptr INT2F_INTRETVM2 ; Jump if not

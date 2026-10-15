@@ -448,23 +448,21 @@ INTFE_HIMEM_CS label near
 ;;;;;;;;
 ;;;;;;;; int	 01h		; Call out the SWAT team
 @@:
-	 cmp	 ah,03h 	; Izit QPI Get Version?
-	 je	 short @F	; Jump if so
+	 cmp	 ah,0Ch 	; Check for # free pages code
+	 jne	 short @F	; Jump if not
 
-	 cmp	 ah,1Ah 	; Izit QPI I/O port trapping?
-	 je	 short @F	; Jump if so
-
-	 cmp	 ah,@MV_API	; Izit Open MaxView extension?
-	 jne	 short INTFE_XQPI ; Jump if not
+	 call	 VCPI_COUNT	; Get free count into EDX
+	 mov	 [ebp].INTXX_EDX,edx ; Return in caller's EDX (QPI_API does the rest)
 @@:
+	 cmp	 ah,10h 	; Check major function code (old VCPI)
+	 je	 short INTFE_XQPI ; Jump if so
+
+; All other functions are those of the QEMM Programming Interface (QPI)
+; and the Open MaxView extension (QMAX_QPI)
+
 	 FIXIJMP JGROUP:QPI_API,DTE_CSJG ; QEMM Programming Interface (QMAX_QPI)
 
 INTFE_XQPI:
-	 cmp	 ah,0Ch 	; Check for # free pages code
-	 je	 near ptr VCPI03 ; Jump if it's a match
-
-	 cmp	 ah,10h 	; Check major function code
-	 jne	 near ptr EMM_E84 ; Jump if not valid
 
 	 cmp	 al,OLDVCPI_CNT ; Check for valid subfunction range
 	 jnb	 near ptr EMM_E8F ; It's too big
