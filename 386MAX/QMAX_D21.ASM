@@ -210,11 +210,16 @@ ACTSEG	 ends			; End ACTSEG segment
 	 DPMIDOSMAC @GETPSP,GETPSP	; 62:  Get current PSP into BX
 ;;;	 DPMIDOSMAC @???   ,??? 	; 63:  ???
 ;;;	 DPMIDOSMAC @???   ,??? 	; 64:  ???
-	 DPMIDOSMAC @GETXCD,GETXCD	; 65:  Get extended conuntry-dependent information
+	 DPMIDOSMAC @GETXCD,XCD	; 65:  Get extended conuntry-dependent information
 	 DPMIDOSMAC @GSTSER,GSTSER	; 69:  Get/set disk serial # for drive BL (origin-1) to DS:eDX
 ;;;	 DPMIDOSMAC @???   ,??? 	; 6A:  ???
 ;;;	 DPMIDOSMAC @???   ,??? 	; 6B:  ???
 	 DPMIDOSMAC @XOPCR2,XOPCR2	; 6C:  Extended Open/Create file, ASCIIZ at DS:eSI, attr in CX, mode in BX, flags in DX
+	 DPMIDOSMAC 71h    ,LFN 	; 71:  Long filename functions (MS-DOS 7)
+	 DPMIDOSMAC 73h    ,FAT32	; 73:  FAT32 functions (MS-DOS 7.1)
+	 DPMIDOSMAC 5Dh    ,SRVR	; 5D:  Server functions (5D06, 5D0A)
+	 DPMIDOSMAC 5Eh    ,NETW	; 5E:  Network functions (5E00)
+	 DPMIDOSMAC 63h    ,DBCS	; 63:  Get DBCS lead byte table (6300)
 
 ; The following DOS functions require no special treatment
 
@@ -741,13 +746,16 @@ JMPTAB21 label	 word
 ;;;;;;;; DLBL	 ???		; 64:  ???
 
 
-	 DLBL	 GETXCD 	; 65:  Get extended conuntry-dependent information
+	 DLBL	 XCD		; 65:  Extended country-dependent functions
+	 ACT	 XCD
+
+	 DLBL	 GETXCD 	; 6500-6507:  Get/set extended country information at ES:eDI
 	 DOSFN	 SAVE_INTXXREG,<INTXX_EDI>
 	 DOSFN	 SAVE_VMCREGS
 	 ACT	 GETXCD
-	 DOSFN	 GETBUF,<VMC_EDI.ELO,VMC_DS,INTXX_EDI,I31_DS-@I31BACK>
+	 DOSFN	 GETBUF,<VMC_EDI.ELO,VMC_ES,INTXX_EDI,I31_ES-@I31BACK>
 	 DOSFN	 SIMVMI,21h
-	 DOSFN	 LOW2EXT,<INTXX_EDI,I31_DS-@I31BACK>
+	 DOSFN	 LOW2EXT,<INTXX_EDI,I31_ES-@I31BACK>
 	 DOSFN	 REST_VMCREGS
 	 DOSFN	 REST_INTXXREG,<INTXX_EDI>
 	 ACT	 EXIT
@@ -779,6 +787,84 @@ JMPTAB21 label	 word
 	 DOSFN	 RELBUF 	; No need to copy back the ASCIIZ string
 	 DOSFN	 REST_VMCREGS
 	 DOSFN	 REST_INTXXREG,<INTXX_ESI>
+	 ACT	 EXIT
+
+
+	 DLBL	 LFN		; 71:  Long filename functions (MS-DOS 7)
+	 ACT	 LFN		; Dispatch by subfunction in AL
+
+	 DLBL	 FAT32		; 73:  FAT32 functions (MS-DOS 7.1)
+	 ACT	 FAT32		; Dispatch by subfunction in AL
+
+	 DLBL	 SRVR		; 5D:  Server functions
+	 ACT	 SRVR		; Dispatch by subfunction in AL
+
+	 DLBL	 NETW		; 5E:  Network functions
+	 ACT	 NETW		; Dispatch by subfunction in AL
+
+	 DLBL	 DBCS		; 63:  Get DBCS lead byte table
+	 ACT	 DBCS		; Dispatch by subfunction in AL
+
+
+	 DLBL	 LFNFF		; 714E, 71A0, 7303:  ASCIIZ at DS:eDX, buffer at ES:eDI
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EDX>
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EDI>
+	 DOSFN	 SAVE_VMCREGS
+	 DOSFN	 ASCIIZ_LEN,<INTXX_EDX,I31_DS-@I31BACK>
+	 ACT	 LFNFF
+	 DOSFN	 GETBUF,<VMC_EDX.ELO,VMC_DS,INTXX_EDX,I31_DS-@I31BACK>
+	 DOSFN	 GETBUF,<VMC_EDI.ELO,VMC_ES,INTXX_EDI,I31_ES-@I31BACK>
+	 DOSFN	 SIMVMI,21h
+	 DOSFN	 LOW2EXT,<INTXX_EDI,I31_ES-@I31BACK>
+	 DOSFN	 RELBUF 	; No need to copy back the ASCIIZ string
+	 DOSFN	 REST_VMCREGS
+	 DOSFN	 REST_INTXXREG,<INTXX_EDI>
+	 DOSFN	 REST_INTXXREG,<INTXX_EDX>
+	 ACT	 EXIT
+
+
+	 DLBL	 LFNDI		; 714F, 71A7 BL=1, 7302, 7304:  Buffer at ES:eDI
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EDI>
+	 DOSFN	 SAVE_VMCREGS
+	 ACT	 LFNDI
+	 DOSFN	 GETBUF,<VMC_EDI.ELO,VMC_ES,INTXX_EDI,I31_ES-@I31BACK>
+	 DOSFN	 SIMVMI,21h
+	 DOSFN	 LOW2EXT,<INTXX_EDI,I31_ES-@I31BACK>
+	 DOSFN	 REST_VMCREGS
+	 DOSFN	 REST_INTXXREG,<INTXX_EDI>
+	 ACT	 EXIT
+
+
+	 DLBL	 LFNDXO 	; 71A6, 71AA BH=2, 5D0A, 5E00, 6521/6522:  Buffer at DS:eDX
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EDX>
+	 DOSFN	 SAVE_VMCREGS
+	 ACT	 LFNDXO
+	 DOSFN	 GETBUF,<VMC_EDX.ELO,VMC_DS,INTXX_EDX,I31_DS-@I31BACK>
+	 DOSFN	 SIMVMI,21h
+	 DOSFN	 LOW2EXT,<INTXX_EDX,I31_DS-@I31BACK>
+	 DOSFN	 REST_VMCREGS
+	 DOSFN	 REST_INTXXREG,<INTXX_EDX>
+	 ACT	 EXIT
+
+
+	 DLBL	 LFNSI		; 71A7 BL=0:  FILETIME at DS:eSI
+	 DOSFN	 SAVE_INTXXREG,<INTXX_ESI>
+	 DOSFN	 SAVE_VMCREGS
+	 ACT	 LFNSI
+	 DOSFN	 GETBUF,<VMC_ESI.ELO,VMC_DS,INTXX_ESI,I31_DS-@I31BACK>
+	 DOSFN	 SIMVMI,21h
+	 DOSFN	 LOW2EXT,<INTXX_ESI,I31_DS-@I31BACK>
+	 DOSFN	 REST_VMCREGS
+	 DOSFN	 REST_INTXXREG,<INTXX_ESI>
+	 ACT	 EXIT
+
+
+	 DLBL	 RETDSSI	; 5D06, 6300:  Return DS:eSI ==> DOS data
+	 DOSFN	 SAVE_VMCREGS
+	 DOSFN	 SIMVMI,21h
+	 DOSFN	 SEG2SEL,<@DATASEL,VMC_DS,I31_DS-@I31BACK>
+	 DOSFN	 IF32ZX,<VMC_ESI.EHI>
+	 DOSFN	 REST_VMCREGS
 	 ACT	 EXIT
 
 
@@ -2045,6 +2131,12 @@ INT21_DPMI_IOCTL2_GENBLK:
 INT21_DPMI_GETDIR:
 	 mov	 ax,64		; Use maximum directory name size
 
+	 cmp	 [ebp].INTXX_EAX.ELO.HI,71h ; Izit LFN 7147?
+	 jne	 short @F	; Jump if not
+
+	 mov	 ax,260 	; Use maximum long directory name size
+@@:
+
 	 push	 ax		; LOW2EXT   # bytes to release
 	 push	 ax		; LOW2EXT:  # trailing bytes to copy
 	 push	 0		; GETBUF:   # leading bytes to copy
@@ -2818,11 +2910,22 @@ INT21_DPMI_FIXPTH:
 
 @FIXPTH_SIZE equ 128		; Output buffer size
 
+	 mov	 ax,@FIXPTH_SIZE ; Assume 60h
+
+	 cmp	 [ebp].INTXX_EAX.ELO.HI,71h ; Izit LFN 7160 or 71A8?
+	 jne	 short @F	; Jump if not
+
+	 mov	 ax,261 	; 7160:  long path
+	 cmp	 [ebp].INTXX_EAX.ELO.LO,0A8h ; Izit generate short name?
+	 jne	 short @F	; Jump if not
+
+	 mov	 ax,13		; 71A8:  8.3 name
+@@:
 	 push	 bx		; RELBUF:   # bytes to release for filename
-	 push	 @FIXPTH_SIZE	; LOW2EXT:  # bytes to release for buffer
-	 push	 @FIXPTH_SIZE	; LOW2EXT:  # trailing bytes to copy
+	 push	 ax		; LOW2EXT:  # bytes to release for buffer
+	 push	 ax		; LOW2EXT:  # trailing bytes to copy
 	 push	 0		; GETBUF:   # leading bytes to copy
-	 push	 @FIXPTH_SIZE	; GETBUF:   # bytes to allocate for buffer
+	 push	 ax		; GETBUF:   # bytes to allocate for buffer
 	 push	 bx		; GETBUF:   # leading bytes to copy
 	 push	 bx		; GETBUF:   # bytes to allocate for filename
 
@@ -2850,9 +2953,15 @@ INT21_DPMI_GETXCD:
 	 mov	 eax,[ebp].INTXX_ECX ; Get # bytes to copy
 ;;;;;;;; IF16ZX  ax,IG		; Zero to use as dword if 16-bit client
 
+	 xor	 bx,bx		; Assume nothing to copy in
+	 cmp	 [ebp].INTXX_EAX.ELO.LO,0 ; Izit 6500 (set)?
+	 jne	 short @F	; Jump if not
+
+	 mov	 bx,ax		; Copy in the entire buffer
+@@:
 	 push	 ax		; LOW2EXT   # bytes to release
 	 push	 ax		; LOW2EXT:  # trailing bytes to copy
-	 push	 0		; GETBUF:   # leading bytes to copy
+	 push	 bx		; GETBUF:   # leading bytes to copy
 	 push	 ax		; GETBUF:   # bytes to allocate
 
 	 lods	 JMPTAB21[si]	; Get next action
@@ -2894,6 +3003,333 @@ INT21_DPMI_GETSER:
 	 push	 0		; GETBUF:   # leading bytes to copy
 INT21_DPMI_GSTSER_COM:
 	 push	 bx		; GETBUF:   # bytes to allocate
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+	 assume  ds:nothing,es:nothing ; Tell the assembler about it
+
+
+; 様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様
+
+; Select the action stream for a subfunction:  VAL = AL value, LBL = stream
+
+LFNTO	 macro	 VAL,LBL
+	 local	 L1
+
+	 cmp	 al,VAL 	; Izit this subfunction?
+	 jne	 short L1	; Jump if not
+
+	 lea	 si,INT21_DPMIJMP_&LBL ; CS:SI ==> action stream
+	 jmp	 INT21_DPMI_SUBFN ; Join common code
+L1:
+	 endm			; LFNTO
+
+
+; 71:  Long filename functions (MS-DOS 7)
+
+; On entry (in PL3 stack):
+; AL	 =	 subfunction
+; Other register meanings dependent upon the subfunction
+
+; On entry (in registers):
+; CS:SI  ==>	 action stream
+; ES	 =	 PGROUP
+; SS:EBP ==>	 INTXX_STR (nothing above INTXX_SS is valid)
+
+	 assume  es:PGROUP	; Tell the assembler about it
+INT21_DPMI_LFN:
+	 mov	 al,[ebp].INTXX_EAX.ELO.LO ; Get subfunction from AL
+
+; ASCIIZ at DS:eDX in
+
+	 LFNTO	 39h,MKDIR	; 7139:  Create directory
+	 LFNTO	 3Ah,MKDIR	; 713A:  Remove directory
+	 LFNTO	 3Bh,MKDIR	; 713B:  Set current directory
+	 LFNTO	 41h,MKDIR	; 7141:  Delete file
+	 LFNTO	 43h,MKDIR	; 7143:  Get/set file attributes
+
+; ASCIIZ at DS:eSI in
+
+	 LFNTO	 6Ch,XOPCR2	; 716C:  Extended open/create
+	 LFNTO	 0A9h,XOPCR2	; 71A9:  Server create/open
+
+; Others
+
+	 LFNTO	 56h,RENMF2	; 7156:  Rename DS:eDX to ES:eDI
+	 LFNTO	 47h,GETDIR	; 7147:  Get current directory into DS:eSI
+	 LFNTO	 60h,FIXPTH	; 7160:  Get full path DS:eSI into ES:eDI
+	 LFNTO	 0A8h,FIXPTH	; 71A8:  Generate short name DS:eSI into ES:eDI
+	 LFNTO	 4Eh,LFNFF	; 714E:  Find first DS:eDX, data into ES:eDI
+	 LFNTO	 0A0h,LFNFF	; 71A0:  Volume information DS:eDX, name into ES:eDI
+	 LFNTO	 4Fh,LFNDI	; 714F:  Find next, data into ES:eDI
+	 LFNTO	 0A6h,LFNDXO	; 71A6:  File information by handle into DS:eDX
+
+	 cmp	 al,0A7h	; Izit time conversion?
+	 jne	 short INT21_DPMI_LFN_AA ; Jump if not
+
+	 lea	 si,INT21_DPMIJMP_LFNSI ; BL=0:  FILETIME at DS:eSI to DOS time
+
+	 cmp	 [ebp].INTXX_EBX.ELO.LO,0 ; Izit FILETIME to DOS time?
+	 je	 short INT21_DPMI_SUBFN ; Jump if so
+
+	 lea	 si,INT21_DPMIJMP_LFNDI ; BL=1:  DOS time to FILETIME at ES:eDI
+
+	 jmp	 short INT21_DPMI_SUBFN ; Join common code
+
+INT21_DPMI_LFN_AA:
+	 cmp	 al,0AAh	; Izit create/terminate/query SUBST?
+	 jne	 short INT21_DPMI_SUBFN_PASSTHRU ; Jump if not (710D, 71A1, ...)
+
+	 lea	 si,INT21_DPMIJMP_MKDIR ; BH=0:  Create SUBST, path at DS:eDX
+
+	 cmp	 [ebp].INTXX_EBX.ELO.HI,0 ; Izit create?
+	 je	 short INT21_DPMI_SUBFN ; Jump if so
+
+	 lea	 si,INT21_DPMIJMP_LFNDXO ; BH=2:  Query SUBST into DS:eDX
+
+	 cmp	 [ebp].INTXX_EBX.ELO.HI,2 ; Izit query?
+	 je	 short INT21_DPMI_SUBFN ; Jump if so
+INT21_DPMI_SUBFN_PASSTHRU:
+	 lea	 si,INT21_DPMIJMP_PASSTHRU ; CS:SI ==> action stream
+INT21_DPMI_SUBFN:
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; 73:  FAT32 functions (MS-DOS 7.1)
+
+; 7302:  Get extended DPB into ES:eDI (CX bytes)
+; 7303:  Get extended free space for DS:eDX into ES:eDI (CX bytes)
+; 7304:  Set DPB for formatting from ES:eDI (CX bytes)
+
+INT21_DPMI_FAT32:
+	 mov	 al,[ebp].INTXX_EAX.ELO.LO ; Get subfunction from AL
+
+	 LFNTO	 02h,LFNDI
+	 LFNTO	 03h,LFNFF
+	 LFNTO	 04h,LFNDI
+
+	 jmp	 INT21_DPMI_SUBFN_PASSTHRU ; Others (7305:  not translated)
+
+
+; 5D:  Server functions
+
+INT21_DPMI_SRVR:
+	 mov	 al,[ebp].INTXX_EAX.ELO.LO ; Get subfunction from AL
+
+	 LFNTO	 06h,RETDSSI	; 5D06:  Get swappable data area into DS:eSI
+	 LFNTO	 0Ah,LFNDXO	; 5D0A:  Set extended error from DS:eDX
+
+	 jmp	 INT21_DPMI_SUBFN_PASSTHRU ; Others
+
+
+; 5E:  Network functions
+
+INT21_DPMI_NETW:
+	 mov	 al,[ebp].INTXX_EAX.ELO.LO ; Get subfunction from AL
+
+	 LFNTO	 00h,LFNDXO	; 5E00:  Get machine name into DS:eDX
+
+	 jmp	 INT21_DPMI_SUBFN_PASSTHRU ; Others
+
+
+; 63:  Get DBCS lead byte table
+
+INT21_DPMI_DBCS:
+	 mov	 al,[ebp].INTXX_EAX.ELO.LO ; Get subfunction from AL
+
+	 LFNTO	 00h,RETDSSI	; 6300:  Table into DS:eSI
+
+	 jmp	 INT21_DPMI_SUBFN_PASSTHRU ; Others
+
+
+; 65:  Extended country-dependent functions
+
+INT21_DPMI_XCD:
+	 mov	 al,[ebp].INTXX_EAX.ELO.LO ; Get subfunction from AL
+
+	 lea	 si,INT21_DPMIJMP_GETXCD ; 6500-6507:  Buffer at ES:eDI
+
+	 cmp	 al,07h 	; Izit get/set extended country information?
+	 jbe	 short INT21_DPMI_SUBFN ; Jump if so
+
+	 LFNTO	 21h,LFNDXO	; 6521:  Capitalize CX bytes at DS:eDX
+	 LFNTO	 0A1h,LFNDXO	; 65A1:  ...		 filename characters
+	 LFNTO	 22h,LFNDXO	; 6522:  Capitalize ASCIIZ at DS:eDX
+	 LFNTO	 0A2h,LFNDXO	; 65A2:  ...		 filename characters
+
+	 jmp	 INT21_DPMI_SUBFN_PASSTHRU ; Others (no pointers)
+
+	 assume  ds:nothing,es:nothing ; Tell the assembler about it
+
+
+; 様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様
+
+; 714E:  Find first, ASCIIZ at DS:eDX, find data (318 bytes) into ES:eDI
+; 71A0:  Volume information, ASCIIZ at DS:eDX, file system name into ES:eDI (CX bytes)
+; 7303:  Extended free space, ASCIIZ at DS:eDX, structure at ES:eDI (CX bytes)
+
+; On entry (in registers):
+; SS:ESP =	 ASCIIZ length in bytes
+; CS:SI  ==>	 action stream
+; ES	 =	 PGROUP
+; SS:EBP ==>	 INTXX_STR (nothing above INTXX_SS is valid)
+
+	 assume  es:PGROUP	; Tell the assembler about it
+INT21_DPMI_LFNFF:
+	 pop	 bx		; Restore ASCIIZ length of filename
+
+	 mov	 ax,[ebp].INTXX_ECX.ELO ; 71A0, 7303:  buffer size
+	 xor	 dx,dx		; Assume nothing to copy in
+
+	 cmp	 [ebp].INTXX_EAX.ELO.HI,71h ; Izit LFN?
+	 je	 short @F	; Jump if so
+
+	 mov	 dx,ax		; 7303:  Copy in the entire buffer
+	 jmp	 short INT21_DPMI_LFNFF_COM ; Join common code
+
+@@:
+	 cmp	 [ebp].INTXX_EAX.ELO.LO,4Eh ; Izit find first?
+	 jne	 short INT21_DPMI_LFNFF_COM ; Jump if not
+
+	 mov	 ax,318 	; Size of find data
+INT21_DPMI_LFNFF_COM:
+	 push	 bx		; RELBUF:   # bytes to release for filename
+	 push	 ax		; LOW2EXT:  # bytes to release for buffer
+	 push	 ax		; LOW2EXT:  # trailing bytes to copy
+	 push	 dx		; GETBUF:   # leading bytes to copy
+	 push	 ax		; GETBUF:   # bytes to allocate for buffer
+	 push	 bx		; GETBUF:   # leading bytes to copy
+	 push	 bx		; GETBUF:   # bytes to allocate for filename
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+	 assume  ds:nothing,es:nothing ; Tell the assembler about it
+
+
+; 様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様
+
+; 714F:  Find next, find data (318 bytes) into ES:eDI
+; 71A7:  BL=1, DOS time to FILETIME (8 bytes) into ES:eDI
+; 7302:  Get extended DPB into ES:eDI (CX bytes)
+; 7304:  Set DPB for formatting from ES:eDI (CX bytes)
+
+	 assume  es:PGROUP	; Tell the assembler about it
+INT21_DPMI_LFNDI:
+	 mov	 ax,[ebp].INTXX_ECX.ELO ; 7302, 7304:  buffer size
+	 mov	 dx,ax		; Copy in the entire buffer
+
+	 cmp	 [ebp].INTXX_EAX.ELO.HI,71h ; Izit LFN?
+	 jne	 short INT21_DPMI_LFNDI_COM ; Jump if not
+
+	 xor	 dx,dx		; Nothing to copy in
+	 mov	 ax,318 	; Size of find data
+
+	 cmp	 [ebp].INTXX_EAX.ELO.LO,4Fh ; Izit find next?
+	 je	 short INT21_DPMI_LFNDI_COM ; Jump if so
+
+	 mov	 ax,8		; Size of FILETIME
+INT21_DPMI_LFNDI_COM:
+	 push	 ax		; LOW2EXT:  # bytes to release
+	 push	 ax		; LOW2EXT:  # trailing bytes to copy
+	 push	 dx		; GETBUF:   # leading bytes to copy
+	 push	 ax		; GETBUF:   # bytes to allocate
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+	 assume  ds:nothing,es:nothing ; Tell the assembler about it
+
+
+; 様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様
+
+; 71A6:  File information by handle (52 bytes) into DS:eDX
+; 71AA:  BH=2, Query SUBST (260 bytes) into DS:eDX
+; 5D0A:  Set extended error information (22 bytes) from DS:eDX
+; 5E00:  Get machine name (16 bytes) into DS:eDX
+; 6521:  Capitalize CX bytes at DS:eDX (also 65A1)
+; 6522:  Capitalize ASCIIZ at DS:eDX (also 65A2)
+
+	 assume  es:PGROUP	; Tell the assembler about it
+INT21_DPMI_LFNDXO:
+	 mov	 ax,[ebp].INTXX_EAX.ELO ; Get function and subfunction
+
+	 mov	 bx,52		; 71A6:  BY_HANDLE_FILE_INFORMATION
+	 xor	 dx,dx		; Nothing to copy in
+
+	 cmp	 ax,71A6h	; Izit file information?
+	 je	 short INT21_DPMI_LFNDXO_COM ; Jump if so
+
+	 mov	 bx,260 	; 71AA:  path
+
+	 cmp	 ah,71h 	; Izit query SUBST?
+	 je	 short INT21_DPMI_LFNDXO_COM ; Jump if so
+
+	 mov	 bx,16		; 5E00:  machine name
+
+	 cmp	 ah,5Eh 	; Izit get machine name?
+	 je	 short INT21_DPMI_LFNDXO_COM ; Jump if so
+
+	 mov	 bx,22		; 5D0A:  DPL structure
+	 mov	 dx,bx		; Copy in the entire buffer
+
+	 cmp	 ah,5Dh 	; Izit set extended error?
+	 je	 short INT21_DPMI_LFNDXO_COM ; Jump if so
+
+	 mov	 bx,[ebp].INTXX_ECX.ELO ; 6521:  CX bytes
+
+	 test	 al,01h 	; Izit 6521 or 65A1?
+	 jnz	 short INT21_DPMI_LFNDXO_IN ; Jump if so
+
+	 push	 ds		; Save for a moment
+
+	 mov	 ds,[ebp-@I31BACK].I31_DS ; Get caller's DS
+	 assume  ds:nothing	; Tell the assembler about it
+
+	 mov	 esi,[ebp].INTXX_EDX ; DS:eSI ==> ASCIIZ string
+	 IF16ZX  si,IG		; Zero to use as dword if 16-bit client
+
+	 xor	 bx,bx		; Initialize length
+@@:
+	 inc	 bx		; Count in this byte
+
+	 cmp	 bx,4096	; Izit too long?
+	 jae	 short @F	; Jump if so
+
+	 cmp	 ds:[esi].LO,0	; Izit the end?
+	 lea	 esi,[esi+1]	; Skip to next byte
+	 jne	 short @B	; Jump if not
+@@:
+	 pop	 ds		; Restore
+	 assume  ds:nothing	; Tell the assembler about it
+INT21_DPMI_LFNDXO_IN:
+	 mov	 dx,bx		; Copy in the entire buffer
+INT21_DPMI_LFNDXO_COM:
+	 push	 bx		; LOW2EXT:  # bytes to release
+	 push	 bx		; LOW2EXT:  # trailing bytes to copy
+	 push	 dx		; GETBUF:   # leading bytes to copy
+	 push	 bx		; GETBUF:   # bytes to allocate
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+	 assume  ds:nothing,es:nothing ; Tell the assembler about it
+
+
+; 様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様
+
+; 71A7:  BL=0, FILETIME (8 bytes) at DS:eSI to DOS time
+
+	 assume  es:PGROUP	; Tell the assembler about it
+INT21_DPMI_LFNSI:
+	 mov	 ax,8		; Size of FILETIME
+
+	 push	 ax		; LOW2EXT:  # bytes to release
+	 push	 0		; LOW2EXT:  # trailing bytes to copy
+	 push	 ax		; GETBUF:   # leading bytes to copy
+	 push	 ax		; GETBUF:   # bytes to allocate
 
 	 lods	 JMPTAB21[si]	; Get next action
 	 jmp	 ax		; Take appropriate action
