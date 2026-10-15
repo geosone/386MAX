@@ -29,6 +29,12 @@ HPDA_INT21 db	 0CDh,021h	; 20-21:  DOS call entry address
 HPDA_SSR   db	 0CBh		; 22   :  State Save/restore return address
 HPDA_MEI db	 0CDh,0FFh,0CBh ; 23-25:  Mouse Event Interrupt address
 HPDA_PDBI db	 0CDh,0FFh,0CBh ; 26-28:  Mouse Event Interrupt address
+HPDA_ALT1 db	 0CDh,0FFh,0CBh ; 29-2B:  Alternate mouse handler 1 (INT 33h AX=0018h)
+HPDA_ALT2 db	 0CDh,0FFh,0CBh ; 2C-2E:  ...			 2
+HPDA_ALT3 db	 0CDh,0FFh,0CBh ; 2F-31:  ...			 3
+
+; Note:  these are not at the end of HPDA_STR as the VM stack follows it
+; and can grow down into the last bytes.
 
 ; The following two labels *MUST* be contiguous as the first one may be
 ; replaced by NOPs so we can jump to the previous Terminate address.

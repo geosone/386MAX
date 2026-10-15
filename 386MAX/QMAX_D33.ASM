@@ -91,6 +91,11 @@ endif
 
 	 extrn	 LaINDOS:dword
 
+MEI_FVOFF dd	 ?		; Offset in DPTSS_STR of the PM handler
+				; for the mouse event being reflected
+ALT_SLOT dw	 ?		; INT 33h AX=0018h:  slot #, -1 = none
+ALT_OP	 db	 ?		; ...  1 = install, 2 = remove
+
 EDATA	 ends			; End EDATA segment
 
 
@@ -137,6 +142,8 @@ ACTSEG	 ends			; End ACTSEG segment
 	 DPMIMOUSEMAC	15h,GETSSRSIZE	; 15:  Get State Save/Restore Buffer Size
 	 DPMIMOUSEMAC	16h,SAVESTATE	; 16:  Save Driver State
 	 DPMIMOUSEMAC	17h,RESTSTATE	; 17:  Restore Driver State
+	 DPMIMOUSEMAC	18h,SETALT	; 18:  Set Alternate Mouse User Handler
+	 DPMIMOUSEMAC	19h,GETALT	; 19:  Get Alternate Mouse User Handler
 .lall
 
 
@@ -266,6 +273,37 @@ JMPTAB33 label	 word
 	 DOSFN	 SAVE_INTXXREG,<INTXX_EDX>
 	 DOSFN	 SAVE_VMCREGS
 	 ACT	 RESTMEI
+	 DOSFN	 SIMVMI,33h
+	 DOSFN	 REST_VMCREGS
+	 DOSFN	 REST_INTXXREG,<INTXX_EDX>
+	 DOSFN	 REST_INTXXREG,<INTXX_ECX>
+	 DOSFN	 REST_INTXXREG,<INTXX_EAX>
+	 ACT	 RESTMEI_EXIT
+
+
+	 DLBL	 SETALT 	; 18:  Set Alternate Mouse User Handler
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EDX>
+	 DOSFN	 SAVE_VMCREGS
+	 ACT	 SETALT
+	 DOSFN	 SIMVMI,33h
+	 ACT	 SETALT_TAIL
+     DLBL	 SETALT_EXIT
+	 DOSFN	 REST_VMCREGS
+	 DOSFN	 REST_INTXXREG,<INTXX_EDX>
+	 ACT	 EXIT
+
+
+	 DLBL	 GETALT 	; 19:  Get Alternate Mouse User Handler
+	 ACT	 GETALT
+	 ACT	 EXIT
+
+
+	 DLBL	 RESTALT	; Remove alternate handlers upon termination
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EAX>
+	 DOSFN	 SAVE_INTXXREG,<INTXX_ECX>
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EDX>
+	 DOSFN	 SAVE_VMCREGS
+	 ACT	 RESTALT
 	 DOSFN	 SIMVMI,33h
 	 DOSFN	 REST_VMCREGS
 	 DOSFN	 REST_INTXXREG,<INTXX_EDX>
@@ -485,6 +523,7 @@ INT33_DPMI_HOOKMEI:
 
 	 mov	 ebx,[ebp].INTXX_EDX ; Get offset
 	 mov	 PGROUP:[eax].DPTSS_MEI_FVEC.FOFF,ebx ; Set offset
+	 mov	 PGROUP:[eax].DPTSS_MEI_0C,1 ; Remove it from the driver on exit
 
 	 mov	 bx,PGROUP:[eax].DPTSS_HPDASEG ; Get segment of HPDA
 	 mov	 VMCREGS.VMC_ES,bx ; Pass to VM
@@ -673,6 +712,181 @@ INT33_DPMI_RESTSTATE:
 
 ; 様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様
 
+; 様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様
+
+; 18:  Set Alternate Mouse User Handler
+
+; On entry (in PL3 stack):
+; CX	 =	 call mask (bits 5-7:  Shift, Ctrl, Alt)
+; ES:eDX ==>	 PM handler (ES = 0:  remove the handler with this mask)
+
+; Each client has three slots (DPTSS_ALT_FVEC/MASK) with a VM entry
+; HPDA_ALTn each; the driver calls that and DPMI_ALTn calls the client.
+
+	 assume  es:PGROUP	; Tell the assembler about it
+INT33_DPMI_SETALT:
+	 mov	 edx,PCURTSS	; Get offset in PGROUP of current TSS
+	 mov	 cx,[ebp].INTXX_ECX.ELO ; Get call mask
+	 mov	 ALT_SLOT,-1	; Assume no slot
+	 mov	 ALT_OP,0	; ...	 no change
+
+; Find the slot with this call mask
+
+	 xor	 ebx,ebx	; Start with slot 1
+@@:
+	 cmp	 PGROUP:[edx+ebx*2].DPTSS_ALT_MASK,cx ; Izit this mask?
+	 je	 short INT33_DPMI_SETALT_FOUND ; Jump if so
+
+	 inc	 ebx		; Next slot
+
+	 cmp	 ebx,3		; Izit the last one?
+	 jb	 short @B	; Jump if not
+
+	 mov	 ebx,-1 	; Mark as not found
+INT33_DPMI_SETALT_FOUND:
+	 cmp	 [ebp-@I31BACK].I31_ES,0 ; Izit removal?
+	 jne	 short INT33_DPMI_SETALT_INST ; Jump if not
+
+	 mov	 VMCREGS.VMC_ES,0 ; Pass 0:0 to the driver
+	 mov	 VMCREGS.VMC_EDX.ELO,0 ; ...
+
+	 cmp	 ebx,-1 	; Did we have it?
+	 je	 near ptr INT33_DPMI_SETALT_GO ; Jump if not
+
+	 mov	 ALT_SLOT,bx	; Save slot #
+	 mov	 ALT_OP,2	; Mark as removal
+
+	 jmp	 near ptr INT33_DPMI_SETALT_GO ; Join common code
+
+INT33_DPMI_SETALT_INST:
+	 cmp	 ebx,-1 	; Did we have it?
+	 jne	 short INT33_DPMI_SETALT_SLOT ; Jump if so (replace)
+
+; Find a free slot
+
+	 xor	 ebx,ebx	; Start with slot 1
+@@:
+	 cmp	 PGROUP:[edx+ebx*2].DPTSS_ALT_MASK,0 ; Izit free?
+	 je	 short INT33_DPMI_SETALT_SLOT ; Jump if so
+
+	 inc	 ebx		; Next slot
+
+	 cmp	 ebx,3		; Izit the last one?
+	 jb	 short @B	; Jump if not
+
+; No free slot:  fail as the driver does
+
+	 mov	 VMCREGS.VMC_EAX.ELO,-1 ; Return error
+	 lea	 si,INT33_DPMIJMP_SETALT_EXIT ; Skip the driver call
+
+	 jmp	 near ptr INT33_DPMI_SETALT_GO ; Join common code
+
+INT33_DPMI_SETALT_SLOT:
+	 mov	 ALT_SLOT,bx	; Save slot #
+	 mov	 ALT_OP,1	; Mark as installation
+	 mov	 PGROUP:[edx+ebx*2].DPTSS_ALT_MASK,cx ; Save call mask
+
+	 imul	 eax,ebx,type DPTSS_MEI_FVEC ; Get offset of slot's Sel|Off
+	 add	 eax,edx	; Plus offset of TSS
+	 mov	 cx,[ebp-@I31BACK].I31_ES ; Get caller's selector
+	 mov	 PGROUP:[eax].DPTSS_ALT_FVEC.FSEL,cx ; Save it
+	 mov	 ecx,[ebp].INTXX_EDX ; Get offset
+				; Already zeroed to use as dword if 16-bit client
+	 mov	 PGROUP:[eax].DPTSS_ALT_FVEC.FOFF,ecx ; Save it
+
+	 mov	 ax,PGROUP:[edx].DPTSS_HPDASEG ; Get segment of HPDA
+	 mov	 VMCREGS.VMC_ES,ax ; Pass to VM
+	 imul	 ax,bx,3	; Each VM entry is three bytes
+	 add	 ax,offset HPDA_ALT1 ; Plus offset of the first
+	 mov	 VMCREGS.VMC_EDX.ELO,ax ; Pass to VM
+INT33_DPMI_SETALT_GO:
+	 lods	 JMPTAB33[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; After the driver call:  free the slot if it was removed or the
+; driver refused it
+
+INT33_DPMI_SETALT_TAIL:
+	 cmp	 ALT_SLOT,-1	; Izit a slot?
+	 je	 short INT33_DPMI_SETALT_TAILX ; Jump if not
+
+	 mov	 edx,PCURTSS	; Get offset in PGROUP of current TSS
+	 movzx	 ebx,ALT_SLOT	; Get slot #
+
+	 cmp	 ALT_OP,2	; Izit removal?
+	 je	 short @F	; Jump if so
+
+	 cmp	 VMCREGS.VMC_EAX.ELO,-1 ; Did the driver refuse it?
+	 jne	 short INT33_DPMI_SETALT_TAILX ; Jump if not
+@@:
+	 mov	 PGROUP:[edx+ebx*2].DPTSS_ALT_MASK,0 ; Free the slot
+INT33_DPMI_SETALT_TAILX:
+	 lods	 JMPTAB33[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; 19:  Get Alternate Mouse User Handler
+
+; On entry (in PL3 stack):
+; CX	 =	 call mask
+
+; On exit (in PL3 stack):
+; CX	 =	 call mask, 0 if not found
+; BX:eDX ==>	 PM handler
+
+INT33_DPMI_GETALT:
+	 mov	 edx,PCURTSS	; Get offset in PGROUP of current TSS
+	 mov	 cx,[ebp].INTXX_ECX.ELO ; Get call mask
+
+	 xor	 ebx,ebx	; Start with slot 1
+@@:
+	 cmp	 PGROUP:[edx+ebx*2].DPTSS_ALT_MASK,cx ; Izit this mask?
+	 je	 short INT33_DPMI_GETALT_FOUND ; Jump if so
+
+	 inc	 ebx		; Next slot
+
+	 cmp	 ebx,3		; Izit the last one?
+	 jb	 short @B	; Jump if not
+
+	 mov	 [ebp].INTXX_ECX.ELO,0 ; Not found
+
+	 jmp	 short INT33_DPMI_GETALT_EXIT ; Join common code
+
+INT33_DPMI_GETALT_FOUND:
+	 imul	 eax,ebx,type DPTSS_MEI_FVEC ; Get offset of slot's Sel|Off
+	 add	 eax,edx	; Plus offset of TSS
+	 mov	 cx,PGROUP:[eax].DPTSS_ALT_FVEC.FSEL ; Get selector
+	 mov	 [ebp].INTXX_EBX.ELO,cx ; Return in BX
+	 mov	 ecx,PGROUP:[eax].DPTSS_ALT_FVEC.FOFF ; Get offset
+	 mov	 [ebp].INTXX_EDX,ecx ; Return in eDX
+INT33_DPMI_GETALT_EXIT:
+	 lods	 JMPTAB33[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; Remove an alternate handler from the driver upon termination
+
+; On entry:
+; ALT_SLOT =	 slot #
+
+INT33_DPMI_RESTALT:
+	 mov	 edx,PCURTSS	; Get offset in PGROUP of current TSS
+	 movzx	 ebx,ALT_SLOT	; Get slot #
+	 mov	 ax,PGROUP:[edx+ebx*2].DPTSS_ALT_MASK ; Get call mask
+	 mov	 PGROUP:[edx+ebx*2].DPTSS_ALT_MASK,0 ; Free the slot
+
+	 mov	 VMCREGS.VMC_EAX.ELO,0018h ; Set alternate handler
+	 mov	 VMCREGS.VMC_ECX.ELO,ax ; ... with this call mask
+	 mov	 VMCREGS.VMC_EDX.ELO,0 ; ... to 0:0 (remove)
+	 mov	 VMCREGS.VMC_ES,0 ; ...
+
+	 lods	 JMPTAB33[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+	 assume  ds:nothing,es:nothing ; Tell the assembler about it
+
+
 	 assume  ss:PGROUP	; Tell the assembler about it
 INT33_DPMI_EXIT:
 	 cli			; Disable interrupts to avoid HW interrupt
@@ -704,6 +918,7 @@ SS:EBP	 ==>	 INTXX_STR
 
 |
 
+	 mov	 MEI_FVOFF,DPTSS_MEI_FVEC ; Use the PDBI/MEI handler
 	 mov	 ecx,4		; Set # words to copy from the VM
 				; stack to DPMI client's PL3 stack
 	 jmp	 short DPMI_MEI_NXT ; Join common code
@@ -711,6 +926,42 @@ SS:EBP	 ==>	 INTXX_STR
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 DPMI_PDBI endp			; End DPMI_PDBI procedure
+	 NPPROC  DPMI_ALT1 -- Alternate Mouse Handler 1 (INT 33h AX=0018h)
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:AGROUP,ss:nothing
+
+	 mov	 MEI_FVOFF,DPTSS_ALT_FVEC+0*(type DPTSS_MEI_FVEC) ; Slot 1
+
+	 jmp	 near ptr DPMI_MEI_ALT ; Join common code
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+DPMI_ALT1 endp			; End DPMI_ALT1 procedure
+
+
+	 NPPROC  DPMI_ALT2 -- Alternate Mouse Handler 2 (INT 33h AX=0018h)
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:AGROUP,ss:nothing
+
+	 mov	 MEI_FVOFF,DPTSS_ALT_FVEC+1*(type DPTSS_MEI_FVEC) ; Slot 2
+
+	 jmp	 near ptr DPMI_MEI_ALT ; Join common code
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+DPMI_ALT2 endp			; End DPMI_ALT2 procedure
+
+
+	 NPPROC  DPMI_ALT3 -- Alternate Mouse Handler 3 (INT 33h AX=0018h)
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:AGROUP,ss:nothing
+
+	 mov	 MEI_FVOFF,DPTSS_ALT_FVEC+2*(type DPTSS_MEI_FVEC) ; Slot 3
+
+	 jmp	 near ptr DPMI_MEI_ALT ; Join common code
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+DPMI_ALT3 endp			; End DPMI_ALT3 procedure
+
+
 	 NPPROC  DPMI_MEI -- Mouse Event Interrupt Handler
 	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:AGROUP,ss:nothing
 COMMENT|
@@ -723,6 +974,9 @@ SS:EBP	 ==>	 INTXX_STR
 
 |
 
+	 mov	 MEI_FVOFF,DPTSS_MEI_FVEC ; Use the MEI handler
+	 public  DPMI_MEI_ALT
+DPMI_MEI_ALT:
 	 xor	 ecx,ecx	; Set # words to copy from the VM
 				; stack to DPMI client's PL3 stack
 DPMI_MEI_NXT:
@@ -849,8 +1103,9 @@ DPMI_MEI_COM:
 
 	 mov	 ebx,PCURTSS	; Get offset in PGROUP of current TSS
 
-	 push	 PGROUP:[ebx].DPTSS_MEI_FVEC.FSEL.EDD ; Pass selector w/filler
-	 push	 PGROUP:[ebx].DPTSS_MEI_FVEC.FOFF     ; Pass offset
+	 add	 ebx,MEI_FVOFF	; Plus offset of the handler's Sel|Off
+	 push	 PGROUP:[ebx].FSEL.EDD ; Pass selector w/filler
+	 push	 PGROUP:[ebx].FOFF     ; Pass offset
 
 	 mov	 eax,[ebp].INTXX_EAX ; Restore caller's EAX
 	 mov	 ebx,[ebp].INTXX_EBX ; ...		EBX
@@ -1016,7 +1271,15 @@ Restore mouse event interrupt
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of current TSS
 
 	 cmp	 PGROUP:[edx].DPTSS_MEI_ORIG_VEC,0 ; Izit valid?
+	 jne	 short @F	; Jump if so (restore the swapped one)
+
+; If the client set a handler with AX=000Ch, the driver would keep
+; calling its HPDA after termination:  set the call mask to 0 (0:0)
+
+	 cmp	 PGROUP:[edx].DPTSS_MEI_0C,0 ; Did it set one?
 	 je	 short INT33_DPMI_RESTMEI_EXIT ; Jump if not
+@@:
+	 mov	 PGROUP:[edx].DPTSS_MEI_0C,0 ; Only once
 
 	 lea	 si,INT33_DPMIJMP_RESTMEI ; CS:SI ==> action stream
 	 lods	 JMPTAB33[si]	; Get next action
@@ -1037,9 +1300,31 @@ INT33_DPMI_RESTMEI:
 	 jmp	 ax		; Take appropriate action
 
 INT33_DPMI_RESTMEI_EXIT:
+
+; Remove any alternate mouse handlers of this client from the driver
+; (INT 33h AX=0018h, same call mask, address 0:0), one per pass
+
+	 mov	 edx,PCURTSS	; Get offset in PGROUP of current TSS
+	 xor	 ebx,ebx	; Start with slot 1
+@@:
+	 cmp	 PGROUP:[edx+ebx*2].DPTSS_ALT_MASK,0 ; Izit in use?
+	 jne	 short INT33_DPMI_RESTMEI_ALT ; Jump if so
+
+	 inc	 ebx		; Next slot
+
+	 cmp	 ebx,3		; Izit the last one?
+	 jb	 short @B	; Jump if not
+
 	 popad			; Restore all EGP registers
 
 	 ret			; Return to caller
+
+INT33_DPMI_RESTMEI_ALT:
+	 mov	 ALT_SLOT,bx	; Save slot # for RESTALT
+	 lea	 si,INT33_DPMIJMP_RESTALT ; CS:SI ==> action stream
+
+	 lods	 JMPTAB33[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 

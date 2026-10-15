@@ -172,6 +172,9 @@ ICODE	 segment use16 dword public 'icode' ; Start ICODE segment
 	 extrn	 DPMI_REFRET:near
 	 extrn	 DPMI_MEI:near
 	 extrn	 DPMI_PDBI:near
+	 extrn	 DPMI_ALT1:near
+	 extrn	 DPMI_ALT2:near
+	 extrn	 DPMI_ALT3:near
 	 extrn	 FLTPROC_VMFULL:near
 
 	 extrn	 PMIDEF_SSR16:abs
@@ -1439,6 +1442,17 @@ DPMI_SIMRET_SAMELVL:
 
 	 cmp	 [ebp].INTXX_EIP,dword ptr HPDA_PDBI[2] ; Izit PDBI?
 	 je	 near ptr DPMI_PDBI ; Jump if so
+
+; Check for alternate mouse handlers (INT 33h AX=0018h) from VM
+
+	 cmp	 [ebp].INTXX_EIP,dword ptr HPDA_ALT1[2] ; Izit alternate 1?
+	 je	 near ptr DPMI_ALT1 ; Jump if so
+
+	 cmp	 [ebp].INTXX_EIP,dword ptr HPDA_ALT2[2] ; Izit alternate 2?
+	 je	 near ptr DPMI_ALT2 ; Jump if so
+
+	 cmp	 [ebp].INTXX_EIP,dword ptr HPDA_ALT3[2] ; Izit alternate 3?
+	 je	 near ptr DPMI_ALT3 ; Jump if so
 
 ; Check for Terminate reflected from VM
 
