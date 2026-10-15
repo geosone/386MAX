@@ -642,6 +642,7 @@ if @OEM_DPMI
 	 extrn	 INT04:near
 	 extrn	 INT05:near
 	 extrn	 INT11:near
+	 extrn	 INT13:near
 if @OEM_VIRTUALMEM
 	 extrn	 INT1C:near
 	 extrn	 INT23:near
@@ -1340,6 +1341,7 @@ if @OEM_DPMI
 	 SETIDT  08		; Normal IRQ0 = Double Fault
 	 SETIDT  0B		; Normal IRQ3 = Segment Not Present
 	 SETIDT  10		; Used for BIOS translation
+	 SETIDT  13,I		; Disk BIOS translation
 	 SETIDT  11,I		; Alignment check for 486
 if @OEM_VIRTUALMEM
 	 test	 VMM_FLAG,@VMM_BSGLOBAL ; Is there a swapfile present?

@@ -201,6 +201,7 @@ ECODE	 segment use16 dword public 'ecode' ; Start ECODE segment
 	 extrn	 INTPROC04:near
 	 extrn	 INTPROC05:near
 	 extrn	 INTPROC10:near
+	 extrn	 INTPROC13:near
 	 extrn	 INTPROC11:near
 	 extrn	 INTPROC1C:near
 	 extrn	 INTPROC20:near
@@ -608,6 +609,9 @@ ICODE	 segment use16 dword public 'icode' ; Start ICODE segment
 
 	 extrn	 INT10_DPMI:far
 	 extrn	 INT33_DPMI:far
+	 extrn	 INT13_DPMI:far
+	 extrn	 INT25_DPMI:far
+	 extrn	 INT26_DPMI:far
 	 extrn	 PMINTCOM:far
 	 extrn	 VMFLTCOM:far
 	 extrn	 DPMIFN_LMSW:near
@@ -1111,11 +1115,11 @@ If we're called from VM, continue on (the code at INTCOM_DPMI_INT
    will call any active DPMI clients).
 
 If we're called from PM, and there are no DPMI clients active,
-   ignore the call (MAX did this?).
+   pass the call through our translation services.
 
 If we're called from PM, and there are DPMI clients active,
    give them a crack at this interrupt.  If we regain control,
-   ignore the call.
+   pass the call through our translation services.
 
 On entry:
 
@@ -1658,11 +1662,11 @@ If we're called from VM, continue on (the code at INTCOM_DPMI_INT
    will call any active DPMI clients).
 
 If we're called from PM, and there are no DPMI clients active,
-   ignore the call (MAX did this?).
+   pass the call through our translation services.
 
 If we're called from PM, and there are DPMI clients active,
    give them a crack at this interrupt.  If we regain control,
-   ignore the call.
+   pass the call through our translation services.
 
 On entry:
 
@@ -1703,6 +1707,8 @@ SS:ESP	 ==>	 INTDPI_STR (if we're called from DPMI)
 
 	 public  INT25_INTRETPM
 INT25_INTRETPM:
+	 mov	 [esp].INTDPI_INTNO,4*25h + offset PGROUP:INTPROC00Z ; Mark as INT 25h
+INT25_INTRETPM_COM:
 
 INT25_STR struc
 
@@ -1738,14 +1744,21 @@ INT25_STR ends
 	 push	 [ebp].INT25_NXT.INTDPI_EFL.ELO ; Get original flags
 	 pop	 ds:[eax].ELO	; Save onto caller's stack
 
-	 or	 [ebp].INT25_NXT.INTDPI_EFL.ELO,mask $CF ; CF=1
-
 	 REGREST <ds,eax>	; Restore
 	 assume  ds:nothing	; Tell the assembler about it
 
 	 pop	 ebp		; Restore
 
-	 iretd			; Return to caller
+; Translate the call (buffer or packet at DS:eBX); the result flags
+; go into the IRET flags, the original flags stay on the caller's stack
+
+	 cmp	 [esp].INTDPI_INTNO,4*26h + offset PGROUP:INTPROC00Z ; Izit INT 26h?
+	 je	 short @F	; Jump if so
+
+	 FIXIJMP IGROUP:INT25_DPMI,DTE_CSIG ; Run through our translator
+
+@@:
+	 FIXIJMP IGROUP:INT26_DPMI,DTE_CSIG ; Run through our translator
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
@@ -1760,11 +1773,11 @@ If we're called from VM, continue on (the code at INTCOM_DPMI_INT
    will call any active DPMI clients).
 
 If we're called from PM, and there are no DPMI clients active,
-   ignore the call (MAX did this?).
+   pass the call through our translation services.
 
 If we're called from PM, and there are DPMI clients active,
    give them a crack at this interrupt.  If we regain control,
-   ignore the call.
+   pass the call through our translation services.
 
 On entry:
 
@@ -1805,7 +1818,9 @@ SS:ESP	 ==>	 INTDPI_STR (if we're called from DPMI)
 
 	 public  INT26_INTRETPM
 INT26_INTRETPM:
-	 jmp	 INT25_INTRETPM ; Join common code
+	 mov	 [esp].INTDPI_INTNO,4*26h + offset PGROUP:INTPROC00Z ; Mark as INT 26h
+
+	 jmp	 INT25_INTRETPM_COM ; Join common code
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
@@ -1820,11 +1835,11 @@ If we're called from VM, continue on (the code at INTCOM_DPMI_INT
    will call any active DPMI clients).
 
 If we're called from PM, and there are no DPMI clients active,
-   ignore the call (MAX did this?).
+   pass the call through our translation services.
 
 If we're called from PM, and there are DPMI clients active,
    give them a crack at this interrupt.  If we regain control,
-   ignore the call.
+   pass the call through our translation services.
 
 On entry:
 
@@ -1870,6 +1885,35 @@ INT27_INTRETPM:
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 INT27	 endp			; End INT27 procedure
+	 FPPROC  INT13 -- Disk BIOS Interrupt Handler
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Disk BIOS interrupt handler
+
+If we're called from VM, continue on.
+
+If we're called from PM, pass the call through our translation
+   services (they give any active DPMI clients a crack at it first).
+
+On entry:
+
+SS:ESP	 ==>	 INTCOM_STR (if we're called from VM86 mode)
+SS:ESP	 ==>	 INTDPI_STR (if we're called from DPMI)
+
+|
+
+	 test	 [esp].INTCOM_EFL.EHI,mask $VM ; Izit from VM86 mode?
+	 jz	 short @F	; Jump if not
+
+	 FIXIJMP PGROUP:INTPROC13,DTE_CS2 ; Jump if so (call as VM INT 13h)
+
+@@:
+	 FIXIJMP IGROUP:INT13_DPMI,DTE_CSIG ; Run through our translator
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+INT13	 endp			; End INT13 procedure
 	 FPPROC  INT33 -- Mouse Interrupt Handler
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
@@ -1921,11 +1965,11 @@ If we're called from VM, continue on (the code at INTCOM_DPMI_INT
    will call any active DPMI clients).
 
 If we're called from PM, and there are no DPMI clients active,
-   ignore the call (MAX did this?).
+   pass the call through our translation services.
 
 If we're called from PM, and there are DPMI clients active,
    give them a crack at this interrupt.  If we regain control,
-   ignore the call.
+   pass the call through our translation services.
 
 On entry:
 
@@ -1981,11 +2025,11 @@ If we're called from VM, continue on (the code at INTCOM_DPMI_INT
    will call any active DPMI clients).
 
 If we're called from PM, and there are no DPMI clients active,
-   ignore the call (MAX did this?).
+   pass the call through our translation services.
 
 If we're called from PM, and there are DPMI clients active,
    give them a crack at this interrupt.  If we regain control,
-   ignore the call.
+   pass the call through our translation services.
 
 On entry:
 

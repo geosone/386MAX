@@ -790,6 +790,89 @@ JMPTAB21 label	 word
 	 ACT	 EXIT
 
 
+; Absolute disk I/O from PM (INT 25h/26h, INT 21h AX=7305h, INT 13h AH=02h/03h)
+; in chunks which fit into the HPDA buffer.  DSKINIT/DSK13INIT set up a
+; DSK_STR frame on the stack which stays until DSKEND.
+
+DSKENTRY macro	 LBL
+	 DLBL	 LBL
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EBX>
+	 DOSFN	 SAVE_INTXXREG,<INTXX_ECX>
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EDX>
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EDI>
+	 DOSFN	 SAVE_VMCREGS
+	 ACT	 LBL
+	 endm			; DSKENTRY
+
+; Old form (count in CX, sector in DX, buffer at DS:BX in DOS memory)
+
+DSKOLD	 macro	 NN
+	 DLBL	 DSKO&NN
+	 ACT	 DSKCHUNK
+	 DOSFN	 GETBUF,<VMC_EBX.ELO,VMC_DS,INTXX_EDI,I31_ES-@I31BACK>
+	 DOSFN	 SIMVMI,NN&h
+	 DOSFN	 LOW2EXT,<INTXX_EDI,I31_ES-@I31BACK>
+	 ACT	 DSKTAIL
+	 endm			; DSKOLD
+
+; Packet form (CX=-1, packet at DS:BX, data buffer at the packet's ES:DI)
+
+DSKPKT	 macro	 NN
+	 DLBL	 DSKP&NN
+	 ACT	 DSKCHUNK
+	 DOSFN	 GETBUF,<VMC_EDI.ELO,VMC_ES,INTXX_EDI,I31_ES-@I31BACK>
+	 DOSFN	 GETBUF,<VMC_EBX.ELO,VMC_DS,INTXX_EDI,I31_ES-@I31BACK>
+	 ACT	 DSKPKT
+	 DOSFN	 SIMVMI,NN&h
+	 DOSFN	 RELBUF 	; No need to copy back the packet
+	 DOSFN	 LOW2EXT,<INTXX_EDI,I31_ES-@I31BACK>
+	 ACT	 DSKTAIL
+	 endm			; DSKPKT
+
+	 DSKENTRY DSK25 	; INT 25h:  Absolute disk read
+	 DSKENTRY DSK26 	; INT 26h:  Absolute disk write
+	 DSKENTRY DSK7305	; 7305:  FAT32 absolute disk read/write
+	 DSKENTRY DSK13 	; INT 13h AH=02h/03h:  Read/write sectors
+
+	 DSKOLD  25
+	 DSKOLD  26
+	 DSKPKT  25
+	 DSKPKT  26
+	 DSKPKT  21
+
+	 DLBL	 DSKO13 	; INT 13h:  buffer at ES:BX
+	 ACT	 DSK13CHUNK
+	 DOSFN	 GETBUF,<VMC_EBX.ELO,VMC_ES,INTXX_EDI,I31_ES-@I31BACK>
+	 DOSFN	 SIMVMI,13h
+	 DOSFN	 LOW2EXT,<INTXX_EDI,I31_ES-@I31BACK>
+	 ACT	 DSK13TAIL
+
+	 DLBL	 DSKDONE
+	 ACT	 DSKEND
+	 DOSFN	 REST_VMCREGS
+	 DOSFN	 REST_INTXXREG,<INTXX_EDI>
+	 DOSFN	 REST_INTXXREG,<INTXX_EDX>
+	 DOSFN	 REST_INTXXREG,<INTXX_ECX>
+	 DOSFN	 REST_INTXXREG,<INTXX_EBX>
+	 ACT	 EXIT
+
+
+	 DLBL	 BIOS08 	; INT 13h AH=08h, floppy:  Table at ES:DI
+	 DOSFN	 SAVE_VMCREGS
+	 DOSFN	 SIMVMI,13h
+	 DOSFN	 SEG2SEL,<@DATASEL,VMC_ES,I31_ES-@I31BACK>
+	 DOSFN	 IF32ZX,<VMC_EDI.EHI>
+	 DOSFN	 REST_VMCREGS
+	 ACT	 EXIT
+
+
+	 DLBL	 PASS13 	; INT 13h:  Other functions
+	 DOSFN	 SAVE_VMCREGS
+	 DOSFN	 SIMVMI,13h
+	 DOSFN	 REST_VMCREGS
+	 ACT	 EXIT
+
+
 	 DLBL	 LFN		; 71:  Long filename functions (MS-DOS 7)
 	 ACT	 LFN		; Dispatch by subfunction in AL
 
@@ -3109,8 +3192,9 @@ INT21_DPMI_FAT32:
 	 LFNTO	 02h,LFNDI
 	 LFNTO	 03h,LFNFF
 	 LFNTO	 04h,LFNDI
+	 LFNTO	 05h,DSK7305	; 7305:  Absolute disk read/write
 
-	 jmp	 INT21_DPMI_SUBFN_PASSTHRU ; Others (7305:  not translated)
+	 jmp	 INT21_DPMI_SUBFN_PASSTHRU ; Others
 
 
 ; 5D:  Server functions
@@ -3383,7 +3467,621 @@ INT21_DPMI_UNSUP:
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
+; 様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様
+
+; Absolute disk I/O from PM:  INT 25h/26h, 7305h and INT 13h AH=02h/03h
+
+DSK_STR  struc			; Frame on the stack from DSKINIT to DSKEND
+DSK_REM  dd	 ?		; # sectors still to transfer
+DSK_SEC  dd	 ?		; Next sector (INT 13h:  sector # in CL)
+DSK_CNT  dd	 ?		; # sectors in the current chunk
+DSK_SIZ  dw	 ?		; Bytes per sector
+DSK_INT  db	 ?		; INT # to simulate (21h for 7305h)
+DSK_FLG  db	 ?		; Flags (see @DSK_xxx)
+DSK_NXT  dw	 ?		; Action stream for the next chunk
+DSK_ES	 dw	 ?		; Caller's ES
+DSK_TOT  dw	 ?		; INT 13h:  # sectors requested
+DSK_STR  ends
+
+@DSK_WR  equ	 01h		; Write
+@DSK_PKT equ	 02h		; Packet form (CX=-1)
+
+; INT 25h:  Absolute disk read
+; INT 26h:  Absolute disk write
+; 7305h:    FAT32 absolute disk read/write (SI bit 0 = write)
+
+; On entry (in PL3 stack):
+; AL	 =	 drive (0 = A:) for INT 25h/26h
+; DL	 =	 drive (1 = A:) for 7305h
+; CX	 =	 # sectors, or -1 for the packet form
+; DX	 =	 start sector (if CX != -1)
+; DS:eBX ==>	 buffer, or packet (start sector dd, # sectors dw,
+;		 buffer selector:offset16 dd)
+
+; On entry (in registers):
+; CS:SI  ==>	 action stream
+; ES	 =	 PGROUP
+; SS:EBP ==>	 INTXX_STR (nothing above INTXX_SS is valid)
+
+	 assume  es:PGROUP	; Tell the assembler about it
+INT21_DPMI_DSK25:
+	 mov	 ax,25h 	; INT 25h, read
+	 jmp	 short INT21_DPMI_DSKINIT ; Join common code
+
+INT21_DPMI_DSK26:
+	 mov	 ax,(@DSK_WR shl 8) or 26h ; INT 26h, write
+	 jmp	 short INT21_DPMI_DSKINIT ; Join common code
+
+INT21_DPMI_DSK7305:
+	 mov	 ax,(@DSK_PKT shl 8) or 21h ; INT 21h, packet form
+
+	 test	 [ebp].INTXX_ESI.ELO.LO,01h ; Izit a write?
+	 jz	 short INT21_DPMI_DSKINIT ; Jump if not
+
+	 or	 ah,@DSK_WR	; Mark as write
+INT21_DPMI_DSKINIT:
+	 sub	 esp,size DSK_STR ; Make room for the frame
+
+	 mov	 [esp].DSK_INT,al ; Save INT #
+	 mov	 [esp].DSK_FLG,ah ; ...  flags
+	 mov	 bx,[ebp-@I31BACK].I31_ES ; Get caller's ES
+	 mov	 [esp].DSK_ES,bx ; Save to restore in DSKEND
+
+	 cmp	 [ebp].INTXX_ECX.ELO,-1 ; Izit the packet form?
+	 jne	 short @F	; Jump if not
+
+	 or	 [esp].DSK_FLG,@DSK_PKT ; Mark as packet form
+@@:
+	 test	 [esp].DSK_FLG,@DSK_PKT ; Izit the packet form?
+	 jnz	 short INT21_DPMI_DSKINIT_PKT ; Jump if so
+
+	 movzx	 eax,[ebp].INTXX_EDX.ELO ; Get start sector
+	 movzx	 ecx,[ebp].INTXX_ECX.ELO ; ...	# sectors
+	 mov	 edx,[ebp].INTXX_EBX ; Get buffer offset
+				; Already zeroed to use as dword if 16-bit client
+	 mov	 bx,[ebp-@I31BACK].I31_DS ; Get buffer selector
+
+	 jmp	 short INT21_DPMI_DSKINIT_COM ; Join common code
+
+INT21_DPMI_DSKINIT_PKT:
+	 push	 ds		; Save for a moment
+
+	 mov	 ds,[ebp-@I31BACK].I31_DS ; Get caller's DS
+	 assume  ds:nothing	; Tell the assembler about it
+
+	 mov	 ebx,[ebp].INTXX_EBX ; DS:EBX ==> packet
+				; Already zeroed to use as dword if 16-bit client
+	 mov	 eax,ds:[ebx].EDD ; Get start sector
+	 movzx	 ecx,ds:[ebx+4].ELO ; ...  # sectors
+	 movzx	 edx,ds:[ebx+6].ELO ; ...  buffer offset
+	 mov	 bx,ds:[ebx+8].ELO ; ...  buffer selector
+
+	 pop	 ds		; Restore
+	 assume  ds:nothing	; Tell the assembler about it
+INT21_DPMI_DSKINIT_COM:
+	 mov	 [esp].DSK_SEC,eax ; Save start sector
+	 mov	 [esp].DSK_REM,ecx ; ...  # sectors
+
+; From here on, the caller's buffer is at I31_ES:INTXX_EDI
+
+	 mov	 [ebp].INTXX_EDI,edx ; Save buffer offset
+	 mov	 [ebp-@I31BACK].I31_ES,bx ; ...  selector
+
+; Select the action stream for the chunks
+
+	 mov	 al,[esp].DSK_INT ; Get INT #
+
+	 test	 [esp].DSK_FLG,@DSK_PKT ; Izit the packet form?
+	 jnz	 short INT21_DPMI_DSKINIT_P ; Jump if so
+
+	 lea	 bx,INT21_DPMIJMP_DSKO25 ; INT 25h
+
+	 cmp	 al,25h 	; Izit INT 25h?
+	 je	 short INT21_DPMI_DSKINIT_N ; Jump if so
+
+	 lea	 bx,INT21_DPMIJMP_DSKO26 ; INT 26h
+
+	 jmp	 short INT21_DPMI_DSKINIT_N ; Join common code
+
+INT21_DPMI_DSKINIT_P:
+	 lea	 bx,INT21_DPMIJMP_DSKP25 ; INT 25h
+
+	 cmp	 al,25h 	; Izit INT 25h?
+	 je	 short INT21_DPMI_DSKINIT_N ; Jump if so
+
+	 lea	 bx,INT21_DPMIJMP_DSKP26 ; INT 26h
+
+	 cmp	 al,26h 	; Izit INT 26h?
+	 je	 short INT21_DPMI_DSKINIT_N ; Jump if so
+
+	 lea	 bx,INT21_DPMIJMP_DSKP21 ; 7305h
+INT21_DPMI_DSKINIT_N:
+	 mov	 [esp].DSK_NXT,bx ; Save for DSKTAIL
+
+; Get the bytes per sector of the drive (INT 21h AH=36h)
+
+	 movzx	 edx,[ebp].INTXX_EDX.ELO.LO ; 7305h:  DL = drive (1 = A:)
+
+	 cmp	 [esp].DSK_INT,21h ; Izit 7305h?
+	 je	 short @F	; Jump if so
+
+	 movzx	 edx,[ebp].INTXX_EAX.ELO.LO ; INT 25h/26h:  AL = drive (0 = A:)
+	 inc	 dx		; Convert to origin-1
+@@:
+	 mov	 VMCREGS.VMC_EDX,edx ; DL = drive
+	 mov	 VMCREGS.VMC_EAX,3600h ; Get free disk space
+
+	 REGSAVE <bx,cx,edi>	; Save registers
+
+	 mov	 bx,21h 	; BL = Interrupt #, BH = flags (none)
+	 xor	 cx,cx		; # words to copy
+	 lea	 edi,VMCREGS	; ES:EDI ==> VMC register structure
+	 DPMICALL0 @DPMI_SIMVMI  ; Request DPMI service
+
+	 REGREST <edi,cx,bx>	; Restore
+
+	 mov	 ax,VMCREGS.VMC_EAX.ELO ; Get result (-1 = invalid drive)
+	 mov	 cx,VMCREGS.VMC_ECX.ELO ; Get bytes per sector
+
+	 call	 EGP2VMCREGS	; Transfer caller's EGP registers to VMCREGS
+
+	 cmp	 ax,-1		; Izit an invalid drive?
+	 je	 short INT21_DPMI_DSKERR ; Jump if so
+
+	 jcxz	 INT21_DPMI_DSKERR ; Jump if no sector size
+
+	 cmp	 cx,4096	; Izit too large?
+	 ja	 short INT21_DPMI_DSKERR ; Jump if so
+
+	 mov	 [esp].DSK_SIZ,cx ; Save bytes per sector
+
+	 mov	 si,[esp].DSK_NXT ; CS:SI ==> action stream
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+INT21_DPMI_DSKERR:
+	 mov	 ax,0101h	; INT 25h/26h:  unknown unit, bad command
+
+	 cmp	 [esp].DSK_INT,21h ; Izit 7305h?
+	 jne	 short @F	; Jump if not
+
+	 mov	 ax,000Fh	; 7305h:  invalid drive
+@@:
+	 mov	 VMCREGS.VMC_EAX.ELO,ax ; Return error code
+	 or	 VMCREGS.VMC_FL,mask $CF ; ...  CF=1
+INT21_DPMI_DSKCHUNK_DONE:
+	 lea	 si,INT21_DPMIJMP_DSKDONE ; CS:SI ==> action stream
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; Next chunk of INT 25h/26h/7305h
+
+; On entry (in registers):
+; SS:ESP ==>	 DSK_STR
+
+INT21_DPMI_DSKCHUNK:
+	 mov	 ecx,[esp].DSK_REM ; Get # sectors still to transfer
+	 jecxz	 INT21_DPMI_DSKCHUNK_DONE ; Jump if none
+
+	 mov	 eax,PCURTSS	; Get offset in PGROUP of current TSS
+	 mov	 eax,PGROUP:[eax].DPTSS_VMBUFSIZ.EDD ; Get free buffer size
+
+	 test	 [esp].DSK_FLG,@DSK_PKT ; Izit the packet form?
+	 jz	 short @F	; Jump if not
+
+	 sub	 eax,16 	; Less room for the packet
+	 jbe	 short INT21_DPMI_DSKERR ; Jump if no room
+@@:
+	 xor	 edx,edx	; Zero to use as qword
+	 movzx	 ebx,[esp].DSK_SIZ ; Get bytes per sector
+	 div	 ebx		; EAX = # sectors which fit
+
+	 or	 eax,eax	; Izit room for one?
+	 jz	 short INT21_DPMI_DSKERR ; Jump if not
+
+	 cmp	 eax,ecx	; Use the smaller
+	 jbe	 short @F	; Jump if it fits
+
+	 mov	 eax,ecx	; Use the rest
+@@:
+	 mov	 [esp].DSK_CNT,eax ; Save # sectors in this chunk
+	 mul	 ebx		; EAX = # bytes in this chunk
+	 mov	 bx,ax		; Copy to save
+
+	 xor	 cx,cx		; LOW2EXT:  # trailing bytes to copy (write)
+	 xor	 dx,dx		; GETBUF:   # leading bytes to copy (read)
+
+	 test	 [esp].DSK_FLG,@DSK_WR ; Izit a write?
+	 jz	 short @F	; Jump if not
+
+	 mov	 dx,bx		; Copy the data into DOS memory
+
+	 jmp	 short INT21_DPMI_DSKCHUNK_REGS ; Join common code
+
+@@:
+	 mov	 cx,bx		; Copy the data from DOS memory
+INT21_DPMI_DSKCHUNK_REGS:
+	 mov	 ax,[ebp].INTXX_EAX.ELO ; Get caller's AX
+	 mov	 VMCREGS.VMC_EAX.ELO,ax ; Pass to VM
+
+	 test	 [esp].DSK_FLG,@DSK_PKT ; Izit the packet form?
+	 jnz	 short INT21_DPMI_DSKCHUNK_PKT ; Jump if so
+
+	 mov	 ax,[esp].DSK_CNT.ELO ; Get # sectors in this chunk
+	 mov	 VMCREGS.VMC_ECX.ELO,ax ; Pass to VM
+	 mov	 ax,[esp].DSK_SEC.ELO ; Get start sector of this chunk
+	 mov	 VMCREGS.VMC_EDX.ELO,ax ; Pass to VM
+
+	 push	 bx		; LOW2EXT:  # bytes to release
+	 push	 cx		; LOW2EXT:  # trailing bytes to copy
+	 push	 dx		; GETBUF:   # leading bytes to copy
+	 push	 bx		; GETBUF:   # bytes to allocate
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+INT21_DPMI_DSKCHUNK_PKT:
+	 mov	 VMCREGS.VMC_ECX.ELO,-1 ; Packet form
+	 mov	 ax,[ebp].INTXX_EDX.ELO ; Get caller's DX (7305h:  DL = drive)
+	 mov	 VMCREGS.VMC_EDX.ELO,ax ; Pass to VM
+
+	 push	 bx		; LOW2EXT:  # bytes to release for data
+	 push	 cx		; LOW2EXT:  # trailing bytes to copy
+	 push	 16		; RELBUF:   # bytes to release for packet
+	 push	 0		; GETBUF:   # leading bytes to copy for packet
+	 push	 16		; GETBUF:   # bytes to allocate for packet
+	 push	 dx		; GETBUF:   # leading bytes to copy for data
+	 push	 bx		; GETBUF:   # bytes to allocate for data
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; Fill in the packet in DOS memory at VM DS:BX for the data at VM ES:DI
+
+; On entry (in registers):
+; SS:ESP+6 ==>	 DSK_STR (RELBUF and LOW2EXT arguments above it)
+
+INT21_DPMI_DSKPKT:
+	 mov	 eax,PCURTSS	; Get offset in PGROUP of current TSS
+	 mov	 edi,PGROUP:[eax].DPTSS_LaHPDA ; Get linear address of HPDA
+	 movzx	 eax,VMCREGS.VMC_EBX.ELO ; Get offset of packet in HPDA
+	 add	 edi,eax	; AGROUP:EDI ==> packet
+
+	 mov	 eax,[esp+6].DSK_SEC ; Get start sector of this chunk
+	 mov	 cx,[esp+6].DSK_CNT.ELO ; ...	# sectors ...
+
+	 push	 fs		; Save for a moment
+
+	 mov	 fs,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  fs:AGROUP	; Tell the assembler about it
+
+	 mov	 AGROUP:[edi].EDD,eax ; Save start sector
+	 mov	 AGROUP:[edi+4].ELO,cx ; ...  # sectors
+	 mov	 ax,VMCREGS.VMC_EDI.ELO ; Get offset of data in DOS memory
+	 mov	 AGROUP:[edi+6].ELO,ax ; Save in packet
+	 mov	 ax,VMCREGS.VMC_ES ; Get segment of data in DOS memory
+	 mov	 AGROUP:[edi+8].ELO,ax ; Save in packet
+
+	 pop	 fs		; Restore
+	 assume  fs:nothing	; Tell the assembler about it
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; After a chunk of INT 25h/26h/7305h
+
+; On entry (in registers):
+; SS:ESP ==>	 DSK_STR
+
+INT21_DPMI_DSKTAIL:
+	 test	 VMCREGS.VMC_FL,mask $CF ; Izit an error?
+	 jnz	 near ptr INT21_DPMI_DSKCHUNK_DONE ; Jump if so
+
+	 mov	 eax,[esp].DSK_CNT ; Get # sectors in this chunk
+	 sub	 [esp].DSK_REM,eax ; Less from # sectors still to transfer
+	 add	 [esp].DSK_SEC,eax ; Skip to next sector
+
+	 movzx	 ebx,[esp].DSK_SIZ ; Get bytes per sector
+	 mul	 ebx		; EAX = # bytes in this chunk
+	 add	 [ebp].INTXX_EDI,eax ; Skip to next part of the buffer
+
+	 cmp	 [esp].DSK_REM,0 ; Izit done?
+	 je	 near ptr INT21_DPMI_DSKCHUNK_DONE ; Jump if so
+
+	 mov	 si,[esp].DSK_NXT ; CS:SI ==> action stream
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; End of disk I/O:  restore caller's ES, remove the frame
+
+INT21_DPMI_DSKEND:
+	 mov	 ax,[esp].DSK_ES ; Get caller's ES
+	 mov	 [ebp-@I31BACK].I31_ES,ax ; Restore
+
+	 add	 esp,size DSK_STR ; Remove the frame
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; INT 13h AH=02h:  Read sectors into ES:BX
+; INT 13h AH=03h:  Write sectors from ES:BX
+
+; On entry (in PL3 stack):
+; AL	 =	 # sectors
+; CH	 =	 cylinder (low 8 bits), CL = sector (bits 0-5)
+; DH	 =	 head, DL = drive
+; ES:eBX ==>	 buffer
+
+INT21_DPMI_DSK13:
+	 sub	 esp,size DSK_STR ; Make room for the frame
+
+	 mov	 [esp].DSK_INT,13h ; Save INT #
+	 mov	 [esp].DSK_FLG,0 ; Assume read
+
+	 cmp	 [ebp].INTXX_EAX.ELO.HI,03h ; Izit write?
+	 jne	 short @F	; Jump if not
+
+	 mov	 [esp].DSK_FLG,@DSK_WR ; Mark as write
+@@:
+	 mov	 ax,[ebp-@I31BACK].I31_ES ; Get caller's ES
+	 mov	 [esp].DSK_ES,ax ; Save to restore in DSKEND
+	 movzx	 eax,[ebp].INTXX_EAX.ELO.LO ; Get # sectors
+	 mov	 [esp].DSK_REM,eax ; Save # sectors still to transfer
+	 mov	 [esp].DSK_TOT,ax ; ...  requested
+	 movzx	 eax,[ebp].INTXX_ECX.ELO.LO ; Get sector # and cylinder bits
+	 and	 al,3Fh 	; Isolate sector #
+	 mov	 [esp].DSK_SEC,eax ; Save start sector
+	 mov	 [esp].DSK_SIZ,512 ; Bytes per sector
+	 lea	 ax,INT21_DPMIJMP_DSKO13 ; Action stream for each chunk
+	 mov	 [esp].DSK_NXT,ax ; Save for DSK13TAIL
+
+	 mov	 eax,[ebp].INTXX_EBX ; Get buffer offset
+				; Already zeroed to use as dword if 16-bit client
+	 mov	 [ebp].INTXX_EDI,eax ; The buffer is at I31_ES:INTXX_EDI
+
+	 mov	 si,[esp].DSK_NXT ; CS:SI ==> action stream
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; Next chunk of INT 13h AH=02h/03h (sectors within the same track)
+
+INT21_DPMI_DSK13CHUNK:
+	 mov	 ecx,[esp].DSK_REM ; Get # sectors still to transfer
+	 jecxz	 INT21_DPMI_DSK13_END ; Jump if none
+
+	 mov	 eax,PCURTSS	; Get offset in PGROUP of current TSS
+	 mov	 eax,PGROUP:[eax].DPTSS_VMBUFSIZ.EDD ; Get free buffer size
+	 shr	 eax,9		; Convert to # sectors which fit
+	 jz	 short INT21_DPMI_DSK13ERR ; Jump if none
+
+	 cmp	 eax,ecx	; Use the smaller
+	 jbe	 short @F	; Jump if it fits
+
+	 mov	 eax,ecx	; Use the rest
+@@:
+	 mov	 [esp].DSK_CNT,eax ; Save # sectors in this chunk
+	 mov	 bx,ax		; Copy # sectors
+	 shl	 bx,9		; Convert to # bytes
+
+	 mov	 VMCREGS.VMC_EAX.ELO.LO,al ; AL = # sectors
+	 mov	 al,[ebp].INTXX_EAX.ELO.HI ; Get function
+	 mov	 VMCREGS.VMC_EAX.ELO.HI,al ; AH = function
+	 mov	 ax,[ebp].INTXX_ECX.ELO ; Get cylinder and sector
+	 and	 al,0C0h	; Isolate cylinder bits
+	 or	 al,byte ptr [esp].DSK_SEC ; Include sector # of this chunk
+	 mov	 VMCREGS.VMC_ECX.ELO,ax ; Pass to VM
+	 mov	 ax,[ebp].INTXX_EDX.ELO ; Get head and drive
+	 mov	 VMCREGS.VMC_EDX.ELO,ax ; Pass to VM
+
+	 xor	 cx,cx		; LOW2EXT:  # trailing bytes to copy (write)
+	 xor	 dx,dx		; GETBUF:   # leading bytes to copy (read)
+
+	 test	 [esp].DSK_FLG,@DSK_WR ; Izit a write?
+	 jz	 short @F	; Jump if not
+
+	 mov	 dx,bx		; Copy the data into DOS memory
+
+	 jmp	 short INT21_DPMI_DSK13CHUNK_PUSH ; Join common code
+
+@@:
+	 mov	 cx,bx		; Copy the data from DOS memory
+INT21_DPMI_DSK13CHUNK_PUSH:
+	 push	 bx		; LOW2EXT:  # bytes to release
+	 push	 cx		; LOW2EXT:  # trailing bytes to copy
+	 push	 dx		; GETBUF:   # leading bytes to copy
+	 push	 bx		; GETBUF:   # bytes to allocate
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+INT21_DPMI_DSK13ERR:
+	 mov	 VMCREGS.VMC_EAX.ELO,0100h ; AH = 01h:  invalid request
+	 or	 VMCREGS.VMC_FL,mask $CF ; CF=1
+INT21_DPMI_DSK13_END:
+	 lea	 si,INT21_DPMIJMP_DSKDONE ; CS:SI ==> action stream
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+
+; After a chunk of INT 13h AH=02h/03h
+
+INT21_DPMI_DSK13TAIL:
+	 mov	 eax,[esp].DSK_CNT ; Get # sectors in this chunk
+
+	 test	 VMCREGS.VMC_FL,mask $CF ; Izit an error?
+	 jnz	 short INT21_DPMI_DSK13TAIL_ERR ; Jump if so
+
+	 sub	 [esp].DSK_REM,eax ; Less from # sectors still to transfer
+	 add	 [esp].DSK_SEC,eax ; Skip to next sector
+	 shl	 eax,9		; Convert to # bytes
+	 add	 [ebp].INTXX_EDI,eax ; Skip to next part of the buffer
+
+	 cmp	 [esp].DSK_REM,0 ; Izit done?
+	 jne	 short @F	; Jump if not
+
+	 mov	 al,byte ptr [esp].DSK_TOT ; AL = # sectors transferred
+	 mov	 VMCREGS.VMC_EAX.ELO.LO,al ; Return to caller
+
+	 jmp	 short INT21_DPMI_DSK13_END ; Join common code
+
+@@:
+	 mov	 si,[esp].DSK_NXT ; CS:SI ==> action stream
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+INT21_DPMI_DSK13TAIL_ERR:
+	 mov	 al,byte ptr [esp].DSK_TOT ; Get # sectors requested
+	 sub	 al,byte ptr [esp].DSK_REM ; Less # sectors not transferred
+	 mov	 VMCREGS.VMC_EAX.ELO.LO,al ; AL = # sectors transferred
+
+	 jmp	 short INT21_DPMI_DSK13_END ; Join common code
+
+	 assume  ds:nothing,es:nothing ; Tell the assembler about it
+
+
 INT21_DPMI endp 		; End INT21_DPMI procedure
+
+
+; Common entry for the translators below (as INT21_INTRETPM)
+
+DSKXENTRY macro
+	 PUSHD	 0		; Put pseudo-error code onto stack
+	 pushad 		; All EGP registers
+	 cld			; Ensure string ops forwardly
+	 mov	 ebp,esp	; SS:EBP ==> INTXX_STR
+				; (nothing above INTXX_SS is valid)
+	 REGSAVE <ds,es>	; Save segment registers
+; Note that the above REGSAVE is mapped by I31_STR and must be
+; consistent with it
+
+	 mov	 es,ISEL_DS3	; Get PGROUP data selector at PL3
+	 assume  es:PGROUP	; Tell the assembler about it
+
+	 push	 LPMSTK_FVEC.FSEL ; Save current LPM stack top
+	 push	 LPMSTK_FVEC.FOFF ; ...
+
+	 lea	 eax,[ebp].INTXX_EIP ; SS:EAX ==> INTDPI_STR from PL3
+	 push	 eax		; Pass the offset
+	 call	 DPMIFN_LPMSTK	; Save new LPM stack as appropriate
+
+	 push	 [ebp].INTXX_EFL.ELO ; Get caller's flags
+	 and	 [esp].ELO,not ((mask $NT) or (mask $DF) or (mask $TF)) ; NT=TF=DF=0
+	 popf			; Put caller's IF into effect
+	 endm			; DSKXENTRY
+
+
+	 FPPROC  INT13_DPMI -- Disk BIOS Calls from DPMI Clients
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Disk BIOS calls from DPMI clients:  AH=02h/03h with the buffer at
+ES:eBX, AH=08h (floppy) returning ES:eDI, others passed through.
+
+|
+
+; If the caller is at PL0, don't pass on to any DPMI clients
+
+	 test	 [esp].INTDPI_CS,mask $PL ; Izit at PL0?
+	 jz	 short INT13_INTRETPM ; Jump if so
+
+; If there's a DPMI client active and it has hooked this interrupt,
+; give it a crack at this interrupt.
+
+	 assume  ss:PGROUP	; Tell the assembler about it
+	 test	 DPMI_CPIHOOK[13h/8],1 shl (13h mod 8) ; Izit hooked by current client?
+	 assume  ss:nothing	; Tell the assembler about it
+	 jz	 short INT13_INTRETPM ; Jump if not
+
+	 mov	 [esp].INTCOM_INTNO,4*13h + offset PGROUP:INTPROC00Z
+	 push	 @PMINTCOM_NRM	; Use application stack
+	 jmp	 near ptr PMINTCOM ; Jump to common code
+
+; We're back to handle it ourselves
+
+	 public  INT13_INTRETPM
+INT13_INTRETPM:
+	 DSKXENTRY		; Set up INTXX_STR
+
+	 mov	 ax,[ebp].INTXX_EAX.ELO ; Get function
+
+	 lea	 si,INT21_DPMIJMP_DSK13 ; CS:SI ==> action stream
+
+	 cmp	 ah,02h 	; Izit read sectors?
+	 je	 short INT13_DPMI_GO ; Jump if so
+
+	 cmp	 ah,03h 	; Izit write sectors?
+	 je	 short INT13_DPMI_GO ; Jump if so
+
+	 lea	 si,INT21_DPMIJMP_PASS13 ; CS:SI ==> action stream
+
+	 cmp	 ah,08h 	; Izit get drive parameters?
+	 jne	 short INT13_DPMI_GO ; Jump if not
+
+	 test	 [ebp].INTXX_EDX.ELO.LO,80h ; Izit a hard disk?
+	 jnz	 short INT13_DPMI_GO ; Jump if so (no table)
+
+	 lea	 si,INT21_DPMIJMP_BIOS08 ; CS:SI ==> action stream
+INT13_DPMI_GO:
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+INT13_DPMI endp 		; End INT13_DPMI procedure
+
+
+	 FPPROC  INT25_DPMI -- Absolute Disk Read from DPMI Clients
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Absolute disk read from DPMI clients.  Called from INT25_INTRETPM
+after the original flags have been put onto the caller's stack.
+
+|
+
+	 DSKXENTRY		; Set up INTXX_STR
+
+	 lea	 si,INT21_DPMIJMP_DSK25 ; CS:SI ==> action stream
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+INT25_DPMI endp 		; End INT25_DPMI procedure
+
+
+	 FPPROC  INT26_DPMI -- Absolute Disk Write from DPMI Clients
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Absolute disk write from DPMI clients.  Called from INT26_INTRETPM
+after the original flags have been put onto the caller's stack.
+
+|
+
+	 DSKXENTRY		; Set up INTXX_STR
+
+	 lea	 si,INT21_DPMIJMP_DSK26 ; CS:SI ==> action stream
+
+	 lods	 JMPTAB21[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+INT26_DPMI endp 		; End INT26_DPMI procedure
 	 NPPROC  DPMIFN_GETDTA -- Get Address Of DTA From Low DOS
 	 assume  ds:nothing,es:PGROUP,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
