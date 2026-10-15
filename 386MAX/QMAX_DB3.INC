@@ -19,5 +19,6 @@
 @DB3_TRIP  equ	 0100h		; Use triple fault to reboot
 @DB3_PIC   equ	 0080h		; Reprogram PIC when entering PM
 @DB3_8042  equ	 0040h		; Use 8042 reset to reboot
+@DB3_FLTWAIT equ 0020h		; DPMI fault:  full message, wait for a key
 
 

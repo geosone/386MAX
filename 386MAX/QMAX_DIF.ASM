@@ -1890,8 +1890,8 @@ neither our leading fixup code nor the client's exception
 handler (if any) could fix it up.
 
 Our default action is to reflect the exception as a PM interrupt
-(similar to HW-DPMI) for 00h-05h, and 07h, and to terminate the DPMI
-client for all others.
+(similar to HW-DPMI) for 00h-04h, and to terminate the DPMI client for
+all others (05h and 07h too:  reflected, they loop in VM).
 
 The MAX stack contains (from bottom up) INTDPF_STR.
 
@@ -1944,8 +1944,6 @@ FLTPROC&N:
 	 PMFDEF_MAC 02,INT
 	 PMFDEF_MAC 03,INT
 	 PMFDEF_MAC 04,INT
-	 PMFDEF_MAC 05,INT
-	 PMFDEF_MAC 07,INT
 FLTPROC_INTCOM:
 
 ; The MAX stack is mapped by INTDPF_STR
@@ -1974,7 +1972,9 @@ FLTPROC_INTCOM:
 	 PMFDEF_MAC _VMFULL,FLT
 	 PMFDEF_MAC _LPMFULL,FLT
 	 PMFDEF_MAC _APPLFULL,FLT
-	 PMFDEF_MAC 06,FLT
+	 PMFDEF_MAC 05,FLT	; BOUND:  reflected to VM it would loop (INT 05h
+	 PMFDEF_MAC 06,FLT	; is Print Screen there); terminate the client
+	 PMFDEF_MAC 07,FLT	; as CWSDPMI and HDPMI do (07h likewise)
 
 CNT	 =	 8
 .sall

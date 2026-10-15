@@ -2630,6 +2630,20 @@ if @OEM_DEBUG
 FCN_DBGFILL endp		; End FCN_DBGFILL procedure
 endif				; IF @OEM_DEBUG
 if @OEM_DEBUG
+	 FPPROC  FCN_DBGFLTWAIT -- DEBUG=FLTWAIT Function
+	 assume  ds:nothing,es:PGROUP,fs:XGROUP,gs:nothing,ss:nothing
+
+	 or	 DB3_FLAG,@DB3_FLTWAIT ; DPMI fault: full message and key wait
+
+	 clc			; Indicate all went well
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+FCN_DBGFLTWAIT endp		; End FCN_DBGFLTWAIT procedure
+endif				; IF @OEM_DEBUG
+if @OEM_DEBUG
 	 FPPROC  FCN_DBGHLT -- DEBUG=HLT Function
 	 assume  ds:nothing,es:PGROUP,fs:XGROUP,gs:nothing,ss:nothing
 
