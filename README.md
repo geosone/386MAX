@@ -14,6 +14,9 @@ that existed only as binaries, and develops 386MAX further:
   reserved areas (AHCI, EBDA, ACPI) stay untouched, more than 256 MB RAM,
   ISA DMA above 16 MB
 - QEMM QPI port trapping API for SBEMU and VSBHDA
+- versioned Open MaxView backend discovery API (the 9.x branch exposes
+  capability negotiation and root-context status; multi-VM services remain
+  disabled until their contracts are implemented)
 - no serial numbers or registration; version 8.55, English and German
 
 Tested in QEMU with complete installation and MAXIMIZE runs (DOS and

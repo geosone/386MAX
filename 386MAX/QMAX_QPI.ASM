@@ -22,13 +22,15 @@ Original code by:  Open 386MAX, 2026.
 Modifications by:  None.
 
 The subset of the QEMM Programming Interface (QPI) which SBEMU's real
-mode support uses:  I/O port trapping with a callback in VM, the way
+mode support uses, plus the separately identified Open MaxView extension.
+The QPI part provides I/O port trapping with a callback in VM, the way
 Jemm's QPIEMU provides it.
 
 * The entry point in VM is the old VCPI one (OLDVCPI in QMAX_OVR, an
   INT 0FEh), returned by INT 67h AH=3Fh, CX='QE', DX='MM' (QEMM's
   way) and by INT 2Fh AX=1684h, BX=4354h (Jemm's QPIEMU, QMAX_XMS).
-  INTFE (QMAX_VCP) passes the QPI functions (AH=03h, 1Ah) to QPI_API
+  INTFE (QMAX_VCP) passes the QPI functions (AH=03h, 1Ah) and Open
+  MaxView functions (AH=4Dh) to QPI_API
   below; those of the old VCPI spec are AH=0Ch, 10h.
 * I/O to a port trapped via QPI faults because its bit in the I/O
   permission bit map is set.  CHECK_INP/CHECK_OUT (QMAX_IOP) call
@@ -48,6 +50,7 @@ Because PGROUP is full, all but the hooks lives here in JGROUP.
 	 include ALLMEM.INC
 	 include MASM5.MAC
 	 include IOTRAP.INC
+	 include MAXVIEW.INC
 
 	 include QMAX_DTE.INC
 	 include QMAX_OEM.INC
@@ -487,6 +490,8 @@ AX	 =	 1A00h	 Untrapped IN  AL,DX (result in BL)
 	 =	 1A08h	 Get port DX trap status (BL)
 	 =	 1A09h	 Trap port DX
 	 =	 1A0Ah	 Untrap port DX
+	 =	 4D00h	 Query Open MaxView extension
+	 =	 4D01h	 Get backend/root-context status
 
 On entry:
 
@@ -507,20 +512,23 @@ Caller's CF =	 0 if successful
 
 	 mov	 dx,[ebp].INTXX_EDX.ELO ; Get the I/O port #
 
+	 cmp	 ah,@MV_API	; Izit Open MaxView extension?
+	 je	 near ptr QPI_API_MV ; Jump if so
+
 	 cmp	 ah,03h 	; Izit Get Version?
-	 je	 short QPI_API_VER ; Jump if so
+	 je	 near ptr QPI_API_VER ; Jump if so
 
 	 cmp	 ah,1Ah 	; Izit I/O trapping?
 	 jne	 short QPI_API_EXIT ; Jump if not
 
 	 cmp	 al,00h 	; Izit untrapped input?
-	 je	 short QPI_API_IN ; Jump if so
+	 je	 near ptr QPI_API_IN ; Jump if so
 
 	 cmp	 al,01h 	; Izit untrapped output?
-	 je	 short QPI_API_OUT ; Jump if so
+	 je	 near ptr QPI_API_OUT ; Jump if so
 
 	 cmp	 al,04h 	; Izit untrapped I/O?
-	 je	 short QPI_API_IO ; Jump if so
+	 je	 near ptr QPI_API_IO ; Jump if so
 
 	 cmp	 al,06h 	; Izit get callback?
 	 je	 near ptr QPI_API_GETCB ; Jump if so
@@ -543,6 +551,31 @@ QPI_API_OK:
 	 and	 [ebp].INTXX_EFL,not (mask $CF) ; Indicate success
 
 	 jmp	 QPI_API_EXIT	; Join common exit code
+
+QPI_API_MV:
+	 cmp	 al,@MV_QUERY	; Izit ABI/capability query?
+	 je	 short QPI_API_MV_QUERY ; Jump if so
+
+	 cmp	 al,@MV_STATUS	; Izit backend status query?
+	 je	 short QPI_API_MV_STATUS ; Jump if so
+
+	 mov	 [ebp].INTXX_EAX.ELO,@MVERR_UNSUPPORTED ; Defined failure
+	 jmp	 QPI_API_EXIT	; Return with CF set
+
+QPI_API_MV_QUERY:
+	 mov	 [ebp].INTXX_EAX.ELO,@MV_ABI_VERSION
+	 mov	 [ebp].INTXX_EBX.ELO,@MV_SIGNATURE_1
+	 mov	 [ebp].INTXX_ECX.ELO,@MV_SIGNATURE_2
+	 mov	 [ebp].INTXX_EDX.ELO,@MV_CAPABILITIES
+	 jmp	 QPI_API_OK
+
+QPI_API_MV_STATUS:
+	 xor	 ax,ax		; Successful status call
+	 mov	 [ebp].INTXX_EAX.ELO,ax
+	 mov	 [ebp].INTXX_EBX.ELO,@MV_ROOT_CONTEXT ; Current context
+	 mov	 [ebp].INTXX_ECX.ELO,1 ; One active root context
+	 mov	 [ebp].INTXX_EDX.ELO,1 ; One context supported for now
+	 jmp	 QPI_API_OK
 
 QPI_API_VER:
 	 mov	 [ebp].INTXX_EAX.ELO,0703h ; Version 7.03
@@ -567,12 +600,12 @@ QPI_API_OUT:
 QPI_API_IO:
 	 mov	 ecx,[ebp].INTXX_ECX ; Get the I/O type
 	 test	 cl,20h 	; Izit string I/O?
-	 jnz	 short QPI_API_EXIT ; Jump if so (not supported)
+	 jnz	 near ptr QPI_API_EXIT ; Jump if so (not supported)
 
 	 shr	 ecx,3		; Shift down the width
 	 and	 ecx,@IOTRAP_WID ; Isolate it
 	 cmp	 cl,@IOTRAP_DD	; Izit valid?
-	 ja	 short QPI_API_EXIT ; Jump if not
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
 
 	 test	 [ebp].INTXX_ECX.ELO.LO,@IOTRAP_OUT ; Izit output?
 	 jnz	 short QPI_API_IOOUT ; Jump if so
@@ -582,12 +615,12 @@ QPI_API_IO:
 	 mov	 [ebp].INTXX_EBX.ELO.LO,al ; Return in caller's BL
 
 	 cmp	 cl,@IOTRAP_DB	; Izit byte I/O?
-	 je	 short QPI_API_OK ; Jump if so
+	 je	 near ptr QPI_API_OK ; Jump if so
 
 	 mov	 [ebp].INTXX_EBX.ELO,ax ; Return in caller's BX
 
 	 cmp	 cl,@IOTRAP_DW	; Izit word I/O?
-	 je	 short QPI_API_OK ; Jump if so
+	 je	 near ptr QPI_API_OK ; Jump if so
 
 	 mov	 [ebp].INTXX_EBX,eax ; Return in caller's EBX
 
