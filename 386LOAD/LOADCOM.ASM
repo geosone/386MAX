@@ -307,6 +307,7 @@ DTAIL	 segment para public 'zdata' ; Start DTAIL segment
 	 extrn	 LOADSEG:word
 	 extrn	 INFOSIZE:abs
 	 extrn	 POVR_MAC:word
+	 extrn	 ORG_POVR:word
 	 extrn	 CURINT67_VEC:dword
 
 DTAIL	 ends			; End DTAIL segment
@@ -3436,6 +3437,47 @@ REST_2324 endp			; End REST_2324 procedure
 	 DOSCALL @IOCTL2,INFO_CTL ; Get IOCTL info into INFO
 
 	 DOSCALL @CLOSF2	; Close it up
+
+; On the FreeDOS kernel with DOS=UMB, the kernel takes the UMBs from the
+; XMS driver (386MAX) and builds its own MCB chain in them, so 386MAX's
+; high DOS MAC entries are all allocated:  use the kernel's UMB chain
+; (LoL+66h) as POVR_MAC.  INFO_WRITE gives 386MAX its own value back.
+; Only for 386LOAD.COM:  while CONFIG.SYS is processed, the kernel's
+; DEVICEHIGH and FILESHIGH etc. use the first UMB from its own pointer
+; (umb_base_seg), not from the MCB chain, and would overwrite what we
+; loaded there.
+
+	 mov	 ax,POVR_MAC	; Get 386MAX's first MAC in high DOS
+	 mov	 ORG_POVR,ax	; Save for INFO_WRITE
+
+	 test	 LCL_FLAG,@LCL_TSR ; Izit 386LOAD.COM?
+	 jz	 short INFO_READ_XFDOS ; Jump if not (CONFIG.SYS)
+
+	 mov	 ax,4452h	; DR DOS version call
+	 stc			; Assume not DR DOS
+	 int	 21h		; Return with CF=0 on DR DOS
+	 jnc	 short INFO_READ_XFDOS ; Jump if DR DOS
+
+	 mov	 ax,33FFh	; FreeDOS:  get kernel name in DX:AX
+	 xor	 dx,dx		; Assume not FreeDOS
+	 int	 21h		; Return with DX:AX ==> name on FreeDOS
+	 or	 dx,dx		; Izit FreeDOS?
+	 jz	 short INFO_READ_XFDOS ; Jump if not
+
+	 push	 es		; Save for a moment
+	 mov	 ah,52h 	; Get List of Lists
+	 int	 21h		; Return with ES:BX ==> List of Lists
+	 mov	 ax,es:[bx+66h] ; Get start of the kernel's UMB chain
+	 pop	 es		; Restore
+
+	 cmp	 ax,-1		; Izit valid?
+	 je	 short INFO_READ_XFDOS ; Jump if not (no DOS=UMB)
+
+	 or	 ax,ax		; Izit valid?
+	 jz	 short INFO_READ_XFDOS ; Jump if not
+
+	 mov	 POVR_MAC,ax	; Use the kernel's UMB chain
+INFO_READ_XFDOS:
 @@:
 	 REGREST <dx,cx,bx,ax>	; Restore
 
@@ -3463,7 +3505,11 @@ INFO_CTL set to IOCTL function to be requested (@CTL_XFER,
 
 	 mov	 al,03h 	; Write to device
 	 mov	 cx,INFOSIZE	; CX = # bytes in INFO structure
+	 push	 POVR_MAC	; Save (maybe the FreeDOS UMB chain)
+	 mov	 dx,ORG_POVR	; Get 386MAX's own value
+	 mov	 POVR_MAC,dx	; Give it back to 386MAX
 	 DOSCALL @IOCTL2,INFO_CTL ; Set IOCTL info from INFO
+	 pop	 POVR_MAC	; Restore
 
 	 DOSCALL @CLOSF2	; Close it up
 @@:
