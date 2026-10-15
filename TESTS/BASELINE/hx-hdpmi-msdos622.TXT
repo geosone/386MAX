@@ -5,7 +5,7 @@ hx/DPMITEST              END
 hx/EMUHLT                HANG
 hx/EXAMPLE               CRASH
 hx/EXC00                 END
-hx/EXC01MZ               END
+hx/EXC01MZ               CRASH
 hx/EXC03MZ               END
 hx/EXC05                 END
 hx/EXC06                 END

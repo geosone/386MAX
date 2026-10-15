@@ -16,7 +16,7 @@ hx/EXC0D                 END
 hx/EXC0E                 END
 hx/EXC0E2                END
 hx/EXC0ER0               END
-hx/EXC10                 CRASH
+hx/EXC10                 END
 hx/EXC11                 END
 hx/EXEC2C                END
 hx/EXEC2D                END
@@ -70,11 +70,11 @@ hx/RAWJMP4               END
 hx/RAWJMP5               END
 hx/RAWJMP6               HANG
 hx/RAWJMP7               HANG
-hx/RMCB1                 END
+hx/RMCB1                 HANG
 hx/RMCB3                 END
 hx/RMCB6                 END
 hx/RMCB7                 END
-hx/RMCB8                 END
+hx/RMCB8                 CRASH
 hx/RMCB9                 END
 hx/SETCR0                HANG
 hx/SETCR4                END

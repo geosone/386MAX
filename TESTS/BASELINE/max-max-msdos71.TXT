@@ -1,13 +1,14 @@
 max/DISKIO               PASS
 max/DOSXLAT              PASS
 max/DPMI10               PASS
-max/EMSFUNC              HANG
+max/EMSFUNC              PASS
 max/MOUSE12              SKIP
 max/MOUSE18              SKIP
 max/QPITEST              PASS
-max/STKFLT               CRASH
+max/QPITRAP              PASS
+max/STKFLT               PASS
 max/V86FUNC              PASS
-max/VCPIFUNC             FAIL
+max/VCPIFUNC             PASS
 max/VDSFUNC              PASS
 max/XLAT32               PASS
 max/XMSFUNC              PASS

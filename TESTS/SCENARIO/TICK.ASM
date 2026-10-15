@@ -2,7 +2,8 @@
 ; BBS nodes): about once a second (18 timer ticks) appends a line with a
 ; running number to a file (opened, written and closed each time, so the
 ; data reaches the disk), with C also writes a byte to COM1 (3F8h) like a
-; node sending data.  Runs until a key is pressed.
+; node sending data.  Runs until the machine is stopped (no keyboard
+; check:  in a DESQview foreground window a pending key ended it at once).
 ;   TICK file [C]
 ; Build: jwasm -mz TICK.ASM
 
@@ -73,17 +74,14 @@ endnm2:	mov	ax,es
 	mov	al,03h
 	out	dx,al
 
-loop1:	; wait 18 ticks, leave on a key
+loop1:	; wait 18 ticks
 	push	ds
 	push	40h
 	pop	ds
 	mov	ax,ds:[6Ch]
 	pop	ds
 	mov	lasttk,ax
-wait1:	mov	ah,1
-	int	16h
-	jnz	done
-	push	ds
+wait1:	push	ds
 	push	40h
 	pop	ds
 	mov	ax,ds:[6Ch]
@@ -126,10 +124,6 @@ wait1:	mov	ah,1
 	out	dx,al
 	jmp	loop1
 
-done:	mov	ah,0
-	int	16h
-	mov	ax,4C00h
-	int	21h
 noarg:	push	es
 	pop	ds
 	mov	dx,offset usage

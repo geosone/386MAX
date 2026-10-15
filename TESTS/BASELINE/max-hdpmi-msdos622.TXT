@@ -5,7 +5,7 @@ max/EMSFUNC              SKIP
 max/MOUSE12              SKIP
 max/MOUSE18              SKIP
 max/QPITEST              SKIP
-max/STKFLT               FAIL
+max/STKFLT               PASS
 max/V86FUNC              PASS
 max/VCPIFUNC             SKIP
 max/VDSFUNC              SKIP

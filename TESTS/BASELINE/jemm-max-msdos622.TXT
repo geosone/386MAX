@@ -4,7 +4,7 @@ jemm/EMS4F               END
 jemm/EMS56               END
 jemm/EMS57               END
 jemm/EMS57A              END
-jemm/EMS5B               HANG
+jemm/EMS5B               END
 jemm/EXC00               END
 jemm/EXC06               HANG
 jemm/FRAMERES            END

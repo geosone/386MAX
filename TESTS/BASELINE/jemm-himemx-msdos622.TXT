@@ -10,7 +10,7 @@ jemm/EXC06               HANG
 jemm/FRAMERES            SKIP
 jemm/HLTTEST             END
 jemm/HLTTEST2            HANG
-jemm/I15MOVE             CRASH
+jemm/I15MOVE             END
 jemm/INT67               SKIP
 jemm/INT88               END
 jemm/TESTDMA             SKIP
