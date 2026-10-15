@@ -16,3 +16,4 @@ DPMI/STKFLT   needs=dpmi term
 DPMI/MOUSE12  needs=dpmi,mouse
 DPMI/MOUSE18  needs=dpmi,mouse
 QPI/QPITEST   needs=qpi
+QPI/QPITRAP   needs=qpi

@@ -449,6 +449,41 @@ wx:	NL
 ; (no 1F00h with a page above 10Fh:  QEMM does not check the range and
 ; crashes)
 
+; 1F00 above the HMA (QEMM 97 covers pages 0-3FFh, RBIL says 0-10Fh)
+	mov	ax,1F00h
+	mov	cx,120h
+	call	qpi
+	HDR	'1F00 page 120h'
+	OKIF	nc
+	NL
+
+; 1F02 get CR0, 1F03 change only MP/EM/ET (here:  nothing)
+	mov	ax,1F02h
+	call	qpi
+	HDR	'1F02 CR0'
+	jc	@F
+	mov	pte,eax
+	push	eax
+	shr	eax,16
+	call	hex
+	pop	eax
+	call	hex
+	test	eax,1			; PE
+	jz	@F
+	smsw	ax
+	cmp	ax,word ptr pte		; same as SMSW
+@@:	OKIF	e
+	NL
+	mov	ax,1F03h
+	mov	ecx,0FFFFFFFFh		; keep everything
+	xor	ebx,ebx
+	call	qpi
+	HDR	'1F03 CR0 unchanged'
+	jc	@F
+	cmp	eax,pte
+@@:	OKIF	e
+	NL
+
 ; 2000 VirtualHDIRQ
 	mov	ax,2000h
 	call	qpi

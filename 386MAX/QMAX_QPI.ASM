@@ -166,9 +166,12 @@ BX	 =	 undefined
 	 or	 cl,bl		; Include the direction
 
 	 mov	 eax,[ebp].INTXX_EAX ; Pass caller's EAX (the value if output)
-	 call	 QPI_CALLVM	; Call the callback
-				; Return with CF=0 if handled, EAX = value
-	 jc	 short QPI_CHECK_XFOUND ; Jump if not handled
+	 call	 QPI_CALLVM	; Call the callback, EAX = value
+
+; As QEMM 97, the callback's CF is ignored:  the callback does the I/O
+; (itself or via 1A04h/1A05h).  RBIL's "CF=1 = not handled" would make us
+; do the access a second time, with programs written for QEMM, whose
+; callbacks return with any CF.
 
 	 mov	 [esp+2*4],eax	; Return the value as EAX
 
@@ -247,9 +250,9 @@ DX	 =	 I/O port #
 
 and runs with interrupts disabled.  It returns with
 
-CF	 =	 0 if it handled the I/O
-	 =	 1 if not
 AL/AX/EAX =	 input value
+
+(CF is ignored by QPI_CHECK, as by QEMM 97.)
 
 On entry:
 
@@ -526,8 +529,10 @@ AX	 =	 1A02h	 Untrapped OUT DX,BH; IN BL,DX+1
 	 =	 1E00h	 Stealth configuration (none)
 	 =	 1E01h	 # Stealth'ed ROMs (none)
 	 =	 1E02h	 Stealth ROM list (none)
-	 =	 1F00h	 Get PTE of page CX (0-10Fh) into EDX
+	 =	 1F00h	 Get PTE of page CX (0-3FFh) into EDX
 	 =	 1F01h	 Set ...
+	 =	 1F02h	 Get CR0
+	 =	 1F03h	 Change CR0.MP/EM/ET
 	 =	 2000h	 Get VirtualHDIRQ state (not supported)
 	 =	 2001h	 Set ...		 (ignored)
 AX	 =	 1A00h	 Untrapped IN  AL,DX (result in BL)
@@ -1237,21 +1242,52 @@ QPI_API_STEALTH:
 	 jmp	 QPI_API_OK	; Join common exit code
 
 
-; 1F00:  Get PTE of page CX (0-10Fh) into EDX
-; 1F01:  Set ...		       from EDX
+; 1F00:  Get PTE of page CX into EDX
+; 1F01:  Set ...	       from EDX (raw, PCD/PWT included; TLB flushed)
+; 1F02:  Get CR0 into EAX
+; 1F03:  Change only CR0.MP/EM/ET:  CR0 = (CR0 and (ECX or not 16h)) or
+;	 (EBX and 16h), new CR0 in EAX
+; As QEMM 97:  pages 0-3FFh (the first 4MB, RBIL says 0-10Fh), no check
+; of the PTE; we refuse only pages beyond our page table (PDTLEN).
+; This is how DOS software maps memory-mapped I/O of a PCI card.
+
+@CR0_FPU equ	 16h		; CR0.MP, EM, ET
 
 QPI_API_PTE:
-	 cmp	 al,01h 	; Izit a valid subfunction?
+	 cmp	 al,03h 	; Izit a valid subfunction?
 	 ja	 near ptr QPI_API_EXIT ; Jump if not
 
+	 cmp	 al,02h 	; Izit a CR0 function?
+	 jb	 short QPI_API_PTE1 ; Jump if not
+
+	 mov	 eax,cr0	; Get current CR0
+	 je	 short @F	; Jump if 1F02 (flags from CMP above)
+
+	 mov	 ecx,[ebp].INTXX_ECX ; Get the bits to keep
+	 or	 ecx,not @CR0_FPU ; Never change other bits
+	 and	 eax,ecx	; Keep them
+	 mov	 ecx,[ebp].INTXX_EBX ; Get the bits to set
+	 and	 ecx,@CR0_FPU	; Only these
+	 or	 eax,ecx	; Set them
+	 mov	 cr0,eax	; Tell the CPU about it
+@@:
+	 mov	 [ebp].INTXX_EAX,eax ; Return CR0 in caller's EAX
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_PTE1:
 	 movzx	 esi,[ebp].INTXX_ECX.ELO ; Get page #
 
-	 cmp	 esi,10Fh	; Izit valid?
+	 cmp	 esi,3FFh	; Izit within the first 4MB?
 	 ja	 near ptr QPI_API_EXIT ; Jump if not
+
+	 shl	 esi,2		; Convert to offset in PDT
+
+	 cmp	 esi,PDTLEN	; Izit within our page table?
+	 jae	 near ptr QPI_API_EXIT ; Jump if not
 
 	 FIXICALL PGROUP:FWRAP_DISABLE,DTE_CS2 ; Disable the 1MB wrap (pages 100-10F)
 
-	 shl	 esi,2		; Convert to offset in PDT
 	 add	 esi,PRGPDT	; Plus offset in PGROUP of PDT
 
 	 cmp	 [ebp].INTXX_EAX.ELO.LO,01h ; Izit set?
