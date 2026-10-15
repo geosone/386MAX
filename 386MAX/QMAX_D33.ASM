@@ -132,6 +132,7 @@ ACTSEG	 ends			; End ACTSEG segment
 .sall
 	 DPMIMOUSEMAC	09h,SETSHAPE	; 09:  Set Pointer Shape
 	 DPMIMOUSEMAC	0Ch,HOOKMEI	; 0C:  Hook Mouse Event Interrupt
+	 DPMIMOUSEMAC	12h,SETLARGE	; 12:  Set Large Graphics Pointer Shape
 	 DPMIMOUSEMAC	14h,SWAPINT	; 14:  Swap Mouse Interrupt Subroutines
 	 DPMIMOUSEMAC	15h,GETSSRSIZE	; 15:  Get State Save/Restore Buffer Size
 	 DPMIMOUSEMAC	16h,SAVESTATE	; 16:  Save Driver State
@@ -180,6 +181,19 @@ JMPTAB33 label	 word
 	 DOSFN	 GETBUF,<VMC_EDX.ELO,VMC_ES,INTXX_EDX,I31_ES-@I31BACK>
 	 DOSFN	 SIMVMI,33h
 	 DOSFN	 RELBUF 	; No need to copy back the buffer
+	 DOSFN	 REST_VMCREGS
+	 DOSFN	 REST_INTXXREG,<INTXX_EDX>
+	 ACT	 EXIT
+
+
+	 DLBL	 SETLARGE	; 12:  Set Large Graphics Pointer Shape
+	 DOSFN	 SAVE_INTXXREG,<INTXX_EDX>
+	 DOSFN	 SAVE_VMCREGS
+	 ACT	 SETLARGE
+	 DOSFN	 GETBUF,<VMC_EDX.ELO,VMC_ES,INTXX_EDX,I31_ES-@I31BACK>
+	 DOSFN	 SIMVMI,33h
+	 DOSFN	 RELBUF 	; No need to copy back the buffer
+     DLBL	 SETLARGE_EXIT
 	 DOSFN	 REST_VMCREGS
 	 DOSFN	 REST_INTXXREG,<INTXX_EDX>
 	 ACT	 EXIT
@@ -403,6 +417,47 @@ INT33_DPMI_SETSHAPE:
 	 push	 ax		; GETBUF:  # leading bytes to copy
 	 push	 ax		; GETBUF:  # bytes to allocate in buffer
 
+	 lods	 JMPTAB33[si]	; Get next action
+	 jmp	 ax		; Take appropriate action
+
+	 assume  ds:nothing,es:nothing ; Tell the assembler about it
+
+
+; 様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様
+
+; 12:  Set Large Graphics Pointer Shape
+
+; On entry (in PL3 stack):
+; BH	 =	 width in words
+; CH	 =	 # rows
+; ES:eDX ==>	 screen mask followed by pointer mask (BH*CH words each)
+
+; On entry (in registers):
+; CS:SI  ==>	 action stream
+; ES	 =	 PGROUP
+; SS:EBP ==>	 INTXX_STR (nothing above INTXX_SS is valid)
+
+	 assume  es:PGROUP	; Tell the assembler about it
+INT33_DPMI_SETLARGE:
+	 movzx	 ax,[ebp].INTXX_EBX.ELO.HI ; Get width in words
+	 movzx	 bx,[ebp].INTXX_ECX.ELO.HI ; Get # rows
+	 mul	 bx		; AX = # words per mask
+	 shl	 ax,2		; Two masks of words
+
+	 mov	 ebx,PCURTSS	; Get offset in PGROUP of current TSS
+
+	 cmp	 ax,PGROUP:[ebx].DPTSS_VMBUFSIZ ; Izit within bounds?
+	 jbe	 short @F	; Jump if so
+
+	 lea	 si,INT33_DPMIJMP_SETLARGE_EXIT ; Too large:  ignore the call
+
+	 jmp	 short INT33_DPMI_SETLARGE_NEXT ; Join common code
+
+@@:
+	 push	 ax		; RELBUF:  # bytes to release in buffer
+	 push	 ax		; GETBUF:  # leading bytes to copy
+	 push	 ax		; GETBUF:  # bytes to allocate in buffer
+INT33_DPMI_SETLARGE_NEXT:
 	 lods	 JMPTAB33[si]	; Get next action
 	 jmp	 ax		; Take appropriate action
 
