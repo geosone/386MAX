@@ -124,6 +124,13 @@ EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 extrn	 PHNDLPAGE:dword
 	 extrn	 PPAGELINK:dword
 	 extrn	 PLINKBASE:dword
+	 extrn	 NEWIMR1:word
+	 extrn	 NEWIMR2:word
+
+	 public  QPI_CDFLG
+QPI_CDFLG db	 0		; IRQ calldowns enabled (QPI 1Ch, read in INTCOM)
+@QPI_CD1 equ	 01h		; ...  IRQ0-7  (master PIC)
+@QPI_CD2 equ	 02h		; ...  IRQ8-15 (slave PIC)
 
 EDATA	 ends			; End EDATA segment
 
@@ -147,6 +154,9 @@ QPI_DRVNAME db	 '386MAX.SYS'   ; Driver file name, for 1E04h
 QPI_DVX  dd	 0		; 22h:  DV/X shared pool control block (Seg:Off)
 QPI_QUOTA dd	 0		; 23h:  VCPI quota DWORD (Seg:Off), 0 = unlimited
 QPI_W28  dw	 0		; 28h:  EMM import structure word
+
+QPI_CDTAB dd	 8 dup (0)	; 1C01h:  V86 handlers of IRQ0-7
+	 dd	 8 dup (0)	; 1C03h:  ...		  IRQ8-15
 
 @QPI_NDEF equ	 110h		; # pages with a default PTE (0-10FFFFh)
 QPI_DEFOK db	 0		; 1 = QPI_DEFPTE is filled in
@@ -651,6 +661,102 @@ EBX	 =	 linear address
 QPI_SEG2LIN endp		; End QPI_SEG2LIN procedure
 
 
+	 FPPROC  QPI_CDVEC -- Vector Of An IRQ Calldown
+	 assume  ds:AGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Called from INTCOM (QMAX_IDT) while IRQ calldowns are enabled (QPI 1Ch)
+instead of reading the IVT.  A vector of the PIC whose calldowns are
+enabled gets the V86 handler from QPI_CDTAB, unless it's a software
+INT n (CD n right before CS:IP):  as with QEMM, those still go to the
+IVT.
+
+On entry:
+
+DS	 =	 AGROUP
+BX	 =	 vector * 4
+SS:ESP+4+12 ==>  INTCOM_STR (the far return, INTCOM's EAX, EBX, EDI)
+
+On exit:
+
+EAX	 =	 Segment:Offset of the handler
+All other registers preserved.
+
+|
+
+	 REGSAVE <ecx,edx,esi,edi,es> ; Save registers
+@CDFRM	 equ	 4*4+2+4+12	; Offset of INTCOM_STR on the stack
+
+	 push	 DTE_DS 	; Get PGROUP data selector
+	 pop	 es		; Address it
+	 assume  es:PGROUP	; Tell the assembler about it
+
+	 movzx	 ecx,bx 	; Copy the vector * 4
+	 shr	 ecx,2-0	; Vector #
+
+	 xor	 esi,esi	; Assume master PIC's table entries
+	 mov	 dx,cx		; Copy the vector
+	 sub	 dx,NEWIMR1	; Less the master PIC's base
+	 cmp	 dx,8		; Izit one of its IRQs?
+	 jae	 short @F	; Jump if not
+
+	 test	 QPI_CDFLG,@QPI_CD1 ; Are its calldowns enabled?
+	 jz	 short QPI_CDVEC_IVT ; Jump if not
+
+	 jmp	 short QPI_CDVEC_SW ; Join common code
+
+@@:
+	 mov	 esi,8*4	; Slave PIC's table entries
+	 mov	 dx,cx		; Copy the vector
+	 sub	 dx,NEWIMR2	; Less the slave PIC's base
+	 cmp	 dx,8		; Izit one of its IRQs?
+	 jae	 short QPI_CDVEC_IVT ; Jump if not
+
+	 test	 QPI_CDFLG,@QPI_CD2 ; Are its calldowns enabled?
+	 jz	 short QPI_CDVEC_IVT ; Jump if not
+QPI_CDVEC_SW:
+
+; Software INT n:  CD n right before CS:IP
+
+	 movzx	 eax,[esp+@CDFRM].INTCOM_CS ; Get V86 CS
+	 shl	 eax,4-0	; Convert from paras to bytes
+	 movzx	 edi,[esp+@CDFRM].INTCOM_EIP.ELO ; Get IP
+	 add	 eax,edi	; Linear address after the instruction
+
+	 cmp	 eax,2		; Izit at the very start?
+	 jb	 short @F	; Jump if so (not an INT n)
+
+	 mov	 di,cx		; Copy the vector
+	 shl	 di,8		; To the high byte
+	 or	 di,0CDh	; With the INT opcode
+	 cmp	 di,AGROUP:[eax-2] ; Izit INT n?
+	 je	 short QPI_CDVEC_IVT ; Jump if so
+@@:
+	 movzx	 edx,dx 	; IRQ # within the PIC
+	 add	 esi,edx	; Plus index
+	 add	 esi,edx	; ...
+	 add	 esi,edx	; ...
+	 add	 esi,edx	; ... (times four)
+	 mov	 es,SEL_DSJG3	; Get JGROUP data selector at PL3
+	 assume  es:JGROUP	; Tell the assembler about it
+
+	 mov	 eax,QPI_CDTAB[esi] ; Get the calldown
+
+	 jmp	 short QPI_CDVEC_EXIT ; Join common exit code
+
+QPI_CDVEC_IVT:
+	 mov	 eax,AGROUP:[bx] ; Get the IVT entry
+QPI_CDVEC_EXIT:
+	 REGREST <es,edi,esi,edx,ecx> ; Restore
+	 assume  es:nothing	; Tell the assembler about it
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_CDVEC endp			; End QPI_CDVEC procedure
+
+
 	 FPPROC  QPI_API -- QEMM Programming Interface Functions
 	 assume  ds:PGROUP,es:PGROUP,fs:nothing,gs:nothing,ss:PGROUP
 COMMENT|
@@ -799,6 +905,9 @@ Caller's CF =	 0 if successful
 
 	 cmp	 ah,20h 	; Izit VirtualHDIRQ?
 	 je	 near ptr QPI_API_VHI ; Jump if so
+
+	 cmp	 ah,1Ch 	; Izit IRQ calldowns?
+	 je	 near ptr QPI_API_CD ; Jump if so
 
 	 cmp	 ah,22h 	; Izit DV/X shared pool?
 	 je	 near ptr QPI_API_DVX ; Jump if so
@@ -2066,6 +2175,164 @@ S32  rep stos	 AGROUP:[edi].EDD ; Clear it
 	 assume  es:JGROUP	; Tell the assembler about it
 
 	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 1C00:  Disable the IRQ0-7 calldowns
+; 1C01:  Set the V86 handlers of IRQ0-7 (8 Seg:Off at ES:DI) and enable
+; 1C02:  Disable the IRQ8-15 calldowns
+; 1C03:  Set the V86 handlers of IRQ8-15 ...
+; 1C04:  Simulate the hardware interrupt BX (BH = 0)
+; As QEMM 97:  while enabled, the hardware interrupts of the PIC go to
+; these handlers instead of the IVT (INTCOM calls QPI_CDVEC), entered as
+; a real mode ISR; no EOI is sent for them.  Software INTs of those
+; vectors still go to the IVT.  The table is copied on every 1C01h/1C03h.
+
+QPI_API_CD:
+	 cmp	 al,04h 	; Izit a valid subfunction?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+	 je	 near ptr QPI_API_SIMINT ; Jump if simulate
+
+	 mov	 cl,@QPI_CD1	; Assume master PIC
+	 xor	 esi,esi	; Its table entries
+
+	 cmp	 al,02h 	; Izit the slave PIC?
+	 jb	 short @F	; Jump if not
+
+	 mov	 cl,@QPI_CD2	; Slave PIC
+	 mov	 esi,8*4	; Its table entries
+@@:
+	 test	 al,01h 	; Izit set?
+	 jnz	 short QPI_API_CDSET ; Jump if so
+
+	 not	 cl		; Mask to clear the bit
+	 and	 QPI_CDFLG,cl	; Disable
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_CDSET:
+	 QPI_ESDI		; EDI = linear address of caller's ES:DI
+
+	 push	 fs		; Save for a moment
+
+	 mov	 fs,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  fs:AGROUP	; Tell the assembler about it
+
+	 pushf			; Save flags
+	 cli			; Disallow interrupts
+
+	 mov	 edx,8		; # handlers
+@@:
+	 mov	 eax,AGROUP:[edi] ; Get the next handler
+	 mov	 QPI_CDTAB[esi],eax ; Save it
+	 add	 edi,4		; Next one
+	 add	 esi,4		; ...
+	 dec	 edx		; Count it out
+	 jnz	 short @B	; Jump if more
+
+	 or	 QPI_CDFLG,cl	; Enable
+
+	 popf			; Restore flags
+
+	 pop	 fs		; Restore
+	 assume  fs:nothing	; Tell the assembler about it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+; 1C04:  BX = vector; 08h-0Fh and 70h-77h are taken as IRQ0-15 at the
+; current PIC bases.  The handler runs right after the QPI call returns
+; as if the interrupt had come in there (frame on the caller's stack).
+
+QPI_API_SIMINT:
+	 mov	 bx,[ebp].INTXX_EBX.ELO ; Get the vector
+	 or	 bh,bh		; Izit valid?
+	 jnz	 near ptr QPI_API_EXIT ; Jump if not
+
+	 movzx	 ecx,bl 	; Copy the vector
+
+	 cmp	 cl,08h 	; Izit IRQ0-7?
+	 jb	 short QPI_API_SIMINT1 ; Jump if not
+	 cmp	 cl,0Fh 	; ...
+	 ja	 short @F	; Jump if not
+
+	 sub	 cl,08h 	; IRQ #
+	 add	 cx,NEWIMR1	; Plus the master PIC's base
+
+	 jmp	 short QPI_API_SIMINT1 ; Join common code
+
+@@:
+	 cmp	 cl,70h 	; Izit IRQ8-15?
+	 jb	 short QPI_API_SIMINT1 ; Jump if not
+	 cmp	 cl,77h 	; ...
+	 ja	 short QPI_API_SIMINT1 ; Jump if not
+
+	 sub	 cl,70h 	; IRQ # - 8
+	 add	 cx,NEWIMR2	; Plus the slave PIC's base
+QPI_API_SIMINT1:
+	 and	 ecx,0FFh	; Vector # (CX = vector)
+
+	 push	 fs		; Save for a moment
+
+	 mov	 fs,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  fs:AGROUP	; Tell the assembler about it
+
+	 mov	 eax,AGROUP:[ecx*4] ; Get the IVT entry
+
+	 mov	 dx,cx		; Copy the vector
+	 sub	 dx,NEWIMR1	; Less the master PIC's base
+	 cmp	 dx,8		; Izit one of its IRQs?
+	 jae	 short @F	; Jump if not
+
+	 test	 QPI_CDFLG,@QPI_CD1 ; Are its calldowns enabled?
+	 jz	 short QPI_API_SIMINT2 ; Jump if not
+
+	 movzx	 edx,dx 	; IRQ #
+	 mov	 eax,QPI_CDTAB[edx*4] ; Get the calldown
+
+	 jmp	 short QPI_API_SIMINT2 ; Join common code
+
+@@:
+	 mov	 dx,cx		; Copy the vector
+	 sub	 dx,NEWIMR2	; Less the slave PIC's base
+	 cmp	 dx,8		; Izit one of its IRQs?
+	 jae	 short QPI_API_SIMINT2 ; Jump if not
+
+	 test	 QPI_CDFLG,@QPI_CD2 ; Are its calldowns enabled?
+	 jz	 short QPI_API_SIMINT2 ; Jump if not
+
+	 movzx	 edx,dx 	; IRQ # - 8
+	 mov	 eax,QPI_CDTAB[8*4+edx*4] ; Get the calldown
+QPI_API_SIMINT2:
+	 and	 [ebp].INTXX_EFL,not (mask $CF) ; Success (before it's copied)
+
+; FLAGS, CS, IP on the caller's stack, as INTCOM does
+
+	 movzx	 esi,[ebp].INTXX_SS ; Get caller's stack segment
+	 shl	 esi,4-0	; Convert from paras to bytes
+	 movzx	 edi,[ebp].INTXX_ESP.ELO ; Get caller's stack pointer
+	 sub	 di,6		; Make room for the frame
+	 mov	 [ebp].INTXX_ESP.ELO,di ; Save as new stack pointer
+
+	 mov	 dx,[ebp].INTXX_EIP.ELO ; Get return IP
+	 mov	 AGROUP:[esi+edi],dx ; Save on the stack
+	 inc	 di		; Next word, emulate 64KB wrap
+	 inc	 di		; ...
+	 mov	 dx,[ebp].INTXX_CS ; Get return CS
+	 mov	 AGROUP:[esi+edi],dx ; Save on the stack
+	 inc	 di		; Next word, emulate 64KB wrap
+	 inc	 di		; ...
+	 mov	 dx,[ebp].INTXX_EFL.ELO ; Get FLAGS
+	 mov	 AGROUP:[esi+edi],dx ; Save on the stack
+
+	 pop	 fs		; Restore
+	 assume  fs:nothing	; Tell the assembler about it
+
+	 movzx	 edx,ax 	; Copy the handler's offset
+	 mov	 [ebp].INTXX_EIP,edx ; Continue there
+	 shr	 eax,16 	; Shift down the segment
+	 mov	 [ebp].INTXX_CS,ax ; ...
+	 and	 [ebp].INTXX_EFL,not ((mask $TF) or (mask $IF) or (mask $NT)) ; As an interrupt
+
+	 jmp	 QPI_API_EXIT	; Return (CF cleared above)
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 

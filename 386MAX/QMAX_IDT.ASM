@@ -135,6 +135,9 @@ HICODE	 ends			; End HICODE segment
 EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 assume  ds:PGROUP
 
+	 extrn	 QPI_CDFLG:byte ; QMAX_QPI:  IRQ calldowns enabled (QPI 1Ch)
+@QPI_CDON equ	 03h		; ...  bit 0 = IRQ0-7, bit 1 = IRQ8-15
+
 if @OEM_DPMI
 	 extrn	 I31_FLAG:word
 
@@ -465,6 +468,7 @@ FDATA	 ends			; End FDATA segment
 JCODE	 segment use16 dword public 'jcode' ; Start JCODE segment
 	 assume  cs:JGROUP
 
+	 extrn	 QPI_CDVEC:far	; QMAX_QPI:  vector of an IRQ calldown
 	 public  @QMAX_IDT_JCODE
 @QMAX_IDT_JCODE:		; Mark module start in .MAP file
 
@@ -964,7 +968,12 @@ endif				; IF @OEM_DMA
 	 mov	 bx,[esp+@PUSHSIZE].INTCOM_INTNO ; Get the INT # times 4 + ...
 	 sub	 bx,offset PGROUP:INTPROC00Z ; Convert to origin-0, unit 4
 	 movzx	 edi,[esp+@PUSHSIZE].INTCOM_SS ; Get stack segment
+
+	 test	 cs:QPI_CDFLG,@QPI_CDON ; Are IRQ calldowns enabled (QPI 1Ch)?
+	 jnz	 short INTCOM_CD ; Jump if so
+
 	 mov	 eax,AGROUP:[bx] ; Get the Segment:Offset
+INTCOM_CDRET:
 	 shl	 edi,4-0	; Convert from paras to bytes
 
 	 xchg	 ax,[esp+@PUSHSIZE].INTCOM_EIP.ELO ; Swap IPs
@@ -995,6 +1004,11 @@ endif				; IF @OEM_DMA
 	 jnz	 near ptr IRETD_COM1 ; Yes, handle it specially
 INTCOM_IRETD:
 	 iretd			; No, just return as usual
+
+INTCOM_CD:
+	 FIXICALL JGROUP:QPI_CDVEC,DTE_CSJG ; EAX = calldown or IVT Segment:Offset
+
+	 jmp	 short INTCOM_CDRET ; Join common code
 
 	 assume  ss:nothing	; Tell the assembler about it
 
