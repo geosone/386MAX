@@ -73,6 +73,130 @@ if @VCP_OLD
 	 extrn	 QPI_API:far
 endif				; IF @VCP_OLD
 
+if @OEM_DEBUG
+	 FPPROC  CHECK_EPM -- Validate The EPM Structure
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Validate the EPM structure
+
+On entry:
+
+DS:ESI	 ==>	 caller's EPMTAB
+
+On exit:
+
+CF	 =	 1 if invalid
+
+(In JGROUP:  PGROUP is full.)
+
+|
+
+	 REGSAVE <eax,ebx,ecx,esi> ; Save registers
+
+; Validate CR3
+
+	 lods	 ds:[esi].EDD	; Get CR3
+;;;;;;;; mov	 cr3,eax	; Set new CR3 and flush TLB
+
+	 mov	 cx,1		; Checkpoint #
+
+
+
+
+; Validate GDTR
+
+	 lods	 ds:[esi].EDD	; Get ptr to GDTR
+
+	 mov	 ebx,[eax].DTR_BASE ; Save base address of GDT for later use
+
+;;;;;;;; LGDTD	 ds:[eax].EDF	; Set new GDTR
+
+	 mov	 cx,2		; Checkpoint #
+
+
+
+; Note from here on we're depending upon descriptor
+; caching of CS, DS, and SS.
+
+; Validate IDTR
+
+	 lods	 ds:[esi].EDD	; Get ptr to IDTR
+;;;;;;;; LIDTD	 ds:[eax].EDF	; Set new IDTR
+
+	 mov	 cx,3		; Checkpoint #
+
+
+
+; Validate LDTR
+
+	 lods	 ds:[esi].ELO	; Get LDTR
+;;;;;;;; lldt	 ax		; Set new LDTR
+
+	 and	 ax,ax		; Check for zero LDTR
+	 jz	 short CHECK_EPM1 ; Jump if so
+
+	 movzx	 eax,ax 	; Zero high-order word
+	 add	 eax,ebx	; Plus base address of GDT
+
+	 mov	 cx,4		; Checkpoint #
+
+	 cmp	 ds:[eax].DESC_ACCESS,CPL0_LDT ; Ensure it's an LDT
+	 jne	 short CHECK_EPM_ERR ; Jump if not
+CHECK_EPM1:
+
+; Validate TR
+
+	 lods	 ds:[esi].ELO	; Get TR
+
+	 movzx	 eax,ax 	; Get new TR
+	 and	 ds:[eax+ebx].DESC_ACCESS,not (mask $DS_BUSY) ; Mark as not busy
+;;;;;;;; ltr	 ax		; Set new TR
+
+	 mov	 cx,5		; Checkpoint #
+
+	 cmp	 ds:[eax+ebx].DESC_ACCESS,CPL0_IDLE3 ; Ensure it's a TSS
+	 jne	 short CHECK_EPM_ERR ; Jump if not
+
+; Validate return address
+
+;;;;;;;; jmp	 ds:[esi].EDF	; Return to caller
+
+	 movzx	 eax,ax 	; Zero high-order word
+	 lods	 ds:[esi].EDD	; Get offset
+	 movzx	 eax,ax 	; Zero high-order word
+	 lods	 ds:[esi].ELO	; Get selector
+
+	 mov	 al,ds:[ebx+eax].DESC_ACCESS ; Get the ARB
+	 and	 al,not (mask $DC_ACC) ; Clear accessed bit
+
+	 mov	 cx,6		; Checkpoint #
+
+	 cmp	 al,CPL0_CODE	; Ensure it's code
+	 jne	 short CHECK_EPM_ERR ; Jump if not
+
+
+
+
+
+
+
+
+	 clc			; Valid
+	 jmp	 short CHECK_EPM_EXIT ; Join common exit code
+
+CHECK_EPM_ERR:
+	 stc			; Invalid:  the caller calls SWAT if present
+CHECK_EPM_EXIT:
+	 REGREST <esi,ecx,ebx,eax> ; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+CHECK_EPM endp			; End CHECK_EPM procedure
+endif				; IF @OEM_DEBUG
+
 JCODE	 ends			; End JCODE segment
 
 
@@ -1169,7 +1293,13 @@ if @OEM_DEBUG
 	 test	 DB2_FLAG,@DB2_VMS ; Check out the VCPI mode switch?
 	 jz	 short @F	; Not this time
 
-	 call	 CHECK_EPM	; Validate the EPM structure
+	 FIXICALL JGROUP:CHECK_EPM,DTE_CSJG ; Validate the EPM structure
+	 jnc	 short @F	; Jump if valid
+
+	 test	 LCL_FLAG,@LCL_SWAT ; Izit installed?
+	 jz	 short @F	; Not this time, too bad
+
+	 int	 01h		; Call our debugger
 @@:
 endif				; IF @OEM_DEBUG
 
@@ -1218,125 +1348,6 @@ Drain the VMM pool if it's filled
 
 VMM_DRAIN_POOL endp		; End VMM_DRAIN_POOL procedure
 endif				; IF @OEM_VIRTUALMEM
-if @OEM_DEBUG
-	 NPPROC  CHECK_EPM -- Validate The EPM Structure
-	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
-COMMENT|
-
-Validate the EPM structure
-
-On entry:
-
-DS:ESI	 ==>	 caller's EPMTAB
-
-|
-
-	 REGSAVE <eax,ebx,ecx,esi> ; Save registers
-
-; Validate CR3
-
-	 lods	 ds:[esi].EDD	; Get CR3
-;;;;;;;; mov	 cr3,eax	; Set new CR3 and flush TLB
-
-	 mov	 cx,1		; Checkpoint #
-
-
-
-
-; Validate GDTR
-
-	 lods	 ds:[esi].EDD	; Get ptr to GDTR
-
-	 mov	 ebx,[eax].DTR_BASE ; Save base address of GDT for later use
-
-;;;;;;;; LGDTD	 ds:[eax].EDF	; Set new GDTR
-
-	 mov	 cx,2		; Checkpoint #
-
-
-
-; Note from here on we're depending upon descriptor
-; caching of CS, DS, and SS.
-
-; Validate IDTR
-
-	 lods	 ds:[esi].EDD	; Get ptr to IDTR
-;;;;;;;; LIDTD	 ds:[eax].EDF	; Set new IDTR
-
-	 mov	 cx,3		; Checkpoint #
-
-
-
-; Validate LDTR
-
-	 lods	 ds:[esi].ELO	; Get LDTR
-;;;;;;;; lldt	 ax		; Set new LDTR
-
-	 and	 ax,ax		; Check for zero LDTR
-	 jz	 short CHECK_EPM1 ; Jump if so
-
-	 movzx	 eax,ax 	; Zero high-order word
-	 add	 eax,ebx	; Plus base address of GDT
-
-	 mov	 cx,4		; Checkpoint #
-
-	 cmp	 ds:[eax].DESC_ACCESS,CPL0_LDT ; Ensure it's an LDT
-	 jne	 short CHECK_EPM_ERR ; Jump if not
-CHECK_EPM1:
-
-; Validate TR
-
-	 lods	 ds:[esi].ELO	; Get TR
-
-	 movzx	 eax,ax 	; Get new TR
-	 and	 ds:[eax+ebx].DESC_ACCESS,not (mask $DS_BUSY) ; Mark as not busy
-;;;;;;;; ltr	 ax		; Set new TR
-
-	 mov	 cx,5		; Checkpoint #
-
-	 cmp	 ds:[eax+ebx].DESC_ACCESS,CPL0_IDLE3 ; Ensure it's a TSS
-	 jne	 short CHECK_EPM_ERR ; Jump if not
-
-; Validate return address
-
-;;;;;;;; jmp	 ds:[esi].EDF	; Return to caller
-
-	 movzx	 eax,ax 	; Zero high-order word
-	 lods	 ds:[esi].EDD	; Get offset
-	 movzx	 eax,ax 	; Zero high-order word
-	 lods	 ds:[esi].ELO	; Get selector
-
-	 mov	 al,ds:[ebx+eax].DESC_ACCESS ; Get the ARB
-	 and	 al,not (mask $DC_ACC) ; Clear accessed bit
-
-	 mov	 cx,6		; Checkpoint #
-
-	 cmp	 al,CPL0_CODE	; Ensure it's code
-	 jne	 short CHECK_EPM_ERR ; Jump if not
-
-
-
-
-
-
-
-
-	 jmp	 short CHECK_EPM_EXIT ; Join common exit code
-
-CHECK_EPM_ERR:
-	 test	 LCL_FLAG,@LCL_SWAT ; Izit installed?
-	 jz	 short CHECK_EPM_EXIT ; Not this time, too bad
-
-	 int	 01h		; Call our debugger
-CHECK_EPM_EXIT:
-	 REGREST <esi,ecx,ebx,eax> ; Restore
-
-	 ret			; Return to caller
-
-	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
-
-CHECK_EPM endp			; End CHECK_EPM procedure
-endif				; IF @OEM_DEBUG
 	 NPPROC  VCP_MODESUB -- VCPI Common Mode Subroutine
 	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|

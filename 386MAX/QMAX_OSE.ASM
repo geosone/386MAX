@@ -35,6 +35,16 @@ Modifications by:  None.
 if @OEM_EMS
 
 PGROUP	 group	 CODE,ECODE,EDATA
+JGROUP	 group	 JCODE
+
+
+JCODE	 segment use16 dword public 'jcode' ; Start JCODE segment
+	 assume  cs:JGROUP
+
+	 extrn	 CTX_CHECK:far	; QMAX_I67:  check the context's check word
+
+JCODE	 ends			; End JCODE segment
+
 
 
 CODE	 segment use16 byte public 'prog' ; Start CODE segment
@@ -416,6 +426,9 @@ EMM_ALTMAPREG1_EMU1:
 	 movzx	 esi,[ebp].INTXX_EDI.ELO ; Copy DI from PL3 DI
 	 add	 esi,eax	; DS:ESI ==> PL3 ES:DI
 
+	 FIXICALL JGROUP:CTX_CHECK,DTE_CSJG ; Is the check word right?
+	 jc	 near ptr EMM_EA3 ; Jump if not (not stored by 5B00h/4E00h)
+
 ; Copy the input at DS:ESI into local storage in case we're
 ; about to pull the rug out from under the data.
 
@@ -507,6 +520,7 @@ All registers except EBP, SS, and ESP may be destroyed.
 |
 
 	 mov	 ax,RPNCURSIZ	; Get array size
+	 add	 ax,2		; Plus the check word (CTX_SEAL)
 	 mov	 [ebp].INTXX_EDX.ELO,ax ; Return in caller's DX
 
 	 jmp	 EMM_E00AL	; Join common OK code

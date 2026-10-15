@@ -387,6 +387,83 @@ JCODE	 segment use16 dword public 'jcode' ; Start JCODE segment
 
 if @OEM_EMS
 	 extrn	 JMM_TEST:far
+
+; The mapping contexts of functions 4Eh and 5Bh (whole EMS system) carry a
+; check word after the RPNs:  a context that wasn't stored by us (e.g. a
+; zeroed save area, as MS EMM386 refuses it with A3h too) would otherwise
+; map pages over conventional memory.  (In JGROUP:  PGROUP is full.)
+
+@CTX_SEED equ	 5A3Ch		; Start value of the check word (non-zero:
+				; an area of zeros never checks out)
+
+	 FPPROC  CTX_SEAL -- Append Check Word To EMS Mapping Context
+	 assume  ds:PGROUP,es:AGROUP,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+On entry:
+
+ES:EDI	 ==>	 just after the RPNCURSIZ bytes of the context
+
+|
+
+	 REGSAVE <ax,cx,esi>	; Save registers
+
+	 movzx	 ecx,RPNCURSIZ	; Get # bytes of the context
+	 mov	 esi,edi	; Copy end
+	 sub	 esi,ecx	; Back off to the start
+	 shr	 cx,1		; Convert from bytes to words
+	 mov	 ax,@CTX_SEED	; Initialize the check word
+@@:
+	 add	 ax,AGROUP:[esi] ; Add next word
+	 add	 esi,2		; Skip to next word
+	 loop	 @B		; Jump if more words
+
+	 mov	 AGROUP:[edi],ax ; Save the check word
+
+	 REGREST <esi,cx,ax>	; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+CTX_SEAL endp			; End CTX_SEAL procedure
+	 FPPROC  CTX_CHECK -- Check EMS Mapping Context
+	 assume  ds:AGROUP,es:PGROUP,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+On entry:
+
+DS:ESI	 ==>	 context (RPNCURSIZ bytes and the check word)
+
+On exit:
+
+CF	 =	 0 if the check word is right
+	 =	 1 if not
+
+|
+
+	 REGSAVE <ax,cx,esi>	; Save registers
+
+	 movzx	 ecx,RPNCURSIZ	; Get # bytes of the context
+	 shr	 cx,1		; Convert from bytes to words
+	 mov	 ax,@CTX_SEED	; Initialize the check word
+@@:
+	 add	 ax,AGROUP:[esi] ; Add next word
+	 add	 esi,2		; Skip to next word
+	 loop	 @B		; Jump if more words
+
+	 cmp	 ax,AGROUP:[esi] ; Izit the stored check word?
+	 je	 short @F	; Jump if so (note CF=0)
+
+	 stc			; Indicate it's wrong
+@@:
+	 REGREST <esi,cx,ax>	; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+CTX_CHECK endp			; End CTX_CHECK procedure
 endif				; IF @OEM_EMS
 
 JCODE	 ends			; End JCODE segment
@@ -1575,6 +1652,7 @@ No errors possible
 	 sti			; Allow interrupts
 
 	 mov	 al,RPNCURSIZ.LO ; Get # bytes in RPNCUR save area
+	 add	 al,2		; Plus the check word (CTX_SEAL)
 
 	 jmp	 EMM_E00	; Join common OK code
 
@@ -2679,6 +2757,8 @@ into user's data area.
 
 S32  rep movs	 <AGROUP:[edi].LO,PGROUP:[esi].LO> ; Move the bytes
 
+	 FIXICALL JGROUP:CTX_SEAL,DTE_CSJG ; Append the check word at ES:EDI
+
 	 popf			; Restore
 
 	 REGREST <es,edi,esi,ecx> ; Restore
@@ -2714,6 +2794,9 @@ CF	 =	 0 if all went well
 	 call	 PL3DSSI	; Convert PL3 DS:SI to DTE_D4GB:ESI
 	 assume  ds:nothing	; Tell the assembler about it
 
+	 FIXICALL JGROUP:CTX_CHECK,DTE_CSJG ; Is the check word right?
+	 jc	 short RPN_READ_EXIT ; Jump if not (note CF=1)
+
 ; Copy the input at DS:ESI into local storage in case we're
 ; about to pull the rug out from under the data.
 
@@ -2730,6 +2813,7 @@ CF	 =	 0 if all went well
 	 call	 RPN_DIFF	; Remap CX RPNs at DS:ESI which differ
 	 mov	 esp,eax	; Cut back the stack
 				; Return with CF=1 if error
+RPN_READ_EXIT:
 
 	 REGREST <ds,edi,esi,ecx,eax> ; Restore
 	 assume  ds:PGROUP	; Tell the assembler about it
