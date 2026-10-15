@@ -286,6 +286,15 @@ MSG_DPMIADDROFF equ  MSG_DPMIADDRSEL[5]
 
 LENTXT2  MSG_DPMIAPPLNAME,<78 dup (?)> ; Length of name of last DPMI application
 
+; DPMI fault, short form (without DEBUG=FLTWAIT)
+ifdef LANG_GR
+LENTXT2  MSG_FLTHDR,	<@OEM_TEXT,': '>
+LENTXT2  MSG_FLTTERM,	<'Die Anwendung wurde beendet: '>
+else
+LENTXT2  MSG_FLTHDR,	<@OEM_TEXT,': '>
+LENTXT2  MSG_FLTTERM,	<'The application has been terminated: '>
+endif				; IFDEF LANG_GR
+
 ifdef LANG_GR
 LENTXT2  MSG_DPMIPRESS, <'ออ> weiter mit beliebiger Taste... '>
 else

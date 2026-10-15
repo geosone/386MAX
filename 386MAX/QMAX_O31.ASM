@@ -189,6 +189,8 @@ FDATA	 segment use16 dword public 'fixup' ; Start FDATA segment
 	 extrn	 MSG_DPMIADDRSEP:byte
 	 extrn	 MSG_DPMIADDRSEL:byte
 	 extrn	 MSG_DPMIPRESS:tbyte
+	 extrn	 MSG_FLTHDR:tbyte
+	 extrn	 MSG_FLTTERM:tbyte
 
 	 public  MSG_FOXCOMPAT
 MSG_FOXCOMPAT db 'Incompatible memory manager',LF,0
@@ -2400,6 +2402,45 @@ SS:EBP	 ==>	 INTXX_STR
 	 mov	 PGROUP:[eax].DPTSS_VMSTKOFF,cx ; Save in VM TSS
 DPMIFN_FAULT1:
 
+; Unless DEBUG=FLTWAIT, report the fault in a few lines at the cursor and
+; don't wait for a key:  the client is terminated and DOS continues, as
+; with the other DPMI hosts (CWSDPMI, HDPMI)
+
+	 test	 DB3_FLAG,@DB3_FLTWAIT ; Full message with key wait?
+	 jnz	 short DPMIFN_FAULT_LONG ; Jump if so
+
+	 call	 DPMIFN_NEWLINE ; Start on a new line
+
+	 mov	 dx,-1		; Use current position
+	 push	 es		; Pass message selector
+	 push	 offset FGROUP:MSG_FLTHDR ; Pass message offset
+	 FIXICALL PGROUP:FDISP_STR,DTE_CS2 ; Display it
+
+	 push	 es		; Pass message selector
+	 push	 DPMIMSG	; Pass message offset
+	 FIXICALL PGROUP:FDISP_STR,DTE_CS2 ; Display it
+
+	 test	 DB3_FLAG,@DB3_XADDR ; Display the address?
+	 jnz	 short @F	; Jump if not
+
+	 push	 es		; Pass message selector
+	 push	 offset FGROUP:MSG_DPMIADDR ; Pass message offset
+	 FIXICALL PGROUP:FDISP_STR,DTE_CS2 ; Display it
+@@:
+	 push	 es		; Pass message selector
+	 push	 offset FGROUP:MSG_FLTTERM ; Pass message offset
+	 FIXICALL PGROUP:FDISP_STR,DTE_CS2 ; Display it
+
+	 push	 es		; Pass message selector
+	 push	 offset FGROUP:MSG_DPMIAPPLNAME ; Pass message offset
+	 FIXICALL PGROUP:FDISP_STR,DTE_CS2 ; Display it
+
+	 call	 DPMIFN_NEWLINE ; Start on a new line
+
+	 jmp	 DPMIFN_FAULT_DONE ; Join common code
+
+DPMIFN_FAULT_LONG:
+
 ; Display DPMI fault title
 
 @DPMIMSG_ROW equ 18h		; Starting row for DPMI message display
@@ -2500,6 +2541,7 @@ DPMIFN_FAULT_MSG_XAPPL1:
 	 FIXICALL PGROUP:FKEYWAIT,DTE_CS2 ; Wait for an acknowledgement
 
 	 call	 DPMIFN_NEWLINE ; Start on a new line
+DPMIFN_FAULT_DONE:
 
 ; If we've wound back to the first TSS (PVMTSS), restore the original
 ; VM TSS values
