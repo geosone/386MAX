@@ -54,3 +54,10 @@ built exclusively with the repository's JWasm/JWlink toolchain:
 ```sh
 make -C linux/test/maxview-api
 ```
+
+## QEMM functions for multitasking
+
+The building blocks for running several DOS tasks (mapping contexts,
+port trapping, IRQ calldowns, timer and video virtualization) are already
+available through the QEMM functions of the same entry point, as DESQview
+uses them on QEMM.  See [qpi.md](qpi.md).
