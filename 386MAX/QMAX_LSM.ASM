@@ -293,7 +293,8 @@ S32  rep movs	 <AGROUP:[edi].EDD,AGROUP:[esi].EDD> ; Copy PDEs
 S32  rep movs	 <AGROUP:[edi].EDD,AGROUP:[esi].EDD>  ; copy PDEs
 
 	 mov	 eax,PGROUP:[edx].TSS_CR3 ; Pick up current PD addr (phys)
-	 or	 eax,@PTE_URP	; Make it present r/w
+	 or	 eax,@PTE_RP	; Make it present r/w, supervisor only (a
+				; client must not reach its page tables)
 	 mov	 AGROUP:[edi],eax ; Put self reference of page directory
 
 	 mov	 eax,PGROUP:[edx].TSS_CR3 ; Switch to new page directory

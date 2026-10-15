@@ -346,7 +346,9 @@ AX	 =	 error code
 
 	 mov	 eax,LCL_CR3		; Pick up saved CR3 value
 	 and	 eax,@PTE_FRM		; Throw away any low bits
-	 or	 eax,@PGBITS_PRESENT or @PG_READWRITE ; Make PTE
+	 or	 eax,@PG_PRESENT or @PG_READWRITE ; Make PTE:  supervisor only,
+				; else DPMI clients with a 4GB segment could
+				; write the page tables (FFC00000h-FFFFFFFFh)
 	 xchg	 es:[@PageSize-4].PDT_PTE,eax ; Read default PDE, set new PDE
 	 mov	 DefaultPDE,eax 	; Save default
 
