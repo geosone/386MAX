@@ -43,6 +43,7 @@ Modifications by:  None.
 	 include QMAX_EMM.INC
 	 include QMAX_OEM.INC
 	 include QMAX_VCP.INC
+	 include MAXVIEW.INC
 
 if @OEM_VCPI
 
@@ -451,6 +452,9 @@ INTFE_HIMEM_CS label near
 	 je	 short @F	; Jump if so
 
 	 cmp	 ah,1Ah 	; Izit QPI I/O port trapping?
+	 je	 short @F	; Jump if so
+
+	 cmp	 ah,@MV_API	; Izit Open MaxView extension?
 	 jne	 short INTFE_XQPI ; Jump if not
 @@:
 	 FIXIJMP JGROUP:QPI_API,DTE_CSJG ; QEMM Programming Interface (QMAX_QPI)
