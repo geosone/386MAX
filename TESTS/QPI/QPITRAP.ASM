@@ -13,6 +13,7 @@
 	.stack	1024
 
 PORT	equ	06E0h		; unused port above 3FFh
+PORT2	equ	06E8h		; another one, chained to the old callback
 
 	.data
 qpi	dd	0
@@ -20,13 +21,19 @@ oldcb	dd	?
 	.code
 	include	TESTLIB.INC
 
-; the callback (V86, far):  counts calls, remembers CX/DX, returns 5Ah for IN
+; the callback (V86, far):  counts calls, remembers CX/DX, returns 5Ah for IN;
+; port PORT2 is passed on to the previous callback (QEMM's default does the
+; I/O through QPI 1A05h)
 calls	dw	0
+oldcbc	dd	?
 lastcx	dw	?
 lastdx	dw	?
 lastal	db	?
 cb	proc	far
-	inc	cs:calls
+	cmp	dx,PORT2
+	jne	@F
+	jmp	cs:oldcbc
+@@:	inc	cs:calls
 	mov	cs:lastcx,cx
 	mov	cs:lastdx,dx
 	mov	cs:lastal,al
@@ -69,9 +76,14 @@ haveqpi:
 	call	qcall
 	mov	word ptr oldcb,di
 	mov	word ptr oldcb+2,es
+	mov	word ptr cs:oldcbc,di
+	mov	word ptr cs:oldcbc+2,es
 	push	ds
 	pop	es
 	CHECK	'1A06 get callback', nc
+	mov	eax,oldcb
+	or	eax,eax
+	CHECK	'1A06 default callback exists (not 0:0)', nz
 	push	es
 	push	cs
 	pop	es
@@ -111,6 +123,32 @@ haveqpi:
 	CHECK	'CX bit 2 set for OUT', nz
 	cmp	cs:lastal,0A5h
 	CHECK	'AL = value written', e
+
+	TITLE_	'chained to the default callback, 1A05h'
+	mov	dx,PORT2
+	mov	ax,1A09h
+	call	qcall
+	CHECK	'1A09 trap port 6E8h', nc
+	mov	cs:calls,0
+	mov	dx,PORT2
+	in	al,dx
+	cmp	al,0FFh
+	CHECK	'IN 6E8h through the old callback = FFh (no device)', e
+	mov	dx,PORT2
+	out	dx,al
+	cmp	cs:calls,0
+	CHECK	'our callback did not count it', e
+	mov	dx,PORT2
+	mov	ax,1A0Ah
+	call	qcall
+	mov	dx,PORT2
+	xor	cx,cx			; byte input
+	mov	ebx,12345678h
+	mov	ax,1A05h
+	call	qcall
+	CHECK	'1A05 virtualized IN CF=0', nc
+	cmp	bl,0FFh
+	CHECK	'1A05 BL = FFh', e
 
 	TITLE_	'restore'
 	mov	dx,PORT

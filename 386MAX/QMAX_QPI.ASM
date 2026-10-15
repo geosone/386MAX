@@ -67,6 +67,7 @@ CODE	 segment use16 byte public 'prog' ; Start CODE segment
 	 assume  cs:PGROUP,ds:PGROUP
 
 	 extrn	 GLB_FLAG:word
+	 extrn	 QPI_DEFCB:far
 	 extrn	 LCL_FLAG:word
 	 include QMAX_LCL.INC
 	 extrn	 HARDRET:far
@@ -814,6 +815,9 @@ Caller's CF =	 0 if successful
 	 cmp	 al,04h 	; Izit untrapped I/O?
 	 je	 near ptr QPI_API_IO ; Jump if so
 
+	 cmp	 al,05h 	; Izit virtualized I/O?
+	 je	 near ptr QPI_API_IO ; Jump if so (the same, see QPI_UNTRAPIN)
+
 	 cmp	 al,06h 	; Izit get callback?
 	 je	 near ptr QPI_API_GETCB ; Jump if so
 
@@ -918,6 +922,14 @@ QPI_API_IOOUT:
 
 QPI_API_GETCB:
 	 mov	 eax,QPI_CB	; Get the callback
+
+	 or	 eax,eax	; Izit none?
+	 jnz	 short @F	; Jump if not
+
+	 mov	 ax,HIMEM_CS	; Get segment of our code in VM
+	 shl	 eax,16 	; Shift to segment position
+	 mov	 ax,offset PGROUP:QPI_DEFCB ; The default callback (as QEMM)
+@@:
 	 mov	 [ebp].INTXX_EDI.ELO,ax ; Return offset in caller's DI
 	 shr	 eax,16 	; Shift down the segment
 	 mov	 [ebp].INTXX_ES,ax ; Return in caller's ES
@@ -928,6 +940,16 @@ QPI_API_SETCB:
 	 mov	 ax,[ebp].INTXX_ES ; Get caller's ES
 	 shl	 eax,16 	; Shift to segment position
 	 mov	 ax,[ebp].INTXX_EDI.ELO ; Get caller's DI
+
+	 cmp	 ax,offset PGROUP:QPI_DEFCB ; Izit the default callback?
+	 jne	 short @F	; Jump if not
+
+	 mov	 bx,[ebp].INTXX_ES ; Get its segment again
+	 cmp	 bx,HIMEM_CS	; Izit ours?
+	 jne	 short @F	; Jump if not
+
+	 xor	 eax,eax	; None (we do the I/O without the round trip)
+@@:
 	 mov	 es:QPI_CB,eax	; Save as the callback
 
 	 jmp	 QPI_API_OK	; Join common exit code

@@ -2210,6 +2210,27 @@ RESINTFE_INT:
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 OLDVCPI  endp			; End OLDVCPI procedure
+
+	 FPPROC  QPI_DEFCB -- Default QPI I/O Trap Callback
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Open 386MAX:  the I/O trap callback QPI 1A06h returns while no other is
+set, as QEMM's default one:  do the I/O the way 386MAX's own
+virtualization would (QPI 1A05h:  CX = type, DX = port, EBX = value).
+
+|
+
+	 mov	 ebx,eax	; Value for output
+	 mov	 ax,1A05h	; Virtualized I/O
+	 int	 0FEh		; QPI (QMAX_QPI)
+	 mov	 eax,ebx	; Value for input
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_DEFCB endp			; End QPI_DEFCB procedure
 endif				; IF @OEM_VCPI and @VCP_OLD
 if @OEM_EMS
 	 FPPROC  RESINT67 -- Resident EMS Interrupt Handler
