@@ -13,7 +13,8 @@ check (OK / FAIL) and ends with errorlevel 0 when all checks passed.
 | DPMI | DPMI10  | DPMI 1.0 functions (16-bit client) |
 | DPMI | DOSXLAT | DOS API translation in protected mode: LFN (71xxh), FAT32 (73xxh), country, DBCS, swappable data area |
 | DPMI | XLAT32  | the same for a 32-bit client |
-| DPMI | DISKIO  | INT 13h/25h/26h and 7305h from protected mode, buffers above 4 KB |
+| DPMI | PM26    | INT 25h/26h through 0301h with DOS buffers (host's V86 side, mode switches) |
+| DPMI | DISKIO  | INT 13h/25h/26h and 7305h from protected mode, buffers above 4 KB, DOS 7 volume lock |
 | DPMI | STKFLT  | a 32-bit client with an invalid stack calls INT 21h (must not reset the machine) |
 | DPMI | MOUSE12, MOUSE18 | INT 33h 0Ch/12h/18h/19h handlers (need a mouse driver) |
 | QPI  | QPITEST | QEMM programming interface (INT 2Fh D201h, INT 67h 3Fh) |
@@ -46,8 +47,10 @@ and their timeout; `INC/TESTLIB.INC` has the output and counting macros.
   image), `himem` (HIMEM.SYS only), and with `REFDIR=` a directory holding
   the programs: `jemmex`, `jemm386` (HimemX + Jemm386), `himemx` (XMS only),
   `hdpmi` (HimemX + HDPMI16/32, DPMI), `cwsdpmi` (HimemX + CWSDPMI, the DPMI
-  host of DJGPP and so of many games; 32-bit clients only) and `maxcws`
-  (386MAX with NODPMI + CWSDPMI as its VCPI client).
+  host of DJGPP and so of many games; 32-bit clients only), `maxcws`
+  (386MAX with NODPMI + CWSDPMI as its VCPI client) and `maxhdpmi` (386MAX
+  with NODPMI + HDPMI16/32 as its VCPI client, as VSBHDA setups use it:
+  separates 386MAX's DPMI host from its V86/VCPI side).
 
   MS-DOS has no DPMI host of its own: programs got DPMI from the Windows
   3.x/9x DOS box, from MSDPMI (Microsoft C 7), from their extender (CWSDPMI,

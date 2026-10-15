@@ -4,9 +4,10 @@ max/DPMI10               PASS
 max/EMSFUNC              PASS
 max/MOUSE12              SKIP
 max/MOUSE18              SKIP
+max/PM26                 PASS
 max/QPITEST              PASS
 max/QPITRAP              PASS
-max/STKFLT               HANG
+max/STKFLT               PASS
 max/V86FUNC              PASS
 max/VCPIFUNC             PASS
 max/VDSFUNC              PASS

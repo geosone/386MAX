@@ -11,6 +11,7 @@ V86/V86FUNC
 DPMI/DPMI10   needs=dpmi,dpmi1
 DPMI/DOSXLAT  needs=dpmi,xlat
 DPMI/XLAT32   needs=dpmi32,xlat
+DPMI/PM26     needs=dpmi timeout=60
 DPMI/DISKIO   needs=dpmi,xlat timeout=60
 DPMI/STKFLT   needs=dpmi term
 DPMI/MOUSE12  needs=dpmi,mouse

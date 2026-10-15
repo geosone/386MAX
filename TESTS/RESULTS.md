@@ -7,12 +7,7 @@ QEMM 97 with QDPMI (local reference image, not distributed).
 
 ## State of 386MAX
 
-Own tests:  all PASS on MS-DOS 6.22 and 7.1.  Open:
-
-| Test | 386MAX | Reference | Note |
-|---|---|---|---|
-| DISKIO | HANG on EDR-DOS and SvarDOS (EDR kernel) | MS-DOS, FreeDOS: PASS | INT 26h from protected mode on the EDR kernel |
-| STKFLT | HANG on FreeDOS | other DOS: PASS | the faulting client is not terminated cleanly there |
+Own tests:  all PASS on MS-DOS 6.22 and 7.1, EDR-DOS, SvarDOS and FreeDOS.
 
 HDPMI regression tests (suite `hx`):  386MAX differs from HDPMI and
 CWSDPMI where both agree in one test:
@@ -26,7 +21,12 @@ report (as CWSDPMI/HDPMI), the page tables are no longer writable by
 clients, EMS mapping contexts are checked (A3h as MS EMM386), QPI 1F00h-
 1F03h, 04h/05h/09h/0Ah, the 11h codes and the I/O callback behave as in
 QEMM 97, INT 31h 0300h leaves the CS:IP of the caller's structure alone
-(RAWJMP1).
+(RAWJMP1), INT 21h AX=440Dh/440Ch subfunctions without a translation (the
+DOS 7 volume lock before INT 26h) are passed through instead of running
+the next action stream (hang on EDR-DOS and MS-DOS 7.1, DOS memory
+corrupted on FreeDOS); 440Dh 46h/66h/68h (media ID, media type) are
+translated.  `maxhdpmi` (HDPMI as VCPI client of 386MAX NODPMI) gives the
+same results as HDPMI on HimemX.
 
 Deliberate deviations:  VCPI DE02h returns the end of RAM (Qualitas tuned
 the value around old DOS extenders), DE06h accepts page 100h (as QEMM).
@@ -151,19 +151,20 @@ the value around old DOS extenders), DE06h accepts page 100h (as QEMM).
 
 ## Suite max
 
-| test | emm386<br>msdos622 | himem<br>msdos622 | qemm<br>qemm622 | jemmex<br>msdos622 | jemm386<br>msdos622 | himemx<br>msdos622 | hdpmi<br>msdos622 | cwsdpmi<br>msdos622 | maxcws<br>msdos622 | max<br>msdos622 | max<br>msdos71 | max<br>edrdos | max<br>svardos | max<br>freedos |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| DISKIO | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | FAIL | SKIP | SKIP | PASS | PASS | HANG | HANG | PASS |
-| DOSXLAT | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | FAIL | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS |
-| DPMI10 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS |
-| EMSFUNC | PASS | SKIP | CRASH | FAIL | FAIL | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS | PASS |
-| MOUSE12 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
-| MOUSE18 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
-| QPITEST | SKIP | SKIP | PASS | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS |
-| QPITRAP |  |  | PASS |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS |
-| STKFLT | SKIP | SKIP | FAIL | SKIP | SKIP | SKIP | PASS | SKIP | SKIP | PASS | PASS | PASS | PASS | HANG |
-| V86FUNC | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
-| VCPIFUNC | PASS | SKIP | PASS | PASS | PASS | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS | PASS |
-| VDSFUNC | PASS | SKIP | PASS | PASS | PASS | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS | PASS |
-| XLAT32 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | FAIL | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS |
-| XMSFUNC | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
+| test | emm386<br>msdos622 | himem<br>msdos622 | qemm<br>qemm622 | jemmex<br>msdos622 | jemm386<br>msdos622 | himemx<br>msdos622 | hdpmi<br>msdos622 | cwsdpmi<br>msdos622 | maxcws<br>msdos622 | maxhdpmi<br>msdos622 | max<br>msdos622 | max<br>msdos71 | max<br>edrdos | max<br>svardos | max<br>freedos |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| DISKIO | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | FAIL | SKIP | SKIP | FAIL | PASS | PASS | PASS | PASS | PASS |
+| DOSXLAT | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | FAIL | SKIP | SKIP | FAIL | PASS | PASS | PASS | PASS | PASS |
+| DPMI10 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS |
+| EMSFUNC | PASS | SKIP | CRASH | FAIL | FAIL | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
+| MOUSE12 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
+| MOUSE18 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
+| PM26 |  |  |  |  |  |  | PASS |  |  | PASS | PASS | PASS | PASS | PASS | PASS |
+| QPITEST | SKIP | SKIP | PASS | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS |
+| QPITRAP |  |  | PASS |  |  |  |  |  |  | SKIP | PASS | PASS | PASS | PASS | PASS |
+| STKFLT | SKIP | SKIP | FAIL | SKIP | SKIP | SKIP | PASS | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS | PASS |
+| V86FUNC | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
+| VCPIFUNC | PASS | SKIP | PASS | PASS | PASS | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
+| VDSFUNC | PASS | SKIP | PASS | PASS | PASS | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
+| XLAT32 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | FAIL | SKIP | SKIP | FAIL | PASS | PASS | PASS | PASS | PASS |
+| XMSFUNC | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |

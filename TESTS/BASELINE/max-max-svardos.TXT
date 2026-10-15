@@ -1,9 +1,10 @@
-max/DISKIO               HANG
+max/DISKIO               PASS
 max/DOSXLAT              PASS
 max/DPMI10               PASS
 max/EMSFUNC              PASS
 max/MOUSE12              SKIP
 max/MOUSE18              SKIP
+max/PM26                 PASS
 max/QPITEST              PASS
 max/QPITRAP              PASS
 max/STKFLT               PASS

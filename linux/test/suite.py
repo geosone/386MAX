@@ -31,7 +31,8 @@ reference most programs were tested with), himem (MS HIMEM only), and,
 with REFDIR pointing to a directory with the reference programs, jemmex,
 jemm386 (HIMEMX + JEMM386), himemx (XMS only), hdpmi (HimemX + HDPMI16/32:
 the DPMI reference), cwsdpmi (HimemX + CWSDPMI: DJGPP's host, 32-bit clients
-only) and maxcws (386MAX NODPMI + CWSDPMI as its VCPI client).
+only), maxcws (386MAX NODPMI + CWSDPMI as its VCPI client) and maxhdpmi
+(386MAX NODPMI + HDPMI16/32 as its VCPI client).
 
 --check compares with TESTS/BASELINE/<suite>-<profile>-<dos>.TXT and
 exits with 1 when a test got worse (PASS/END -> FAIL/HANG/CRASH);
@@ -76,16 +77,22 @@ PROFILES = {
     'cwsdpmi': (['DEVICE=C:\\REF\\HIMEMX.EXE'], ['HIMEMX.EXE', 'CWSDPMI.EXE'], 'xms dpmi32'),
     'maxcws':  (['DEVICE=C:\\MAX\\386MAX.SYS PRO=C:\\MAX\\NODPMI.PRO'], ['CWSDPMI.EXE'],
                 'xms ems vcpi vds dpmi32'),
+    # HDPMI as VCPI client of 386MAX NODPMI (VSBHDA setups): separates
+    # 386MAX's DPMI host from its V86/VCPI/EMS side
+    'maxhdpmi': (['DEVICE=C:\\MAX\\386MAX.SYS PRO=C:\\MAX\\NODPMI.PRO'],
+                 ['HDPMI16.EXE', 'HDPMI32.EXE'], 'xms ems vcpi vds dpmi dpmi32 xlat'),
     # QEMM 97 with QDPMI: needs a DOS image with QEMM installed in C:\QEMM
     # (-d qemm622, made locally from the user's own copy)
     'qemm':    (['DEVICE=C:\\QEMM\\QEMM386.SYS RAM FR=D000 X=E000-EFFF',
                  'DEVICE=C:\\QEMM\\QDPMI.SYS SWAPFILE=DPMI.SWP SWAPSIZE=1024'], [],
                 'xms ems vcpi vds qpi dpmi dpmi32'),
 }
-PROFILE_FILES = {'maxcws': {'MAX/NODPMI.PRO': ['NODPMI']}}
+PROFILE_FILES = {'maxcws': {'MAX/NODPMI.PRO': ['NODPMI']},
+                 'maxhdpmi': {'MAX/NODPMI.PRO': ['NODPMI']}}
 AUTOEXTRA = {'hdpmi': ['C:\\REF\\HDPMI16.EXE -r > NUL', 'C:\\REF\\HDPMI32.EXE -r > NUL'],
              'cwsdpmi': ['C:\\REF\\CWSDPMI.EXE -p > NUL'],
-             'maxcws': ['C:\\REF\\CWSDPMI.EXE -p > NUL']}
+             'maxcws': ['C:\\REF\\CWSDPMI.EXE -p > NUL'],
+             'maxhdpmi': ['C:\\REF\\HDPMI16.EXE -r > NUL', 'C:\\REF\\HDPMI32.EXE -r > NUL']}
 WORSE = {'FAIL', 'HANG', 'CRASH', 'MISSING'}
 # TCG by default: KVM on this host is unreliable (KVM and VirtualBox modules
 # loaded together), results under KVM only as a quick pre-test
@@ -369,7 +376,7 @@ def read_result(path):
     return r
 
 
-ORDER = ['emm386', 'himem', 'qemm', 'jemmex', 'jemm386', 'himemx', 'hdpmi', 'cwsdpmi', 'maxcws', 'max']
+ORDER = ['emm386', 'himem', 'qemm', 'jemmex', 'jemm386', 'himemx', 'hdpmi', 'cwsdpmi', 'maxcws', 'maxhdpmi', 'max']
 DOSORDER = ['msdos622', 'msdos71', 'edrdos', 'svardos', 'freedos', 'qemm622']
 
 
