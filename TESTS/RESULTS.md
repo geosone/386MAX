@@ -166,6 +166,7 @@ the value around old DOS extenders), DE06h accepts page 100h (as QEMM).
 | QPICTX |  |  | PASS |  |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS |
 | QPIIRQ |  |  | PASS |  |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS |
 | QPIMISC |  |  | PASS |  |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS |
+| QPIPROT |  |  | PASS |  |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS |
 | QPITEST | SKIP | SKIP | PASS | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS |
 | QPITIMER |  |  | PASS |  |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS |
 | QPITRAP |  |  | PASS |  |  |  |  |  |  | SKIP | PASS | PASS | PASS | PASS | PASS |

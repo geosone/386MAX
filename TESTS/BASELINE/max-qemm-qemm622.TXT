@@ -8,6 +8,7 @@ max/QPICRT               PASS
 max/QPICTX               PASS
 max/QPIIRQ               PASS
 max/QPIMISC              PASS
+max/QPIPROT              PASS
 max/QPITEST              PASS
 max/QPITIMER             PASS
 max/QPITRAP              PASS

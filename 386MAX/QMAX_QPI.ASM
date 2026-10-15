@@ -131,6 +131,7 @@ EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 extrn	 PLINKBASE:dword
 	 extrn	 NEWIMR1:word
 	 extrn	 NEWIMR2:word
+	 extrn	 MRS_CUR:byte
 	 extrn	 PCHECKER_OUT:dword
 	 extrn	 PCHECKER_INP:dword
 
@@ -185,6 +186,7 @@ QPI_HERC dd	 0		; 1309h:  Hercules mode callback
 QPI_DACBUF dd	 0		; 130Ah:  DAC buffer (linear, 0 = none)
 QPI_CRITW dd	 0		; 1306h:  DESQview critical section WORD
 QPI_IRQMSK dw	 0		; 130Ch:  IRQ mask
+QPI_PROTSIZ dw	 0000h,0048h,0049h,005Bh ; 1400h:  X sizes (paras)
 QPI_CRTALL dw	 3B4h,3B5h,3B8h,3D4h,3D5h,3DAh ; Ports of 0Dh, any mode
 QPI_CRTDAC dw	 3C6h,3C8h,3C9h,0 ; ...  both modes
 QPI_CRTP1 dw	 3B4h,3B5h,3B8h,3C6h,3C8h,3C9h,0 ; ...  mode 1 (mono)
@@ -705,6 +707,71 @@ searches; it's always mapped at PPDTPDIR shl 10.
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 QPI_PT2LIN endp 		; End QPI_PT2LIN procedure
+
+
+	 FPPROC  QPI_I2FD2 -- QEMM's INT 2Fh Multiplex Functions
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+From the INT 2Fh handler in VM (QMAX_XMS) for AH=D2h, QEMM's multiplex
+ID.  As QEMM 97:
+AX=D200h, BX='QD', CX='ME', DX='M0' (installation check):
+	 AL = FFh, BX='ME', CX='MD', DX='VR'
+AX=D201h, BX='QE', CX='MM', DX='42' (get the QPI entry point):
+	 BX = 'OK' (the caller returns the entry point in ES:DI)
+
+On exit:
+
+CF	 =	 1 if not one of these (registers unchanged)
+	 =	 0 and ZF = 1 for D200h (registers set)
+	 =	 0 and ZF = 0 for D201h (BX set)
+
+|
+
+	 cmp	 ax,0D200h	; Izit the installation check?
+	 jne	 short QPI_I2FD2_01 ; Jump if not
+
+	 cmp	 bx,5144h	; Izit 'QD'?
+	 jne	 short QPI_I2FD2_NO ; Jump if not
+	 cmp	 cx,4D45h	; Izit 'ME'?
+	 jne	 short QPI_I2FD2_NO ; Jump if not
+	 cmp	 dx,4D30h	; Izit 'M0'?
+	 jne	 short QPI_I2FD2_NO ; Jump if not
+
+	 mov	 al,0FFh	; Installed
+	 mov	 bx,4D45h	; 'ME'
+	 mov	 cx,4D44h	; 'MD'
+	 mov	 dx,5652h	; 'VR'
+
+	 cmp	 ax,ax		; ZF=1, CF=0
+
+	 ret			; Return to caller
+
+QPI_I2FD2_01:
+	 cmp	 ax,0D201h	; Izit get the QPI entry point?
+	 jne	 short QPI_I2FD2_NO ; Jump if not
+
+	 cmp	 bx,5145h	; Izit 'QE'?
+	 jne	 short QPI_I2FD2_NO ; Jump if not
+	 cmp	 cx,4D4Dh	; Izit 'MM'?
+	 jne	 short QPI_I2FD2_NO ; Jump if not
+	 cmp	 dx,3432h	; Izit '42'?
+	 jne	 short QPI_I2FD2_NO ; Jump if not
+
+	 mov	 bx,4F4Bh	; 'OK'
+
+	 test	 ax,ax		; ZF=0 (AX<>0), CF=0
+
+	 ret			; Return to caller
+
+QPI_I2FD2_NO:
+	 stc			; Not ours
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_I2FD2 endp			; End QPI_I2FD2 procedure
 
 
 	 NPPROC  QPI_SEG2LIN -- Convert Seg:Off To Linear Address
@@ -1854,6 +1921,9 @@ Caller's CF =	 0 if successful
 
 	 cmp	 ah,13h 	; Izit VIDRAM/DESQview video?
 	 je	 near ptr QPI_API_VID ; Jump if so
+
+	 cmp	 ah,14h 	; Izit DESQview protection levels?
+	 je	 near ptr QPI_API_PROT ; Jump if so
 
 	 cmp	 ax,0FF00h	; Izit our own context check (QMAX_OVR)?
 	 je	 near ptr QPI_API_CTXCHK ; Jump if so
@@ -3404,6 +3474,104 @@ QPI_API_IRQMSK:
 QPI_API_V11:
 	 mov	 al,[ebp].INTXX_EBX.ELO.LO ; Get BL
 	 mov	 es:QPI_V11,al	; Keep it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 14:  DESQview protection levels (as QEMM 97, but not enforced:  the
+;      calls are accepted and the data structures filled in, no page
+;      is write protected and no violation is ever raised)
+; 1400:  Initialize:  ES:DI = configuration; the required sizes of the
+;	 process segment (0, 48h, 49h, 5Bh paragraphs for level 0-3,
+;	 BL+1 of them, at most 4) go to the buffer at DWORD +0Ah;
+;	 AX = 4705h
+; 1402:  Set the level BL of the current EMS mapping register set:
+;	 ES:DI ==> {X, start segment, size in paras, 3 words, flag};
+;	 level 0 is a NOP (QEMM 97); otherwise X:0136h = X, and for a set
+;	 other than 0 the head
+;	 node (X:0000h-0004h, X:0006h = 0), level (X:000Bh) and the
+;	 process memory (X:0124h/0128h, linear)
+; 1401h, 1403h-140Bh:  CF=0, nothing done
+
+QPI_API_PROT:
+	 cmp	 al,0Bh 	; Izit a valid subfunction?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+
+	 cmp	 al,00h 	; Izit initialize?
+	 je	 near ptr QPI_API_PROT0 ; Jump if so
+
+	 cmp	 al,02h 	; Izit set level?
+	 jne	 near ptr QPI_API_OK ; Jump if not (accepted, nothing done)
+
+	 QPI_ESDI		; EDI = linear address of caller's ES:DI
+
+	 push	 fs		; Save for a moment
+
+	 mov	 fs,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  fs:AGROUP	; Tell the assembler about it
+
+	 mov	 cl,[ebp].INTXX_EBX.ELO.LO ; Get the level
+	 or	 cl,cl		; Izit 0?
+	 jz	 short QPI_API_PROT2_DONE ; Jump if so (NOP, as QEMM 97)
+
+	 movzx	 ebx,AGROUP:[edi+00h].ELO ; Get X (the process segment)
+	 shl	 ebx,4-0	; Linear address of X:0
+	 mov	 ax,AGROUP:[edi+00h].ELO ; Get X again
+	 mov	 AGROUP:[ebx+136h],ax ; X:0136h = X
+
+	 cmp	 MRS_CUR,0	; Izit mapping register set 0?
+	 je	 short QPI_API_PROT2_DONE ; Jump if so (can't be protected)
+
+	 mov	 eax,AGROUP:[edi+06h] ; Head node:  stack segment, low SP
+	 mov	 AGROUP:[ebx+00h],eax ; ...
+	 mov	 ax,AGROUP:[edi+0Ah] ; ...	   high SP
+	 mov	 AGROUP:[ebx+04h],ax ; ...
+	 mov	 AGROUP:[ebx+06h].EDD,0 ; No next node
+	 mov	 AGROUP:[ebx+0Bh],cl ; The level
+
+	 movzx	 eax,AGROUP:[edi+02h].ELO ; Process memory segment
+	 shl	 eax,4-0	; Linear start
+	 mov	 AGROUP:[ebx+124h],eax ; ...
+	 movzx	 edx,AGROUP:[edi+04h].ELO ; Size in paras
+	 shl	 edx,4-0	; In bytes
+	 add	 eax,edx	; Linear end
+	 mov	 AGROUP:[ebx+128h],eax ; ...
+QPI_API_PROT2_DONE:
+	 pop	 fs		; Restore
+	 assume  fs:nothing	; Tell the assembler about it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_PROT0:
+	 QPI_ESDI		; EDI = linear address of caller's ES:DI
+
+	 push	 fs		; Save for a moment
+
+	 mov	 fs,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  fs:AGROUP	; Tell the assembler about it
+
+	 mov	 ebx,AGROUP:[edi+0Ah] ; Get the size buffer (Seg:Off)
+	 call	 QPI_SEG2LIN	; EBX = its linear address
+
+	 movzx	 ecx,[ebp].INTXX_EBX.ELO.LO ; Get BL
+	 cmp	 ecx,3		; Izit at most 3?
+	 jbe	 short @F	; Jump if so
+
+	 mov	 ecx,3		; Use the maximum
+@@:
+	 inc	 ecx		; # words
+	 mov	 esi,offset JGROUP:QPI_PROTSIZ ; The sizes
+@@:
+	 mov	 ax,es:[esi]	; Get the next size
+	 mov	 AGROUP:[ebx],ax ; Save it
+	 add	 ebx,2		; Next word
+	 add	 esi,2		; ...
+	 loop	 @B		; Jump if more
+
+	 pop	 fs		; Restore
+	 assume  fs:nothing	; Tell the assembler about it
+
+	 mov	 [ebp].INTXX_EAX.ELO,4705h ; As QEMM 97
 
 	 jmp	 QPI_API_OK	; Join common exit code
 

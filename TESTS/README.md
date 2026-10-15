@@ -25,6 +25,7 @@ check (OK / FAIL) and ends with errorlevel 0 when all checks passed.
 | QPI  | QPITIMER | timer channel 0 virtualization 15h |
 | QPI  | QPICRT  | CRTC/DAC trapping 0Dh with cursor callbacks 0Eh, 3DAh retrace pattern, 1A02h/1A03h past it |
 | QPI  | QPIVID  | VIDRAM 13h for text background windows: 1301h dirty pages, 130Ah DAC buffer, 1308h all CRT ports, 1309h Hercules callback |
+| QPI  | QPIPROT | DESQview protection levels 14h (initialization, level 0 as DESQview uses it) |
 
 `MAX.LST` lists the tests with what they need (`needs=xms,ems,dpmi,...`)
 and their timeout; `INC/TESTLIB.INC` has the output and counting macros.

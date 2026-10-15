@@ -295,6 +295,7 @@ if @OEM_HIFILL
 	 extrn	 MAC_ALLOC:far
 	 extrn	 MAC_REALLOC:far
 	 extrn	 MAC_FREE:far
+	 extrn	 QPI_I2FD2:far
 endif				; IF @OEM_HIFILL
 
 JCODE	 ends			; End JCODE segment
@@ -690,26 +691,19 @@ INT2F_QPI:
 
 	 iretd			; Return to caller
 
-; QEMM 7.5's documented QPI detection:  AX=D201h, BX='QE', CX='MM', DX='42'
-; returns BX='OK' and ES:DI ==> the same entry point
+; QEMM's detection (QPI_I2FD2 in QMAX_QPI):  AX=D200h installation
+; check, AX=D201h, BX='QE', CX='MM', DX='42' returns BX='OK' and ES:DI ==>
+; the same entry point
 
 INT2F_XQPI:
-	 cmp	 ax,0D201h	; Izit QEMM detection?
+	 cmp	 ah,0D2h	; Izit QEMM's multiplex ID?
 	 jne	 short INT2F_XQPI2 ; Jump if not
 
-	 cmp	 bx,5145h	; Izit 'QE'?
-	 jne	 short INT2F_XQPI2 ; Jump if not
+	 FIXICALL JGROUP:QPI_I2FD2,DTE_CSJG ; CF=1 if not ours, ZF=0 if D201h
+	 jc	 short INT2F_XQPI2 ; Jump if not ours
+	 jnz	 short INT2F_QPI ; Jump if D201h (return the entry point)
 
-	 cmp	 cx,4D4Dh	; Izit 'MM'?
-	 jne	 short INT2F_XQPI2 ; Jump if not
-
-	 cmp	 dx,3432h	; Izit '42'?
-	 jne	 short INT2F_XQPI2 ; Jump if not
-
-	 mov	 bx,4F4Bh	; Return 'OK'
-
-	 jmp	 short INT2F_QPI ; Join common code
-
+	 iretd			; Return to caller (D200h)
 INT2F_XQPI2:
 endif				; IF @OEM_VCPI and @VCP_OLD
 	 cmp	 ax,@IOTRAP_API ; Izit I/O trapping?

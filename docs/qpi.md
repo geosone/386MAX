@@ -10,7 +10,14 @@ Ralf Brown's Interrupt List, QEMM 97 wins.  Every group has a test in
 ## Entry point
 
 * `INT 67h`, `AH=3Fh`, `CX=5145h` ('QE'), `DX=4D4Dh` ('MM'): `ES:DI`
-* `INT 2Fh`, `AX=D201h`, `BX=5145h` (QEMM's multiplex way)
+* `INT 2Fh`, `AX=D201h`, `BX=5145h`, `CX=4D4Dh`, `DX=3432h` (QEMM's multiplex way, returns `BX='OK'`)
+
+`INT 2Fh AX=D200h`, `BX=5144h`, `CX=4D45h`, `DX=4D30h` (QEMM's installation
+check) is answered like QEMM 97 does (`AL=FFh`, `BX='ME'`, `CX='MD'`,
+`DX='VR'`), so programs that require QEMM find it.  DESQview 2.80 then runs
+in its QEMM mode on 386MAX and makes the same QPI calls as on QEMM 97
+(version, IRQ calldowns, cursor callbacks, VIDRAM settings, timer, VCPI
+quota, protection level 0).
 * `INT 2Fh`, `AX=1684h`, `BX=4354h` (Jemm's QPIEMU way)
 
 Far call to it with the function in `AX`.  `CF=0` success, `CF=1` error or
@@ -34,6 +41,7 @@ Open MaxView can use them the same way.
 | Keep a background task off the CRTC/DAC | `0Dh` mode 1/2, `0Eh` cursor GET/SET callbacks | Cursor position writes go to the callbacks, other CRTC writes are dropped (colour: shape 0Ah/0Bh passes), DAC writes dropped (recorded with `130Ah`), 3DAh reads give a synthetic retrace pattern. |
 | Find what a background task drew | `1301h` | Dirty video pages, round robin. |
 | Trap all video ports | `1308h` | Writes from 3B4h on dropped, GC 06h remembered. |
+| Protection levels | `1400h`-`140Bh` | Accepted (`1400h` returns `AX=4705h` and the process segment sizes, `1402h` fills in the process segment), but **not enforced**: no page is write protected, no violation is raised. Level 0 (what DESQview uses by default) behaves exactly as on QEMM. |
 
 A task switch is then: save the task's registers (the scheduler runs in V86,
 e.g. from the IRQ0 calldown), `08h` to the next task's page table, restore
@@ -54,8 +62,7 @@ its registers.
   block) writes the free page count only when a block becomes current.
 * Not implemented (`CF=1`): `02h`, `1B00h`-`1B04h` (386MAX has its own
   Windows support), the graphics virtualization of `13h` (`1300h`,
-  `1302h`-`1305h`, `1307h`, `130Bh`, `130Dh`-`1310h`), `14h` (DESQview
-  protection levels), `19h`, `1Dh`, `21h` (no Stealth), `24h`, `25h`
+  `1302h`-`1305h`, `1307h`, `130Bh`, `130Dh`-`1310h`), `19h`, `1Dh`, `21h` (no Stealth), `24h`, `25h`
   (debugger interface), `26h` (VxD loader), `27h`, `29h`, `2Bh`, `2Ch`.
 * QPI is a V86 interface; it is not available inside Windows DOS boxes.
 
@@ -64,5 +71,5 @@ its registers.
 `TESTS/QPI`: `QPITEST` (detection, information functions), `QPITRAP`
 (ports), `QPIMISC` (1B07h, 1E03h/1E04h, 22h, 23h, 28h, 2Ah), `QPICTX`
 (contexts, 0Ah, 0Bh, 0Fh), `QPIIRQ` (1Ch), `QPITIMER` (15h), `QPICRT`
-(0Dh/0Eh), `QPIVID` (13h).  Run them with `linux/test/suite.py`; the
+(0Dh/0Eh), `QPIVID` (13h), `QPIPROT` (14h).  Run them with `linux/test/suite.py`; the
 `qemm` profile runs them on QEMM 97 for comparison (local image only).
