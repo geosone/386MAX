@@ -11,6 +11,7 @@ max/QPIMISC              PASS
 max/QPITEST              PASS
 max/QPITIMER             PASS
 max/QPITRAP              PASS
+max/QPIVID               PASS
 max/STKFLT               FAIL
 max/V86FUNC              PASS
 max/VCPIFUNC             PASS

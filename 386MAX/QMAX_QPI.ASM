@@ -177,6 +177,14 @@ QPI_RTD  db	 0Fh		; ...	      steady reads left
 QPI_RTN  db	 0FFh		; ...	      alternating reads left
 QPI_CURGET dd	 0		; 0Eh:  GET cursor address callback
 QPI_CURSET dd	 0		; ...  SET ...
+QPI_VGA8 db	 0		; 1308h:  1 = all of 3B0h-3DFh trapped
+QPI_GCIDX db	 0		; ...  last GC index (3CEh)
+QPI_GC06 db	 0		; ...  last value of GC register 06h
+QPI_V11  db	 0		; 1311h:  BL
+QPI_HERC dd	 0		; 1309h:  Hercules mode callback
+QPI_DACBUF dd	 0		; 130Ah:  DAC buffer (linear, 0 = none)
+QPI_CRITW dd	 0		; 1306h:  DESQview critical section WORD
+QPI_IRQMSK dw	 0		; 130Ch:  IRQ mask
 QPI_CRTALL dw	 3B4h,3B5h,3B8h,3D4h,3D5h,3DAh ; Ports of 0Dh, any mode
 QPI_CRTDAC dw	 3C6h,3C8h,3C9h,0 ; ...  both modes
 QPI_CRTP1 dw	 3B4h,3B5h,3B8h,3C6h,3C8h,3C9h,0 ; ...  mode 1 (mono)
@@ -194,7 +202,8 @@ VP_STR	 ends
 
 @VP_TMR  equ	 01h		; Owner:  15h timer virtualization
 @VP_CRT  equ	 02h		; ...	  0Dh CRTC/DAC trapping
-@VP_MAX  equ	 12		; # entries
+@VP_ALL  equ	 04h		; ...	  13h 1308h:  all of 3B0h-3DFh
+@VP_MAX  equ	 64		; # entries
 
 QPI_VPTAB VP_STR @VP_MAX dup (<0,0,0,0,0>) ; Hooked ports
 
@@ -945,10 +954,21 @@ All other registers preserved (EBX = 2 * port for the handler).
 
 	 call	 QPI_TMRREC	; Record it
 @@:
+	 test	 QPI_VPTAB[esi].VP_OWN,@VP_ALL ; Izit all CRT ports (1308h)?
+	 jz	 short @F	; Jump if not
+
+	 cmp	 dx,3B4h	; Izit one of 3B0h-3B3h?
+	 jb	 short QPI_VPOUT_EXIT ; Jump if so (passed on)
+
+	 call	 QPI_GOUT	; CF=1 if dropped
+
+	 jmp	 short QPI_VPOUT_GOUT ; Join common code
+
+@@:
 	 test	 QPI_VPTAB[esi].VP_OWN,@VP_CRT ; Izit CRTC/DAC trapping?
 	 jz	 short QPI_VPOUT_EXIT ; Jump if not
-
 	 call	 QPI_CRTOUT	; CF=1 if suppressed
+QPI_VPOUT_GOUT:
 	 jnc	 short QPI_VPOUT_EXIT ; Jump if not
 
 	 mov	 di,offset PGROUP:QPI_PORTDONE ; Suppressed
@@ -1007,7 +1027,7 @@ All other registers preserved.
 	 mov	 di,QPI_VPTAB[esi].VP_IN ; The previous handler
 @@:
 
-	 test	 QPI_VPTAB[esi].VP_OWN,@VP_CRT ; Izit CRTC/DAC trapping?
+	 test	 QPI_VPTAB[esi].VP_OWN,@VP_CRT or @VP_ALL ; Izit 0Dh/1308h?
 	 jz	 near ptr QPI_VPIN_EXIT ; Jump if not
 
 	 mov	 ecx,IOTRAP_TYP ; Get the I/O type
@@ -1018,6 +1038,18 @@ All other registers preserved.
 	 cmp	 dx,3DAh	; Izit input status 1?
 	 je	 short QPI_VPIN_RT ; Jump if so
 
+	 cmp	 dx,3CFh	; Izit the GC data?
+	 jne	 short @F	; Jump if not
+
+	 cmp	 QPI_GCIDX,06h	; Izit GC register 06h (1308h)?
+	 jne	 near ptr QPI_VPIN_EXIT ; Jump if not (real IN)
+
+	 mov	 al,QPI_GC06	; Its last value
+	 mov	 [esp+@VPINEAX].LO,al ; Return it
+
+	 jmp	 short QPI_VPIN_NOCB ; Join common code
+
+@@:
 	 mov	 cl,QPI_IDXC	; Colour CRTC index
 	 mov	 ch,02h 	; Its mode
 	 cmp	 dx,3D5h	; Izit the colour CRTC data?
@@ -1175,10 +1207,9 @@ As QEMM 97 (see QPI_API_CRT):
 		 if the mode is that of the CRTC);  colour:  0Ah/0Bh
 		 (cursor shape) passed on, all others suppressed;  mono:
 		 the others passed on
-3B8h		 passed on (the Hercules callback of 1309h is not done)
+3B8h		 passed on, then (mode 1) the Hercules callback of 1309h
 3C6h, 3C8h, 3C9h, 3DAh
-		 suppressed (DESQview's DAC buffer of 130Ah is not done:
-		 those writes are lost, as with QEMM without the buffer)
+		 dropped (QPI_GOUT:  DAC writes go to the 130Ah buffer)
 
 On entry:
 
@@ -1212,7 +1243,17 @@ All registers preserved.
 	 je	 short QPI_CRTOUT_DATA ; Jump if so
 
 	 cmp	 dx,3B8h	; Izit the Hercules mode control?
-	 je	 short QPI_CRTOUT_PASS ; Jump if so
+	 jne	 short @F	; Jump if not
+
+	 call	 QPI_HERCOUT	; CF=1 if done with the callback
+
+	 jmp	 short QPI_CRTOUT_EXIT ; Join common exit code
+
+@@:
+	 call	 QPI_GOUT	; 3C6h/3C8h/3C9h/3DAh:  CF=1 if dropped
+
+	 jmp	 short QPI_CRTOUT_EXIT ; Join common exit code
+
 QPI_CRTOUT_SUPP:
 	 stc			; Suppressed
 
@@ -1286,6 +1327,218 @@ QPI_CRTOUT_EXIT:
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 QPI_CRTOUT endp 		; End QPI_CRTOUT procedure
+
+
+	 NPPROC  QPI_GOUT -- OUT To A Video Port Dropped By QPI
+	 assume  ds:nothing,es:JGROUP,fs:nothing,gs:nothing,ss:PGROUP
+COMMENT|
+
+As QEMM 97's "generic VGA" handler (13h, 0Dh DAC ports):
+3C8h		 DAC write index into the 130Ah buffer (a word OUT also
+		 writes AH as 3C9h), dropped
+3C9h		 DAC component into the buffer, dropped
+3C4h		 passed on only for a byte AFh, else dropped
+3CEh/3CFh	 dropped; the index and the value of GC register 06h are
+		 remembered (IN 3CFh returns it, QPI_VPIN)
+all others	 dropped
+
+On entry:
+
+DX	 =	 I/O port #
+AL/AX	 =	 value written
+IOTRAP_TYP =	 I/O width
+
+On exit:
+
+CF	 =	 1 if dropped
+	 =	 0 if to be done
+All registers preserved.
+
+|
+
+	 REGSAVE <eax,ecx>	; Save registers
+
+	 mov	 ecx,IOTRAP_TYP ; Get the I/O type
+	 and	 ecx,@IOTRAP_WID ; Isolate the width
+
+	 cmp	 dx,3C8h	; Izit the DAC write index?
+	 jne	 short QPI_GOUT_3C9 ; Jump if not
+
+	 mov	 ch,0		; Index
+	 call	 QPI_DACREC	; Record it
+
+	 cmp	 cl,@IOTRAP_DB	; Izit byte I/O?
+	 je	 short QPI_GOUT_DROP ; Jump if so
+
+	 mov	 al,ah		; The data
+	 mov	 ch,1		; Component
+	 call	 QPI_DACREC	; Record it
+
+	 jmp	 short QPI_GOUT_DROP ; Join common code
+
+QPI_GOUT_3C9:
+	 cmp	 dx,3C9h	; Izit the DAC data?
+	 jne	 short QPI_GOUT_3C4 ; Jump if not
+
+	 mov	 ch,1		; Component
+	 call	 QPI_DACREC	; Record it
+
+	 jmp	 short QPI_GOUT_DROP ; Join common code
+
+QPI_GOUT_3C4:
+	 cmp	 dx,3C4h	; Izit the sequencer index?
+	 jne	 short QPI_GOUT_3CE ; Jump if not
+
+	 cmp	 cl,@IOTRAP_DB	; Izit byte I/O?
+	 jne	 short QPI_GOUT_DROP ; Jump if not
+
+	 cmp	 al,0AFh	; Izit the one QEMM passes on?
+	 jne	 short QPI_GOUT_DROP ; Jump if not
+
+	 clc			; To be done
+
+	 jmp	 short QPI_GOUT_EXIT ; Join common exit code
+
+QPI_GOUT_3CE:
+	 cmp	 dx,3CEh	; Izit the GC index?
+	 jne	 short QPI_GOUT_3CF ; Jump if not
+
+	 mov	 QPI_GCIDX,al	; Remember the index
+
+	 cmp	 cl,@IOTRAP_DB	; Izit byte I/O?
+	 je	 short QPI_GOUT_DROP ; Jump if so
+
+	 cmp	 al,06h 	; Izit GC register 06h?
+	 jne	 short QPI_GOUT_DROP ; Jump if not
+
+	 mov	 QPI_GC06,ah	; Remember its value
+
+	 jmp	 short QPI_GOUT_DROP ; Join common code
+
+QPI_GOUT_3CF:
+	 cmp	 dx,3CFh	; Izit the GC data?
+	 jne	 short QPI_GOUT_DROP ; Jump if not (others dropped)
+
+	 cmp	 QPI_GCIDX,06h	; Izit GC register 06h?
+	 jne	 short QPI_GOUT_DROP ; Jump if not
+
+	 mov	 QPI_GC06,al	; Remember its value
+QPI_GOUT_DROP:
+	 stc			; Dropped
+QPI_GOUT_EXIT:
+	 REGREST <ecx,eax>	; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_GOUT endp			; End QPI_GOUT procedure
+
+
+	 NPPROC  QPI_DACREC -- Record A DAC Write In The 130Ah Buffer
+	 assume  ds:nothing,es:JGROUP,fs:nothing,gs:nothing,ss:PGROUP
+COMMENT|
+
+On entry:
+
+AL	 =	 value
+CH	 =	 0 for the write index (3C8h), 1 for a component (3C9h)
+
+|
+
+	 REGSAVE <eax,ebx,ecx,edi,fs> ; Save registers
+
+	 mov	 edi,QPI_DACBUF ; Get the buffer's linear address
+	 or	 edi,edi	; Izit set?
+	 jz	 short QPI_DACREC_EXIT ; Jump if not (the write is lost)
+
+	 mov	 fs,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  fs:AGROUP	; Tell the assembler about it
+
+	 or	 ch,ch		; Izit the index?
+	 jnz	 short @F	; Jump if not
+
+	 mov	 AGROUP:[edi+0],al ; The write index
+	 mov	 AGROUP:[edi+1].LO,0 ; Component 0 next
+
+	 jmp	 short QPI_DACREC_EXIT ; Join common exit code
+
+@@:
+	 movzx	 ebx,AGROUP:[edi+0].LO ; Get the index
+	 lea	 ebx,[ebx+ebx*2] ; Times three
+	 movzx	 ecx,AGROUP:[edi+1].LO ; Get the component
+	 add	 ebx,ecx	; Plus it
+	 mov	 AGROUP:[edi+ebx+2],al ; Save the value
+
+	 inc	 cl		; Next component
+	 cmp	 cl,3		; Izit the end of the entry?
+	 jb	 short @F	; Jump if not
+
+	 xor	 cl,cl		; Component 0
+	 inc	 AGROUP:[edi+0].LO ; Next entry (wraps at 256)
+@@:
+	 mov	 AGROUP:[edi+1],cl ; Save the component
+QPI_DACREC_EXIT:
+	 REGREST <fs,edi,ecx,ebx,eax> ; Restore
+	 assume  fs:nothing	; Tell the assembler about it
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_DACREC endp 		; End QPI_DACREC procedure
+
+
+	 NPPROC  QPI_HERCOUT -- OUT To 3B8h With The Hercules Callback
+	 assume  ds:nothing,es:JGROUP,fs:nothing,gs:nothing,ss:PGROUP
+COMMENT|
+
+As QEMM 97 in 0Dh mode 1:  the OUT goes to the hardware first, then the
+1309h callback is called with AL = the value written.
+
+On entry:
+
+DX	 =	 3B8h
+AL	 =	 value written
+SS:EBP	 ==>	 Caller's INTXX_STR
+
+On exit:
+
+CF	 =	 1 if done here
+	 =	 0 if to be done
+All registers preserved.
+
+|
+
+	 cmp	 QPI_CRTMODE,01h ; Izit mono mode?
+	 jne	 short @F	; Jump if not (just do it)
+
+	 cmp	 QPI_HERC.VSEG,0 ; Izit the callback set?
+	 je	 short @F	; Jump if not (just do it)
+
+	 REGSAVE <eax,ebx,edi>	; Save registers
+
+	 out	 dx,al		; Do the OUT first
+
+	 movzx	 eax,al 	; The value in AL
+	 mov	 ebx,[ebp].INTXX_EBX ; Pass caller's EBX
+	 mov	 edi,QPI_HERC	; The callback
+	 call	 QPI_CALLVM	; Call it
+
+	 REGREST <edi,ebx,eax>	; Restore
+
+	 stc			; Done
+
+	 ret			; Return to caller
+
+@@:
+	 clc			; To be done
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_HERCOUT endp		; End QPI_HERCOUT procedure
 
 
 	 NPPROC  QPI_CURSET1 -- Set A Cursor Address Byte Via The Callbacks
@@ -1598,6 +1851,9 @@ Caller's CF =	 0 if successful
 
 	 cmp	 ah,0Eh 	; Izit cursor callbacks?
 	 je	 near ptr QPI_API_CURCB ; Jump if so
+
+	 cmp	 ah,13h 	; Izit VIDRAM/DESQview video?
+	 je	 near ptr QPI_API_VID ; Jump if so
 
 	 cmp	 ax,0FF00h	; Izit our own context check (QMAX_OVR)?
 	 je	 near ptr QPI_API_CTXCHK ; Jump if so
@@ -2984,6 +3240,170 @@ QPI_API_CURCB:
 	 shl	 eax,16 	; Shift to segment position
 	 mov	 ax,[ebp].INTXX_EDX.ELO ; Get caller's DX
 	 mov	 es:QPI_CURSET,eax ; Save as SET
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 13:  VIDRAM / DESQview video (as QEMM 97, the parts DESQview's text mode
+;      background windows need; the graphics virtualization with its EMS
+;      buffer and page fault swapping (1300h, 1302h-1305h, 1307h, 130Bh,
+;      130Dh-1310h) is not done:  CF=1)
+; 1301:  Find a dirty page:  DX:DI = cursor, CX = range in paragraphs (from
+;	 DX:0).  From the page after the cursor's, round robin in the
+;	 range, the dirty bit of each page looked at is cleared; the first
+;	 dirty one:  CX = 1000h, DI = low word of its linear address; none:
+;	 CX = 0.  (QEMM also marks it with PTE bits 9+10 for its graphics
+;	 swapping; 386MAX uses those bits itself, so we don't.)
+; 1306:  DESQview critical section WORD at ES:BX (kept)
+; 1308:  BL <> 0:  trap all of 3B0h-3DFh (QPI_GOUT for 3B4h on), 0:  off
+; 1309:  Hercules mode callback ES:BX (OUT 3B8h in 0Dh mode 1, AL = value)
+; 130A:  DAC buffer CX:DX (byte 0 = index, 1 = component, then 256 RGB),
+;	 filled by the trapped 3C8h/3C9h writes
+; 130C:  IRQ mask BX for critical sections (kept)
+; 1311:  BL kept
+; 1312:  CF=1 (as QEMM 97)
+
+QPI_API_VID:
+	 cmp	 al,01h 	; Izit find dirty page?
+	 je	 short QPI_API_DIRTY ; Jump if so
+
+	 cmp	 al,06h 	; Izit critical section WORD?
+	 je	 near ptr QPI_API_CRITW ; Jump if so
+
+	 cmp	 al,08h 	; Izit CRT port trapping?
+	 je	 near ptr QPI_API_VGA8 ; Jump if so
+
+	 cmp	 al,09h 	; Izit Hercules callback?
+	 je	 near ptr QPI_API_HERC ; Jump if so
+
+	 cmp	 al,0Ah 	; Izit DAC buffer?
+	 je	 near ptr QPI_API_DACBUF ; Jump if so
+
+	 cmp	 al,0Ch 	; Izit IRQ mask?
+	 je	 near ptr QPI_API_IRQMSK ; Jump if so
+
+	 cmp	 al,11h 	; Izit unmask during copies?
+	 je	 near ptr QPI_API_V11 ; Jump if so
+
+	 jmp	 QPI_API_EXIT	; Others:  CF=1
+
+QPI_API_DIRTY:
+	 movzx	 eax,[ebp].INTXX_EDX.ELO ; Get the range's segment
+	 shl	 eax,4-0	; Convert from paras to bytes
+	 mov	 esi,eax	; Copy
+	 shr	 esi,12 	; First page of the range
+
+	 movzx	 ecx,[ebp].INTXX_ECX.ELO ; Get the range in paras
+	 shr	 ecx,12-4	; # pages
+	 jecxz	 QPI_API_DIRTY_NONE ; Jump if none
+
+	 movzx	 edx,[ebp].INTXX_EDI.ELO ; Get the cursor's offset
+	 add	 edx,eax	; Its linear address
+	 shr	 edx,12 	; Its page
+	 sub	 edx,esi	; Index in the range
+
+	 cmp	 edx,ecx	; Izit in the range?
+	 jb	 short @F	; Jump if so
+
+	 lea	 edx,[ecx-1]	; Start with the first page then
+@@:
+	 FIXICALL PGROUP:FWRAP_DISABLE,DTE_CS2 ; Disable the 1MB wrap (pages 100-10F)
+
+	 mov	 ebx,PRGPDT	; Get offset in PGROUP of PDT
+	 mov	 edi,ecx	; # pages to look at
+QPI_API_DIRTY_NXT:
+	 inc	 edx		; Next page in the range
+	 cmp	 edx,ecx	; Izit the end of the range?
+	 jb	 short @F	; Jump if not
+
+	 xor	 edx,edx	; Round robin
+@@:
+	 lea	 eax,[esi+edx]	; The page
+	 cmp	 eax,3FFh	; Izit beyond the first 4MB?
+	 ja	 short QPI_API_DIRTY_NONE ; Jump if so
+
+	 btr	 PGROUP:[ebx+eax*4].EDD,$PTE_D ; Clear its dirty bit
+	 jc	 short QPI_API_DIRTY_FOUND ; Jump if it was dirty
+
+	 dec	 edi		; Count it out
+	 jnz	 short QPI_API_DIRTY_NXT ; Jump if more
+QPI_API_DIRTY_NONE:
+	 mov	 [ebp].INTXX_ECX.ELO,0 ; None
+
+	 jmp	 short QPI_API_DIRTY_EXIT ; Join common exit code
+
+QPI_API_DIRTY_FOUND:
+	 shl	 eax,12 	; Its linear address
+	 mov	 [ebp].INTXX_EDI.ELO,ax ; Return the low word in DI
+	 mov	 [ebp].INTXX_ECX.ELO,1000h ; Found
+QPI_API_DIRTY_EXIT:
+	 mov	 eax,cr3	; Flush the TLB (the dirty bits)
+	 mov	 cr3,eax	; ...
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_CRITW:
+	 mov	 ax,[ebp].INTXX_ES ; Get caller's ES
+	 shl	 eax,16 	; Shift to segment position
+	 mov	 ax,[ebp].INTXX_EBX.ELO ; Get caller's BX
+	 mov	 es:QPI_CRITW,eax ; Keep it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_VGA8:
+	 mov	 cl,[ebp].INTXX_EBX.ELO.LO ; Get BL
+	 or	 cl,cl		; Izit on?
+	 setnz	 cl		; 1 if so
+	 cmp	 cl,es:QPI_VGA8 ; Izit the same?
+	 je	 near ptr QPI_API_OK ; Jump if so
+
+	 mov	 es:QPI_VGA8,cl ; Save the new state
+
+	 mov	 al,@VP_ALL	; Owner:  all CRT ports
+	 mov	 dx,3B0h	; First port
+@@:
+	 or	 cl,cl		; Izit on?
+	 jz	 short QPI_API_VGA8_OFF ; Jump if not
+
+	 call	 QPI_VPHOOK	; Hook it
+
+	 jmp	 short QPI_API_VGA8_NXT ; Join common code
+
+QPI_API_VGA8_OFF:
+	 call	 QPI_VPUNHOOK	; Unhook it
+QPI_API_VGA8_NXT:
+	 inc	 dx		; Next port
+	 cmp	 dx,3DFh	; Izit the last one?
+	 jbe	 short @B	; Jump if not
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_HERC:
+	 mov	 ax,[ebp].INTXX_ES ; Get caller's ES
+	 shl	 eax,16 	; Shift to segment position
+	 mov	 ax,[ebp].INTXX_EBX.ELO ; Get caller's BX
+	 mov	 es:QPI_HERC,eax ; Keep it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_DACBUF:
+	 movzx	 eax,[ebp].INTXX_ECX.ELO ; Get the segment (CX)
+	 shl	 eax,4-0	; Convert from paras to bytes
+	 movzx	 edx,[ebp].INTXX_EDX.ELO ; Get the offset (DX)
+	 add	 eax,edx	; Linear address (0 = none)
+	 mov	 es:QPI_DACBUF,eax ; Keep it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_IRQMSK:
+	 mov	 ax,[ebp].INTXX_EBX.ELO ; Get BX
+	 mov	 es:QPI_IRQMSK,ax ; Keep it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_V11:
+	 mov	 al,[ebp].INTXX_EBX.ELO.LO ; Get BL
+	 mov	 es:QPI_V11,al	; Keep it
 
 	 jmp	 QPI_API_OK	; Join common exit code
 
