@@ -247,6 +247,10 @@ JDATA	 segment use16 dword public 'jcode' ; Start JDATA segment
 	 assume  ds:JGROUP
 
 	 extrn	 NOSCAN_MAP:byte
+	 extrn	 QPI_DIR:byte
+	 extrn	 QPI_DIRLEN:word
+
+@QPI_DIRMAX equ  65		; Maximum length of QPI_DIR (as QEMM)
 
 JDATA	 ends			; End JDATA segment
 
@@ -2066,6 +2070,34 @@ S16  rep movs	 <FLEXFILE_DPFE[di],ds:[si].LO> ; Copy it
 ; FS:DI ==> end+1 of path.  Save length.
 	 sub	 di,offset XGROUP:FLEXFILE_DPFE ; Get length of path
 	 mov	 PATHSTEM_LEN,di ; Save
+
+; Open 386MAX:  keep a resident copy of the directory for QPI 1E03h
+
+	 REGSAVE <ds,es>	; Save for a moment
+
+	 mov	 cx,di		; Copy the length
+
+	 cmp	 cx,@QPI_DIRMAX ; Izit too long?
+	 jbe	 short @F	; Jump if not
+
+	 mov	 cx,@QPI_DIRMAX ; Use the maximum
+@@:
+	 push	 es		; FLEXFILE_DPFE's segment (ES:DI above)
+	 pop	 ds		; Address it
+	 assume  ds:nothing	; Tell the assembler about it
+
+	 mov	 ax,seg JGROUP	; Get segment of QPI_DIR
+	 mov	 es,ax		; Address it
+	 assume  es:JGROUP	; Tell the assembler about it
+
+	 mov	 QPI_DIRLEN,cx	; Save the length
+	 lea	 di,QPI_DIR	; ES:DI ==> resident copy
+
+	 lea	 si,FLEXFILE_DPFE ; DS:SI ==> d:\path\
+     rep movsb			; Copy it
+
+	 REGREST <es,ds>	; Restore
+	 assume  ds:nothing,es:nothing ; Tell the assembler about it
 
 SET_PATHEXIT:
 ;;;;;;;  lss	 sp,OLDARGSTK_VEC ; SS:SP ==> old top of stack

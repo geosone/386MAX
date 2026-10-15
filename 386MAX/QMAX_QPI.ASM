@@ -78,6 +78,7 @@ ECODE	 segment use16 dword public 'ecode' ; Start ECODE segment
 	 extrn	 FWRAP_ENABLE:far
 	 extrn	 FVCPI_ALLOC:far
 	 extrn	 FVCPI_DEALLOC:far
+	 extrn	 FVCPI_COUNT:far
 	 extrn	 FWRAP_DISABLE:far
 	 extrn	 FSET_PPL0STK:far
 
@@ -120,6 +121,29 @@ JDATA	 segment use16 dword public 'jcode' ; Start JDATA segment
 QPI_CB	 dd	 0		; I/O trap callback (Seg:Off in VM), 0 = none
 QPI_PORT dw	 @QPI_MAX dup (?) ; I/O ports trapped via QPI (QPI_NPORT of them)
 QPI_OWN  db	 @QPI_MAX dup (?) ; 1 = I/O permission bit was set already
+
+	 public  QPI_DIR,QPI_DIRLEN
+QPI_DIR  db	 65 dup (0)	; Directory of 386MAX.SYS (QMAX_ARG), for 1E03h
+QPI_DIRLEN dw	 0		; Its length
+QPI_DRVNAME db	 '386MAX.SYS'   ; Driver file name, for 1E04h
+@QPI_DRVLEN equ  $-QPI_DRVNAME	; Its length
+
+QPI_DVX  dd	 0		; 22h:  DV/X shared pool control block (Seg:Off)
+QPI_QUOTA dd	 0		; 23h:  VCPI quota DWORD (Seg:Off), 0 = unlimited
+QPI_W28  dw	 0		; 28h:  EMM import structure word
+
+; 22h control block
+DVX_STR  struc
+DVX_PREV dd	 ?		; 00:  Previous block (Seg:Off)
+DVX_FREE dd	 ?		; 04:  Our # free 4KB pages
+DVX_GIVE dd	 ?		; 08:  # pages the owner can give back
+	 dd	 ?		; 0C:  (reserved)
+DVX_ARG  dd	 ?		; 10:  Request argument/result
+DVX_FLAG db	 ?		; 14:  Flags (bit 2 = superseded)
+DVX_VER  db	 ?		; 15:  Version (02h)
+DVX_STR  ends
+
+@DVX_OLD equ	 04h		; DVX_FLAG:  superseded by a newer block
 
 JDATA	 ends			; End JDATA segment
 
@@ -509,6 +533,36 @@ QPI_UNTRAPOUT_EXIT:
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 QPI_UNTRAPOUT endp		; End QPI_UNTRAPOUT procedure
+	 NPPROC  QPI_SEG2LIN -- Convert Seg:Off To Linear Address
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+On entry:
+
+EBX	 =	 Seg:Off (segment in the high word)
+
+On exit:
+
+EBX	 =	 linear address
+
+|
+
+	 push	 eax		; Save for a moment
+
+	 movzx	 eax,bx 	; Copy offset
+	 shr	 ebx,16 	; Shift down the segment
+	 shl	 ebx,4-0	; Convert from paras to bytes
+	 add	 ebx,eax	; Plus offset
+
+	 pop	 eax		; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+QPI_SEG2LIN endp		; End QPI_SEG2LIN procedure
+
+
 	 FPPROC  QPI_API -- QEMM Programming Interface Functions
 	 assume  ds:PGROUP,es:PGROUP,fs:nothing,gs:nothing,ss:PGROUP
 COMMENT|
@@ -623,8 +677,21 @@ Caller's CF =	 0 if successful
 	 cmp	 ah,20h 	; Izit VirtualHDIRQ?
 	 je	 near ptr QPI_API_VHI ; Jump if so
 
-; Others (02h, 06h-08h, 0Bh, 0Dh-0Fh, 13h-15h, 19h, 1Ch, 1Dh, 21h and up):
-; CF set as QEMM 7 does for those it doesn't support
+	 cmp	 ah,22h 	; Izit DV/X shared pool?
+	 je	 near ptr QPI_API_DVX ; Jump if so
+
+	 cmp	 ah,23h 	; Izit VCPI quota?
+	 je	 near ptr QPI_API_QUOTA ; Jump if so
+
+	 cmp	 ah,28h 	; Izit EMM import word?
+	 je	 near ptr QPI_API_W28 ; Jump if so
+
+	 cmp	 ah,2Ah 	; Izit ANALYSIS bitmaps?
+	 je	 near ptr QPI_API_ANAL ; Jump if so
+
+; Others:  CF set.  As QEMM 97 without the feature:  19h, 1Dh (NOPs),
+; 21h (no Stealth), 24h (no ST-DBL), 25h (no kernel debugger), 26h (no
+; VxD loader), 27h (no QuickBoot), 29h (no DISKBUF), 2Bh, 2Ch (no ANALYSIS)
 
 	 cmp	 ah,1Ah 	; Izit I/O trapping?
 	 jne	 short QPI_API_EXIT ; Jump if not
@@ -1182,6 +1249,13 @@ QPI_API_INDEX:
 ; 1B05:  Is the ASCIIZ filename at DS:DX a Windows driver?
 
 QPI_API_WIN:
+	 cmp	 al,07h 	; Izit Windows import pointer query?
+	 jne	 short @F	; Jump if not
+
+	 mov	 [ebp].INTXX_EAX.ELO.LO,0 ; None (no EMM import record)
+
+	 jmp	 QPI_API_OK	; Join common exit code
+@@:
 	 cmp	 al,05h 	; Izit determine driver?
 	 jne	 near ptr QPI_API_EXIT ; Jump if not (no QEMM Windows support)
 
@@ -1261,8 +1335,8 @@ QPI_API_WIN_DONE:
 ; 1E02:  Stealth ROM list (none)
 
 QPI_API_STEALTH:
-	 cmp	 al,02h 	; Izit a valid subfunction?
-	 ja	 near ptr QPI_API_EXIT ; Jump if not
+	 cmp	 al,02h 	; Izit a Stealth subfunction?
+	 ja	 near ptr QPI_API_NAME ; Jump if not
 
 	 xor	 eax,eax	; Nothing
 	 mov	 [ebp].INTXX_EBX.ELO,ax ; BL = flags, BH = disk buffer flags / BX = count
@@ -1274,6 +1348,50 @@ QPI_API_STEALTH:
 	 mov	 [ebp].INTXX_EDX.ELO,ax ; DL = disk buffer size, DH = reserved
 	 mov	 [ebp].INTXX_ESI.ELO,ax ; Reserved
 	 mov	 [ebp].INTXX_EDI.ELO,ax ; ...
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 1E03:  Get directory of the driver ("C:\386MAX\") into ES:DI
+; 1E04:  Get file name of the driver ("386MAX.SYS") ...
+; As QEMM 97:  not NUL-terminated, BX = length, DI advanced by BX.
+; 1E05:  CF=1 (disabled in QEMM 97)
+
+QPI_API_NAME:
+	 cmp	 al,04h 	; Izit a valid subfunction?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+
+	 lea	 si,QPI_DRVNAME ; JGROUP:SI ==> driver file name
+	 mov	 cx,@QPI_DRVLEN ; CX = its length
+	 je	 short @F	; Jump if 1E04h
+
+	 lea	 si,QPI_DIR	; JGROUP:SI ==> directory
+	 mov	 cx,QPI_DIRLEN	; CX = its length
+@@:
+	 QPI_ESDI		; EDI = linear address of caller's ES:DI
+
+	 mov	 [ebp].INTXX_EBX.ELO,cx ; Return length in BX
+	 add	 [ebp].INTXX_EDI.ELO,cx ; Advance caller's DI
+
+	 REGSAVE <ds,es>	; Save for a moment
+
+	 mov	 ax,SEL_4GB3	; Get AGROUP data selector at PL3
+	 push	 es		; Get JGROUP selector
+	 pop	 ds		; Address it
+	 assume  ds:JGROUP	; Tell the assembler about it
+	 mov	 es,ax		; Address AGROUP
+	 assume  es:AGROUP	; Tell the assembler about it
+
+	 jcxz	 QPI_API_NAME_DONE ; Jump if nothing to copy
+@@:
+	 lods	 QPI_DIR[si]	; Get next byte
+	 mov	 AGROUP:[edi],al ; Save in caller's buffer
+	 inc	 edi		; Next byte
+
+	 loop	 @B		; Jump if more bytes
+QPI_API_NAME_DONE:
+	 REGREST <es,ds>	; Restore
+	 assume  ds:PGROUP,es:JGROUP ; Tell the assembler about it
 
 	 jmp	 QPI_API_OK	; Join common exit code
 
@@ -1431,6 +1549,171 @@ QPI_API_VHI:
 	 ja	 near ptr QPI_API_EXIT ; Jump if not
 
 	 mov	 [ebp].INTXX_EBX.ELO.LO,0 ; Not enabled, not respected
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 2200:  Get the DV/X shared pool control block (ES:DI, 0:0 = none)
+; 2201:  Register the block at ES:DI (0:0 = back to the previous one)
+; As QEMM 97 (DESQview/X):  the block's version byte must be 02h, the new
+; block is linked to the previous one (DVX_PREV), which is marked as
+; superseded, and the block that becomes current gets our free page
+; count in DVX_FREE.  Not done (yet):  keeping DVX_FREE up to date on
+; every allocation, the INT 2Fh "pool changed" broadcast and requests
+; for pages (QEMM asks the owner when it runs out).
+
+QPI_API_DVX:
+	 cmp	 al,01h 	; Izit a valid subfunction?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+	 je	 short QPI_API_DVX1 ; Jump if register
+
+	 mov	 eax,QPI_DVX	; Get the current block
+	 mov	 [ebp].INTXX_EDI.ELO,ax ; Return offset in caller's DI
+	 shr	 eax,16 	; Shift down the segment
+	 mov	 [ebp].INTXX_ES,ax ; Return in caller's ES
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_DVX1:
+	 push	 fs		; Save for a moment
+
+	 mov	 fs,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  fs:AGROUP	; Tell the assembler about it
+
+	 mov	 ax,[ebp].INTXX_ES ; Get caller's ES
+	 shl	 eax,16 	; Shift to segment position
+	 mov	 ax,[ebp].INTXX_EDI.ELO ; Get caller's DI
+
+	 mov	 ebx,QPI_DVX	; Get the current block
+
+	 or	 eax,eax	; Izit unregister?
+	 jnz	 short QPI_API_DVX_REG ; Jump if not
+
+	 or	 ebx,ebx	; Izit registered?
+	 jz	 short QPI_API_DVX_OK ; Jump if not (nothing to do)
+
+	 call	 QPI_SEG2LIN	; EBX = linear address of the block
+	 mov	 eax,AGROUP:[ebx].DVX_PREV ; Get the previous one
+	 mov	 es:QPI_DVX,eax ; It's current again
+
+	 or	 eax,eax	; Izit none?
+	 jz	 short QPI_API_DVX_OK ; Jump if so
+
+	 mov	 ebx,eax	; Copy Seg:Off
+	 call	 QPI_SEG2LIN	; EBX = linear address of the block
+	 and	 AGROUP:[ebx].DVX_FLAG,not @DVX_OLD ; Active again
+
+	 jmp	 short QPI_API_DVX_CUR ; Join common code
+
+QPI_API_DVX_REG:
+	 mov	 ecx,ebx	; Save the previous block
+	 mov	 ebx,eax	; Copy Seg:Off
+	 call	 QPI_SEG2LIN	; EBX = linear address of the block
+
+	 cmp	 AGROUP:[ebx].DVX_VER,02h ; Izit the version we know?
+	 jne	 short QPI_API_DVX_ERR ; Jump if not
+
+	 mov	 AGROUP:[ebx].DVX_PREV,ecx ; Link to the previous one
+	 and	 AGROUP:[ebx].DVX_FLAG,not @DVX_OLD ; Active
+	 mov	 es:QPI_DVX,eax ; It's the current one
+
+	 jecxz	 QPI_API_DVX_CUR ; Jump if there was none
+
+	 push	 ebx		; Save new block
+	 mov	 ebx,ecx	; Copy previous one's Seg:Off
+	 call	 QPI_SEG2LIN	; EBX = linear address of the block
+	 or	 AGROUP:[ebx].DVX_FLAG,@DVX_OLD ; Superseded
+	 pop	 ebx		; Restore
+QPI_API_DVX_CUR:
+	 FIXICALL PGROUP:FVCPI_COUNT,DTE_CS2 ; EDX = # free 4KB pages
+	 mov	 AGROUP:[ebx].DVX_FREE,edx ; Tell the owner
+QPI_API_DVX_OK:
+	 pop	 fs		; Restore
+	 assume  fs:nothing	; Tell the assembler about it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_DVX_ERR:
+	 pop	 fs		; Restore
+	 assume  fs:nothing	; Tell the assembler about it
+
+	 jmp	 QPI_API_EXIT	; Return with CF set
+
+
+; 23FF:  Reset the VCPI quota (unlimited)
+; 2300:  Get the quota DWORD of slot BX (ES:DI, 0:0 = unlimited)
+; 2301:  Set ...			    (ES:DI, 0:0 = unlimited)
+; 2302:  Clear ...
+; As QEMM 97:  one slot (BX = 0); the DWORD counts the KB VCPI clients
+; may still allocate (DESQview's per-process VCPI limit).  Not done
+; (yet):  VCPI DE03h-DE05h don't consult it, so the limit isn't enforced.
+
+QPI_API_QUOTA:
+	 cmp	 al,0FFh	; Izit reset?
+	 je	 short QPI_API_QUOTA_CLR ; Jump if so
+
+	 cmp	 al,02h 	; Izit a valid subfunction?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+
+	 cmp	 [ebp].INTXX_EBX.ELO,0 ; Izit slot 0?
+	 jne	 near ptr QPI_API_EXIT ; Jump if not (the only one)
+
+	 cmp	 al,01h 	; Izit get or set?
+	 ja	 short QPI_API_QUOTA_CLR ; Jump if clear
+	 je	 short QPI_API_QUOTA_SET ; Jump if set
+
+	 mov	 eax,QPI_QUOTA	; Get the pointer
+	 mov	 [ebp].INTXX_EDI.ELO,ax ; Return offset in caller's DI
+	 shr	 eax,16 	; Shift down the segment
+	 mov	 [ebp].INTXX_ES,ax ; Return in caller's ES
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_QUOTA_SET:
+	 mov	 ax,[ebp].INTXX_ES ; Get caller's ES
+	 shl	 eax,16 	; Shift to segment position
+	 mov	 ax,[ebp].INTXX_EDI.ELO ; Get caller's DI
+	 mov	 es:QPI_QUOTA,eax ; Save (0:0 clears it)
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+QPI_API_QUOTA_CLR:
+	 mov	 es:QPI_QUOTA,0 ; Unlimited
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 28:  Set the word of the EMM import structure (BX); we build no such
+;      structure for Windows, so it's only kept
+
+QPI_API_W28:
+	 mov	 ax,[ebp].INTXX_EBX.ELO ; Get caller's BX
+	 mov	 es:QPI_W28,ax	; Save it
+
+	 jmp	 QPI_API_OK	; Join common exit code
+
+
+; 2A00:  Get the ANALYSIS "pages touched" bitmap (32 bytes at ES:DI)
+; 2A01:  Get the ANALYSIS "pages watched" bitmap ...
+; We have no ANALYSIS:  both are empty (QEMM 97 crashes for AL > 01h)
+
+QPI_API_ANAL:
+	 cmp	 al,01h 	; Izit a valid subfunction?
+	 ja	 near ptr QPI_API_EXIT ; Jump if not
+
+	 QPI_ESDI		; EDI = linear address of caller's ES:DI
+
+	 push	 es		; Save for a moment
+
+	 mov	 es,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  es:AGROUP	; Tell the assembler about it
+
+	 xor	 eax,eax	; Nothing touched
+	 mov	 ecx,32/4	; # dwords in the bitmap
+S32  rep stos	 AGROUP:[edi].EDD ; Clear it
+
+	 pop	 es		; Restore
+	 assume  es:JGROUP	; Tell the assembler about it
 
 	 jmp	 QPI_API_OK	; Join common exit code
 

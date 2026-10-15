@@ -18,3 +18,4 @@ DPMI/MOUSE12  needs=dpmi,mouse
 DPMI/MOUSE18  needs=dpmi,mouse
 QPI/QPITEST   needs=qpi
 QPI/QPITRAP   needs=qpi
+QPI/QPIMISC   needs=qpi

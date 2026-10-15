@@ -2326,6 +2326,16 @@ FVCPI_ALLOC endp		; End FVCPI_ALLOC procedure
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 FVCPI_DEALLOC endp		; End FVCPI_DEALLOC procedure
+	 FPPROC  FVCPI_COUNT -- Far VCPI_COUNT (QPI 22h in JGROUP)
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+	 call	 VCPI_COUNT	; EDX = # free 4KB pages
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+FVCPI_COUNT endp		; End FVCPI_COUNT procedure
 	 NPPROC  VCPI_SET -- Set System Variables
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
