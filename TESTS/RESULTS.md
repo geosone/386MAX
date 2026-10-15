@@ -15,18 +15,18 @@ Own tests:  all PASS on MS-DOS 6.22 and 7.1.  Open:
 | STKFLT | HANG on FreeDOS | other DOS: PASS | the faulting client is not terminated cleanly there |
 
 HDPMI regression tests (suite `hx`):  386MAX differs from HDPMI and
-CWSDPMI where both agree in two tests:
+CWSDPMI where both agree in one test:
 
 | Test | Majority | 386MAX |
 |---|---|---|
 | NEWCL | END | a client that starts itself again and again (1FE6h selectors each) exhausts the host, whose free chain is then corrupted |
-| RAWJMP1 | END | hangs in the protected-mode part of a real-mode callback reached through a raw mode switch |
 
 Fixed on the way (v9):  DPMI faults terminate the client with a short
 report (as CWSDPMI/HDPMI), the page tables are no longer writable by
 clients, EMS mapping contexts are checked (A3h as MS EMM386), QPI 1F00h-
 1F03h, 04h/05h/09h/0Ah, the 11h codes and the I/O callback behave as in
-QEMM 97.
+QEMM 97, INT 31h 0300h leaves the CS:IP of the caller's structure alone
+(RAWJMP1).
 
 Deliberate deviations:  VCPI DE02h returns the end of RAM (Qualitas tuned
 the value around old DOS extenders), DE06h accepts page 100h (as QEMM).
@@ -100,7 +100,7 @@ the value around old DOS extenders), DE06h accepts page 100h (as QEMM).
 | NEWCL | END | END | END | HANG |
 | NEWCL2 | END | END | END | END |
 | PRVILEG0 | END | END | END | END |
-| RAWJMP1 | END | END | END | HANG |
+| RAWJMP1 | END | END | END | END |
 | RAWJMP2 | END | END | END | END |
 | RAWJMP3 | END | END | END | END |
 | RAWJMP4 | END | END | END | END |

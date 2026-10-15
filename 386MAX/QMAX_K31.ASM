@@ -82,6 +82,9 @@ CODE	 ends			; End CODE segment
 
 
 EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
+
+SIMVMI_VEC dd	 ?		; 0300h:  real-mode interrupt vector to call
+SIMVMI_USEVEC db 0		; 1 = DPMI_SIMVMI2 takes SIMVMI_VEC
 	 assume  ds:PGROUP
 
 	 extrn	 I31_FLAG:word
@@ -1031,9 +1034,12 @@ All other registers except EBP, FS, GS, and SS may be clobbered.
 	 mov	 es,[ebp-@I31BACK].I31_ES ; Get caller's ES
 	 assume  es:nothing	; Tell the assembler about it
 
-	 mov	 es:[edi].VMC_IP,ax ; Save offset
-	 shr	 eax,16 	; Shift down high-order word
-	 mov	 es:[edi].VMC_CS,ax ; Save segment
+; Don't put the vector into the caller's structure:  CWSDPMI and HDPMI
+; leave its CS:IP alone, and a client may use the same structure for a
+; real-mode callback (HDPMI test rawjmp1), whose return address it is
+
+	 mov	 SIMVMI_VEC,eax ; Save as the target for DPMI_SIMVMI2
+	 mov	 SIMVMI_USEVEC,1 ; Mark as to be used
 
 	 cli			; Disallow interrupts
 
@@ -1186,11 +1192,25 @@ DPMI_SIMVMI2:
 @@:
 	 push	 eax		; Place on stack for VM transfer
 
+	 cmp	 SIMVMI_USEVEC,0 ; Izit 0300h (target = interrupt vector)?
+	 je	 short @F	; Jump if not
+
+	 mov	 SIMVMI_USEVEC,0 ; Used up
+
+	 movzx	 eax,SIMVMI_VEC.EHI ; Get CS to use
+	 push	 eax		; Place on stack for VM transfer
+
+	 movzx	 eax,SIMVMI_VEC.ELO ; Get IP to use
+	 push	 eax		; Place on stack for VM transfer
+
+	 jmp	 short DPMI_SIMVMI_XVEC ; Join common code
+@@:
 	 movzx	 eax,es:[edi].VMC_CS ; Get CS to use
 	 push	 eax		; Place on stack for VM transfer
 
 	 movzx	 eax,es:[edi].VMC_IP ; Get IP to use
 	 push	 eax		; Place on stack for VM transfer
+DPMI_SIMVMI_XVEC:
 
 ; The MAX stack is now mapped by INTCOM_STR followed by SIMVMC_STR
 

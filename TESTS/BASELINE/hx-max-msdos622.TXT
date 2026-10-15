@@ -63,7 +63,7 @@ hx/IRQ1EXC               HANG
 hx/NEWCL                 HANG
 hx/NEWCL2                END
 hx/PRVILEG0              END
-hx/RAWJMP1               HANG
+hx/RAWJMP1               END
 hx/RAWJMP2               END
 hx/RAWJMP3               END
 hx/RAWJMP4               END
