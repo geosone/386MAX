@@ -60,7 +60,7 @@ hx/IRQ01                 HANG
 hx/IRQ0TSTP              END
 hx/IRQ12EXC              HANG
 hx/IRQ1EXC               HANG
-hx/NEWCL                 HANG
+hx/NEWCL                 END
 hx/NEWCL2                END
 hx/PRVILEG0              END
 hx/RAWJMP1               END
@@ -74,7 +74,7 @@ hx/RMCB1                 END
 hx/RMCB3                 END
 hx/RMCB6                 END
 hx/RMCB7                 END
-hx/RMCB8                 CRASH
+hx/RMCB8                 HANG
 hx/RMCB9                 END
 hx/SETCR0                END
 hx/SETCR4                END

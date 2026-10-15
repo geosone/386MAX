@@ -844,11 +844,11 @@ EAX	 =	 (updated)
 	 mov	 PPL0STK_MIN,ebx ; Save as offset to minimum stack size
 
 ; Add in the size of the program stack
-; This size is 4096 plus NSTACKS times 256 rounded up to a dword boundary
-
+; This size is 8192 plus NSTACKS times 256 rounded up to a dword boundary
+; (Open 386MAX:  was 4096; nested DPMI clients need about 300 bytes each)
 	 movzx	 ebx,NSTACKS	; Get parameter, zero high-order word
 	 shl	 ebx,8-0	; Convert from 256-bytes to bytes
-	 add	 ebx,4096	; Plus base
+	 add	 ebx,8192	; Plus base
 	 add	 eax,ebx	; Add it into putative PRGSIZE
 	 add	 eax,4-1	; Round up to dword boundary
 	 and	 ax,not (4-1)	; ...

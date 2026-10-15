@@ -9,19 +9,17 @@ QEMM 97 with QDPMI (local reference image, not distributed).
 
 Own tests:  all PASS on MS-DOS 6.22 and 7.1, EDR-DOS, SvarDOS and FreeDOS.
 
-HDPMI regression tests (suite `hx`):  386MAX differs from HDPMI and
-CWSDPMI where both agree in one test:
-
-| Test | Majority | 386MAX |
-|---|---|---|
-| NEWCL | END | a client that starts itself again and again (1FE6h selectors each) exhausts the host, whose free chain is then corrupted |
+HDPMI regression tests (suite `hx`):  where HDPMI and CWSDPMI agree,
+386MAX gives the same result.
 
 Fixed on the way (v9):  DPMI faults terminate the client with a short
 report (as CWSDPMI/HDPMI), the page tables are no longer writable by
 clients, EMS mapping contexts are checked (A3h as MS EMM386), QPI 1F00h-
 1F03h, 04h/05h/09h/0Ah, the 11h codes and the I/O callback behave as in
 QEMM 97, INT 31h 0300h leaves the CS:IP of the caller's structure alone
-(RAWJMP1), INT 21h AX=440Dh/440Ch subfunctions without a translation (the
+(RAWJMP1), nested DPMI clients no longer run 386MAX's ring 0 stack into the
+memory chain tables below it (stack 8 KB, a new client is refused with
+8010h when less than 1.5 KB are left; HX's NEWCL), INT 21h AX=440Dh/440Ch subfunctions without a translation (the
 DOS 7 volume lock before INT 26h) are passed through instead of running
 the next action stream (hang on EDR-DOS and MS-DOS 7.1, DOS memory
 corrupted on FreeDOS); 440Dh 46h/66h/68h (media ID, media type) are
@@ -99,7 +97,7 @@ the value around old DOS extenders), DE06h accepts page 100h (as QEMM).
 | IRQ0TSTP | END | END | END | END |
 | IRQ12EXC | HANG | HANG | HANG | HANG |
 | IRQ1EXC | HANG | HANG | HANG | HANG |
-| NEWCL | END | END | END | HANG |
+| NEWCL | END | END | END | END |
 | NEWCL2 | END | END | END | END |
 | PRVILEG0 | END | END | END | END |
 | RAWJMP1 | END | END | END | END |
@@ -113,7 +111,7 @@ the value around old DOS extenders), DE06h accepts page 100h (as QEMM).
 | RMCB3 | END | END | END | END |
 | RMCB6 | END | END | END | END |
 | RMCB7 | END | END | END | END |
-| RMCB8 | END | CRASH | CRASH | CRASH |
+| RMCB8 | END | CRASH | CRASH | HANG |
 | RMCB9 | END | END | END | END |
 | SETCR0 | END | HANG | HANG | END |
 | SETCR4 | END | END | END | END |
