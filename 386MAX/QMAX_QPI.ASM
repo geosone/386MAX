@@ -664,35 +664,54 @@ AH	 =	 00h	 Get state (AL = 0:  ON)
 	 =	 03h	 Get version (AX = BX = 0703h)
 	 =	 04h	 Allocate a 4KB page (EDX = physical page #)
 	 =	 05h	 Free the 4KB page DX
+	 =	 06h	 Clone the active page table into page DX
+	 =	 07h	 Get the active page table (DX)
+	 =	 08h	 Make page table DX active (mapping context)
 	 =	 09h	 Get the page frame of PTE CX (DX)
 	 =	 0Ah	 Set ...		 (PTE = DX shl 12 or 7)
+	 =	 0Bh	 Map EMS handle DX at page CX (BX 16KB pages)
 	 =	 0Ch	 Get available memory (QMAX_VCP, the old 0Ch too)
+	 =	 0Fh	 Restore default PTEs CX..CX+DX-1 (AL = dirty)
+	 =	 10h	 Old VCPI functions (QMAX_VCP)
 	 =	 11h	 Get memory type map (256 bytes at ES:DI)
 	 =	 12h	 Get HIRAM chain (BX = first high DOS MCB)
 AX	 =	 1600h	 Get memory access status (256 bytes at ES:DI)
 	 =	 1601h	 Set ...
 AH	 =	 17h	 Get memory usage statistics (81 bytes at ES:DI)
 	 =	 18h	 Is conventional memory mapped at ES:BX for CX pages?
-AX	 =	 1A02h	 Untrapped OUT DX,BH; IN BL,DX+1
+AX	 =	 1A00h	 Untrapped IN  AL,DX (result in BL)
+	 =	 1A01h	 Untrapped OUT DX,BL
+	 =	 1A02h	 Untrapped OUT DX,BH; IN BL,DX+1
 	 =	 1A03h	 Untrapped OUT DX,BH; OUT DX+1,BL
+	 =	 1A04h	 Untrapped I/O (CX = flags, EBX = value)
+	 =	 1A05h	 Virtualized I/O (the same)
+	 =	 1A06h	 Get I/O trap callback (ES:DI, default QPI_DEFCB)
+	 =	 1A07h	 Set I/O trap callback (ES:DI)
+	 =	 1A08h	 Get port DX trap status (BL)
+	 =	 1A09h	 Trap port DX
+	 =	 1A0Ah	 Untrap port DX
 	 =	 1B05h	 Is the file DS:DX a Windows driver (.DRV, GDI.EXE)?
+	 =	 1B07h	 Windows import pointer set? (AL = 0)
 	 =	 1E00h	 Stealth configuration (none)
 	 =	 1E01h	 # Stealth'ed ROMs (none)
 	 =	 1E02h	 Stealth ROM list (none)
+	 =	 1E03h	 Directory of the driver into ES:DI (BX = length)
+	 =	 1E04h	 File name of the driver ...
 	 =	 1F00h	 Get PTE of page CX (0-3FFh) into EDX
 	 =	 1F01h	 Set ...
 	 =	 1F02h	 Get CR0
 	 =	 1F03h	 Change CR0.MP/EM/ET
 	 =	 2000h	 Get VirtualHDIRQ state (not supported)
 	 =	 2001h	 Set ...		 (ignored)
-AX	 =	 1A00h	 Untrapped IN  AL,DX (result in BL)
-	 =	 1A01h	 Untrapped OUT DX,BL
-	 =	 1A04h	 Untrapped I/O (CX = flags, EBX = value)
-	 =	 1A06h	 Get I/O trap callback (ES:DI)
-	 =	 1A07h	 Set I/O trap callback (ES:DI)
-	 =	 1A08h	 Get port DX trap status (BL)
-	 =	 1A09h	 Trap port DX
-	 =	 1A0Ah	 Untrap port DX
+	 =	 2200h	 Get DV/X shared pool control block (ES:DI)
+	 =	 2201h	 Register ...
+	 =	 2300h	 Get VCPI quota pointer of slot BX (ES:DI)
+	 =	 2301h	 Set ...
+	 =	 2302h	 Clear ...
+	 =	 23FFh	 Reset ...
+AH	 =	 28h	 Set the EMM import word (BX)
+AX	 =	 2A00h	 Get ANALYSIS bitmap (32 bytes at ES:DI, empty)
+	 =	 2A01h	 ...
 	 =	 4D00h	 Query Open MaxView extension
 	 =	 4D01h	 Get backend/root-context status
 
