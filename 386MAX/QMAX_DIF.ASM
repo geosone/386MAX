@@ -575,6 +575,17 @@ PMVSAPI32_HDPMI equ $-PMIDEF	; Offset in DTE_DPMIDEF
 
 	 retfd			; Return to 32-bit code
 
+; Open 386MAX:  a CLI/STI handler of the HDPMI API (QMAX_HDP) on a 16-bit
+; stack.  An IRET to a 16-bit stack loads only SP:  ESP's high-order word
+; stays the one of our PL0 stack (above 64KB), and a 32-bit handler
+; addresses its frame with ESP.  Clear it, then go to the handler, whose
+; address HDP_GPIO put below the IRET frame.
+
+	 public  PMHDPCLI
+PMHDPCLI equ	 $-PMIDEF	; Offset in DTE_DPMIDEF
+	 movzx	 esp,sp 	; ESP = SP
+	 jmp	 fword ptr ss:[esp-8] ; Go to the handler
+
 	 public  PMVPF
 PMVPF	 equ	 $-PMIDEF	; Offset in DTE_DPMIDEF
 %	 int	 0&@PMM_INT&h	; Interrupt for PM Miscellaneous Returns

@@ -107,6 +107,7 @@ EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 extrn	 DPMI_CPFHOOK:byte
 	 extrn	 QPI_NPORT:word
 	 extrn	 DPMI_IDEF:word
+	 extrn	 PMHDPCLI:abs
 	 extrn	 PVMTSS:dword
 
 EDATA	 ends			; End EDATA segment
@@ -1619,6 +1620,21 @@ HDP_GPIO_CSGO:
 	 mov	 [ebp].INTXX_EIP,eax ; Continue there
 	 mov	 ax,fs:[ebx].FSEL ; ...
 	 mov	 [ebp].INTXX_CS,ax ; ...
+
+; On a 16-bit stack go through PMHDPCLI (QMAX_DIF), which clears ESP's
+; high-order word:  the handler's address below the IRET frame
+
+	 test	 edx,1 shl 22	; Izit a 32-bit stack?
+	 jnz	 short HDP_GPIO_CSX ; Jump if so
+
+	 mov	 eax,[ebp].INTXX_EIP ; The handler's offset
+	 mov	 AGROUP:[esi-8],eax ; Below the frame
+	 mov	 ax,[ebp].INTXX_CS ; The handler's selector
+	 mov	 AGROUP:[esi-8+4],ax ; ...
+	 mov	 [ebp].INTXX_EIP,PMHDPCLI ; Continue in our stub
+	 mov	 ax,DPMI_IDEF	; ...
+	 mov	 [ebp].INTXX_CS,ax ; ...
+HDP_GPIO_CSX:
 
 	 REGREST <fs,esi,edx,ecx,ebx,eax> ; Restore
 	 assume  fs:nothing	; Tell the assembler about it
