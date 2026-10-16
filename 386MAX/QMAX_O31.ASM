@@ -536,6 +536,11 @@ CF	 =	 0 if we have a match and should fail the 1687 call
 	 test	 DPM_FLAG,mask $DPM_DPMIXCOPY ; Should we disregard copyright notices?
 	 jnz	 near ptr IMM2_USEVCPI_NOMATCH ; Jump if so
 
+; Open 386MAX:  while the HDPMI API traps ports (VSBHDA), DOS extenders
+; must use DPMI:  through VCPI they would bypass the traps (DPMIOPLF = 0)
+
+	 cmp	 DPMIOPLF,0	; Are ports trapped in protected mode?
+	 je	 near ptr IMM2_USEVCPI_NOMATCH ; Jump if so
 ; Because the alternative is to use VCPI, we had better be sure
 ; we're providing those services.
 

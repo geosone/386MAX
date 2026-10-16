@@ -33,6 +33,11 @@ h3	dd	0
 imr	db	?
 src	db	11h,22h,33h
 cnt	dw	?
+bigsel	dw	?			; 32-bit stack, 128 KB
+bigh	dd	?
+savesp	dd	?
+savess	dw	?
+bigefl	dd	?
 mnodpmi	db	'no 32-bit DPMI host',13,10,'$'
 	.code
 	include	TESTLIB.INC
@@ -343,14 +348,65 @@ pm:	movzx	esp,sp
 	pop	eax
 	test	eax,200h
 	CHECK	'STI:  IF=1', nz
+	mov	ax,0501h		; CLI on a 32-bit stack, ESP above 64 KB
+	mov	bx,2			; 128 KB
+	xor	cx,cx
+	int	31h
+	jc	nobig
+	mov	word ptr bigh,di
+	mov	word ptr bigh+2,si
+	push	bx
+	push	cx
+	mov	ax,0000h
+	mov	cx,1
+	int	31h
+	mov	bigsel,ax
+	mov	bx,ax
+	pop	dx
+	pop	cx
+	mov	ax,0007h
+	int	31h
+	mov	bx,bigsel
+	mov	cx,1
+	mov	dx,0FFFFh
+	mov	ax,0008h
+	int	31h
+	mov	bx,bigsel
+	mov	cx,40F2h		; data, DPL 3, B bit
+	mov	ax,0009h
+	int	31h
+	mov	savesp,esp
+	mov	savess,ss
+	mov	ss,bigsel
+	mov	esp,1FFF0h
+	cli
+	pushfd
+	pop	eax
+	sti
+	mov	bigefl,eax
+	mov	ss,savess
+	mov	esp,savesp
+	cmp	ncli,2
+	CHECK	'CLI on a 32-bit stack (ESP 1FFF0h):  handler called', e
+	test	bigefl,200h
+	CHECK	'... IF=0 after CLI', z
+	mov	bx,bigsel
+	mov	ax,0001h
+	int	31h
+	mov	di,word ptr bigh
+	mov	si,word ptr bigh+2
+	mov	ax,0502h
+	int	31h
+nobig:
 	mov	ax,9
 	mov	bl,0
 	xor	cx,cx
 	xor	edx,edx
 	call	hdp
+	mov	cx,ncli
 	cli
 	sti
-	cmp	ncli,1
+	cmp	cx,ncli
 	CHECK	'0:0 removes it', e
 
 	TITLE_	'7:  remove the ranges'

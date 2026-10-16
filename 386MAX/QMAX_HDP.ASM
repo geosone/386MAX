@@ -1173,12 +1173,9 @@ All other registers preserved for the old entry.
 	 test	 [ebp].INTXX_EFL.EHI,02h ; Izit from VM86 mode?
 	 jnz	 near ptr HDP_GPIO_OLD ; Jump if so
 
-	 push	 dx		; Save for a moment
-	 mov	 dx,DPMI_IDEF	; Get our PL3 code selector
-	 cmp	 dx,[ebp].INTXX_CS ; Izit our own PL3 code (e.g. the CLI
-				; in the vendor API stubs)?
-	 pop	 dx		; Restore
-	 je	 near ptr HDP_GPIO_OLD ; Jump if so (as before)
+	 test	 [ebp].INTXX_CS,4 ; Izit a GDT selector:  our own PL3 code
+				; (e.g. the CLI in the vendor API stubs)?
+	 jz	 near ptr HDP_GPIO_OLD ; Jump if so (as before)
 
 	 cmp	 al,0FAh	; Izit CLI or STI?
 	 jae	 near ptr HDP_GPIO_CLISTI ; Jump if so
@@ -1564,8 +1561,10 @@ HDP_GPIO_CLISTI:
 ; Push an IRET frame onto the caller's stack
 
 	 movzx	 esi,[ebp].INTXX_SS ; Get the stack selector
-	 lar	 edx,esi	; Get its access rights
 	 FIXICALL JGROUP:FSEGSEL_BASE,DTE_CSJG ; Return with ESI = base
+				; (EDX clobbered)
+	 movzx	 edx,[ebp].INTXX_SS ; Get the stack selector again
+	 lar	 edx,edx	; Get its access rights (B bit)
 
 	 mov	 eax,[ebp].INTXX_ESP ; Get the stack pointer
 	 mov	 ecx,12 	; Size of an IRETD frame
@@ -1581,7 +1580,10 @@ HDP_GPIO_CLISTI:
 	 jnz	 short @F	; Jump if so
 
 	 movzx	 eax,ax 	; Use SP (64KB wrap)
-	 mov	 [ebp].INTXX_ESP.ELO,ax ; Save the new SP
+	 mov	 [ebp].INTXX_ESP,eax ; Save the new SP, high-order word 0:
+				; a 32-bit handler addresses the frame with
+				; ESP (DOS/4GW runs on a 16-bit stack with
+				; garbage in the high-order word of ESP)
 
 	 jmp	 short HDP_GPIO_CSFRM ; Join common code
 

@@ -25,7 +25,7 @@ Enhanced DR-DOS, SvarDOS, Windows for Workgroups 3.11 and Windows 98 SE
 (linux/test: maxdos.sh, win311.sh, win98.sh).
 
 Releases with floppy, USB and CD images:
-[Releases](https://github.com/geosone/386MAX/releases)
+[Releases](https://github.com/geosone/Open386MAX/releases)
 
 ## Build
 
@@ -33,7 +33,7 @@ Requirements: GNU make, gcc, Python 3, [Open Watcom](https://github.com/open-wat
 (`WATCOM=/opt/watcom`), mtools, and for the media xorriso, dosfstools and zip.
 
 ```sh
-git clone --recursive https://github.com/geosone/386MAX
+git clone --recursive https://github.com/geosone/Open386MAX
 cd 386MAX
 make                         # tools and all projects, programs in build/bin
 make MAXLANG=GR              # German
