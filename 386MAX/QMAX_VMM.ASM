@@ -382,9 +382,11 @@ notDPMI:
 	 mov	 ds,SEL_DSIG3	; Get IGROUP data selector at PL3
 	 assume  ds:IGROUP	; Tell the assembler about it
 
-	 mov	 ecx,edx	; Try to drain enough
-	 add	 ecx,@PageSize-1 ; Round up
-	 shr	 ecx,@BytePage	; Convert to pages
+; Open 386MAX:  drain the whole pool as QRY_PGCNT does.  This used EDX
+; as the length, which it isn't here (e.g. the XMS handle #), so XMS 09h
+; failed with A0h while a DPMI client ran unless an XMS query had drained
+; the pool before; and just the pages needed aren't contiguous in general.
+	 mov	 ecx,-1 	; The whole enchilada
 	 FIXICALL IGROUP:PPM_DRAIN_POOL,DTE_CSIG ; Do the drain
 
 	 REGREST <ds,ecx>	; Restore

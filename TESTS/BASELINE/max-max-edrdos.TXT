@@ -20,3 +20,4 @@ max/VCPIFUNC             PASS
 max/VDSFUNC              PASS
 max/XLAT32               PASS
 max/XMSFUNC              PASS
+max/XMSMAP               PASS

@@ -19,7 +19,9 @@ clients, EMS mapping contexts are checked (A3h as MS EMM386), QPI 1F00h-
 QEMM 97, INT 31h 0300h leaves the CS:IP of the caller's structure alone
 (RAWJMP1), nested DPMI clients no longer run 386MAX's ring 0 stack into the
 memory chain tables below it (stack 8 KB, a new client is refused with
-8010h when less than 1.5 KB are left; HX's NEWCL), INT 21h AX=440Dh/440Ch subfunctions without a translation (the
+8010h when less than 1.5 KB are left; HX's NEWCL), an XMS allocate from a DPMI client takes the pages back from
+the virtual memory pool (it drained a garbage number of pages:  A0h,
+VSBHDA "DMA buffer init failed"), INT 21h AX=440Dh/440Ch subfunctions without a translation (the
 DOS 7 volume lock before INT 26h) are passed through instead of running
 the next action stream (hang on EDR-DOS and MS-DOS 7.1, DOS memory
 corrupted on FreeDOS); 440Dh 46h/66h/68h (media ID, media type) are
@@ -175,3 +177,4 @@ the value around old DOS extenders), DE06h accepts page 100h (as QEMM).
 | VDSFUNC | PASS | SKIP | PASS | PASS | PASS | SKIP | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
 | XLAT32 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | FAIL | SKIP | SKIP | FAIL | PASS | PASS | PASS | PASS | PASS |
 | XMSFUNC | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
+| XMSMAP |  |  |  |  |  |  | PASS |  |  |  | PASS | PASS | PASS | PASS | PASS |

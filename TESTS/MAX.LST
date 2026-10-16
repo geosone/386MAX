@@ -14,6 +14,7 @@ DPMI/XLAT32   needs=dpmi32,xlat
 DPMI/PM26     needs=dpmi timeout=60
 DPMI/DISKIO   needs=dpmi,xlat timeout=60
 DPMI/STKFLT   needs=dpmi term
+DPMI/XMSMAP   needs=dpmi,xms
 DPMI/MOUSE12  needs=dpmi,mouse
 DPMI/MOUSE18  needs=dpmi,mouse
 QPI/QPITEST   needs=qpi

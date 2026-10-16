@@ -16,6 +16,7 @@ check (OK / FAIL) and ends with errorlevel 0 when all checks passed.
 | DPMI | PM26    | INT 25h/26h through 0301h with DOS buffers (host's V86 side, mode switches) |
 | DPMI | DISKIO  | INT 13h/25h/26h and 7305h from protected mode, buffers above 4 KB, DOS 7 volume lock |
 | DPMI | STKFLT  | a 32-bit client with an invalid stack calls INT 21h (must not reset the machine) |
+| DPMI | XMSMAP  | XMS block allocated first thing by a DPMI client, locked, mapped with 0800h (sound driver DMA buffers: VSBHDA, SBEMU) |
 | DPMI | MOUSE12, MOUSE18 | INT 33h 0Ch/12h/18h/19h handlers (need a mouse driver) |
 | QPI  | QPITEST | QEMM programming interface (INT 2Fh D201h, INT 67h 3Fh) |
 | QPI  | QPITRAP | port trapping with callback (1A06h-1A0Ah), default callback, 1A05h |
