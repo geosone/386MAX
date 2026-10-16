@@ -6,7 +6,7 @@ JWASM ?= $(ROOT)/linux/bin/jwasm
 OUT   := $(ROOT)/build/TESTS
 SRCS  := $(shell sed -n 's/^\([A-Z0-9_]*\/[A-Z0-9_]*\).*/\1/p' MAX.LST)
 # helpers for scenario tests (no pass/fail of their own)
-SRCS  += SCENARIO/TICK
+SRCS  += SCENARIO/TICK SCENARIO/SBPM
 EXES  := $(addprefix $(OUT)/,$(addsuffix .EXE,$(notdir $(SRCS))))
 
 .PHONY: all
