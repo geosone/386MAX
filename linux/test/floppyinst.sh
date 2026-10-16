@@ -10,7 +10,7 @@
 #            "disk<n>" (put disk n into B:), "mon:<cmd>" (monitor command,
 #            + for blanks)
 #   START    seconds before KEYS (default 15)
-#   DISKS    floppy images (default release/<LANG>/open386max-*-<lang>-disk*.img)
+#   DISKS    floppy images (default release/<LANG>/open386max-<VERSION>-<lang>-disk*.img)
 #   SRC=usb  install from the USB image instead (D:\INSTALL, both extents in
 #            one directory: no disk change)
 # Output (build/test-floppyinst/): shot<n>.png, final.png, installed/ (the
@@ -22,7 +22,8 @@ OUT=$ROOT/build/test-floppyinst
 DOS=${DOS_DIR:-$HOME/Iso/Dos}
 BOOTIMG=${BOOTIMG:-$DOS/dos71de/Dos7.1_System_deutsch.IMG}
 lc=$(echo "$L" | tr A-Z a-z)
-read -r -a disks <<< "${DISKS:-$(ls "$ROOT"/release/$L/open386max-*-$lc-disk*.img | sort -V | tr '\n' ' ')}"
+ver=$(tr -d '\r\n ' < "$ROOT/VERSION")
+read -r -a disks <<< "${DISKS:-$(ls "$ROOT"/release/$L/open386max-$ver-$lc-disk*.img | sort -V | tr '\n' ' ')}"
 rm -rf "$OUT"; mkdir -p "$OUT"
 cp "$BOOTIMG" "$OUT/boot.img"; chmod u+w "$OUT/boot.img"
 i=0; for d in "${disks[@]}"; do i=$((i + 1)); cp "$d" "$OUT/disk$i.img"; done
@@ -34,7 +35,7 @@ mkfs.fat -F 16 -n TESTC -h 63 --offset 63 "$OUT/hd.img" $(( (64 * 1024 * 1024 / 
 
 printf 'FILES=40\r\nBUFFERS=20\r\nSHELL=A:\\COMMAND.COM A:\\ /P\r\n' > "$OUT/CONFIG.SYS"
 if [ "${SRC:-}" = usb ]; then
-    cp "$(ls "$ROOT"/release/$L/open386max-*-$lc-usb.img)" "$OUT/usb.img"
+    cp "$ROOT/release/$L/open386max-$ver-$lc-usb.img" "$OUT/usb.img"
     printf '@ECHO OFF\r\nPATH A:\\\r\nD:\r\nCD \\INSTALL\r\nSETUPDOS\r\n' > "$OUT/AUTOEXEC.BAT"
     USBDRIVE=(-drive if=ide,index=1,format=raw,file="$OUT/usb.img")
 else
