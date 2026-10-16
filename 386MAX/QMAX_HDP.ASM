@@ -1995,6 +1995,98 @@ HDP_SYNCLDT_NXT:
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 HDP_SYNCLDT endp		; End HDP_SYNCLDT procedure
+	 FPPROC  HDP_IRETD -- IRETD with a Clean ESP on 16-bit Stacks
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+IRETD to a PL3 caller whose stack is 16-bit.  The CPU loads only SP
+there:  ESP's high-order word stays the one of our PL0 stack, which is
+above 64KB in PGROUP.  32-bit code on such a stack that addresses it
+with ESP (VSBHDA's INT 31h hook called by DOS/4GW) then runs into the
+segment limit.  As HDPMI does (its PL0 stack is below 64KB), make that
+word 0:  switch to the alias DTE_ESPFIX whose base is our stack's base
+plus ESP's high-order word, so the frame stays at the same linear
+address and ESP's high-order word becomes 0 (Linux calls this espfix).
+
+Jumped to (FIXIJMP) instead of IRETD, with SS:ESP ==> the IRETD frame
+and all registers as for the IRETD.
+
+|
+
+IRETD_STR struc
+IRETD_EIP dd	 ?		; EIP
+IRETD_CS dw	 ?,?		; CS w/filler
+IRETD_EFL dd	 ?		; EFL
+IRETD_ESP dd	 ?		; ESP
+IRETD_SS dw	 ?,?		; SS w/filler
+IRETD_STR ends
+
+	 push	 eax		; Save for a moment
+
+	 test	 [esp+4].IRETD_EFL,2 shl 16 ; Izit to VM86 mode?
+	 jnz	 near ptr HDP_IRETD_PLAIN ; Jump if so
+
+	 test	 [esp+4].IRETD_CS,3 ; Izit to PL0 (no stack in the frame)?
+	 jz	 near ptr HDP_IRETD_PLAIN ; Jump if so
+
+	 test	 esp,0FFFF0000h ; Izit our ESP's high-order word 0 already?
+	 jz	 near ptr HDP_IRETD_PLAIN ; Jump if so
+
+	 movzx	 eax,[esp+4].IRETD_SS ; Get the caller's SS
+	 lar	 eax,eax	; Get its access rights
+	 jnz	 near ptr HDP_IRETD_PLAIN ; Jump if invalid (let IRETD fault)
+
+	 test	 eax,1 shl 22	; Izit a 32-bit stack?
+	 jnz	 near ptr HDP_IRETD_PLAIN ; Jump if so
+
+; DTE_ESPFIX:  base = our stack's base + ESP's high-order word, 64KB
+
+	 REGSAVE <ebx,ecx,ds>	; Save registers
+
+	 push	 DTE_D4GB	; Get all memory selector
+	 pop	 ds		; Address it
+	 assume  ds:AGROUP	; Tell the assembler about it
+
+	 sub	 esp,8		; Room for the GDTR
+	 SGDTD	 [esp].EDF	; Get it
+	 mov	 ebx,[esp+2]	; GDT base
+	 add	 esp,8		; Strip
+
+	 mov	 ecx,ss 	; Our stack selector
+	 and	 ecx,not 7	; Its offset in the GDT
+	 mov	 eax,AGROUP:[ebx+ecx+2] ; Base bits 0-23 (and access)
+	 and	 eax,00FFFFFFh	; Isolate the base
+	 mov	 cl,AGROUP:[ebx+ecx+7] ; Base bits 24-31
+	 shl	 ecx,24 	; ...
+	 or	 eax,ecx	; Our stack's base
+	 mov	 ecx,esp	; Our ESP
+	 and	 ecx,0FFFF0000h ; Its high-order word
+	 add	 eax,ecx	; The alias's base
+
+	 add	 ebx,DTE_ESPFIX ; The alias's descriptor
+	 mov	 AGROUP:[ebx+0].ELO,0FFFFh ; Limit 64KB
+	 mov	 AGROUP:[ebx+2].ELO,ax ; Base bits 0-15
+	 shr	 eax,16 	; Base bits 16-31
+	 mov	 AGROUP:[ebx+4].LO,al ; Base bits 16-23
+	 mov	 AGROUP:[ebx+5].LO,92h ; Present, DPL 0, data R/W
+	 mov	 AGROUP:[ebx+6].LO,0 ; Byte granular, 16-bit, limit bits 16-19 = 0
+	 mov	 AGROUP:[ebx+7].LO,ah ; Base bits 24-31
+
+	 REGREST <ds,ecx,ebx>	; Restore
+	 assume  ds:nothing	; Tell the assembler about it
+
+	 cli			; No interrupts on the alias
+	 mov	 eax,DTE_ESPFIX ; The alias
+	 mov	 ss,ax		; Switch to it (no interrupt before the next)
+	 and	 esp,0FFFFh	; The same linear address, high-order word 0
+HDP_IRETD_PLAIN:
+	 pop	 eax		; Restore
+
+	 iretd			; Return (flags from the frame)
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+HDP_IRETD endp			; End HDP_IRETD procedure
 	 NPPROC  HDP_SEGPFX -- Segment Override Prefix of the Instruction
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|

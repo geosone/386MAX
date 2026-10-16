@@ -239,7 +239,8 @@ DTE_SSIO dq	 ?		; E8: Stack ...
 	 dq	 ?		; 100: (available)
 	 dq	 ?		; 108: (available)
 DTE_DPMI_VSAPI	dq ?		; 110: DPMI Vendor-Specific API entry call gate
-	 dq	 ?		; 118: (available)
+DTE_ESPFIX dq	 ?		; 118: Open 386MAX:  PL0 stack alias for
+				;      IRETs to 16-bit stacks (HDP_IRETD)
 DTE_DPMIDEF dq	 ?		; 120: DPMI default interrupt handler
 DTE_FIXUP dq	 ?		; 128: FGROUP tables
 DTE_CSIG dq	 ?		; 130: IGROUP code selector

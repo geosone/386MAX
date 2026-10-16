@@ -66,6 +66,13 @@ and their timeout; `INC/TESTLIB.INC` has the output and counting macros.
   (the same with HDPMI16I/HDPMI32I, the IOPL 0 variants with the port
   traps of the HDPMI API: the reference for HDPAPI/HDPTRAP).
 
+  Scenario programs in `TESTS/SCENARIO` (not in MAX.LST, run by hand
+  with `linux/test/run.sh`): TICK, SBPM and SB4G (Sound Blaster
+  playback, 3 x 1 s), and the WAVE players WAVRM/WAV4G (`WAVPLAY.C`,
+  OpenWatcom) and WAVPM (`WAVPM.ASM`), which play `TESTS/DATA/DRMAPAN.WAV`
+  through SB16 8-bit stereo auto-init DMA. `TESTS/DATA` holds
+  third-party test files that are not GPL (see its README).
+
   MS-DOS has no DPMI host of its own: programs got DPMI from the Windows
   3.x/9x DOS box, from MSDPMI (Microsoft C 7), from their extender (CWSDPMI,
   DOS/4GW, Borland RTM) or from the memory manager (386MAX, QEMM QDPMI).

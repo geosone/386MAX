@@ -106,17 +106,34 @@ flag at 1, the child gets its own context, as 386MAX always did.
 
 ## Still missing for VSBHDA with protected-mode games
 
-* **VCPI.** DOS/4GW and similar extenders must use DPMI rather than VCPI
-  while traps are installed.
-* **More tests with VSBHDA and protected-mode programs** before the name
-  is answered by default. Tested so far, with the name switched on in a
-  test build (`make -C 386MAX DEFS="@HDP_ON"`):
-  * VSBHDA 2.0 on QEMU HDA
-  * `TESTS/SCENARIO/SBPM`, Sound Blaster playback by a 32-bit DPMI client
-    (3 IRQs, 440 Hz)
-  * SBPLAY in real mode, which still works next to it
+* **More tests with real games** before the name is answered by
+  default. Tested so far, with the name switched on in a test build
+  (`make -C 386MAX DEFS="@HDP_ON"`): VSBHDA 2.0 on QEMU HDA with all three
+  test programs. Each gets 3 IRQs and 440 Hz, as under HDPMI32i:
+  * SBPLAY in real mode
+  * `TESTS/SCENARIO/SBPM`, a 32-bit DPMI client
+  * `TESTS/SCENARIO/SB4G`, a DOS/4GW program
+  * the WAVE players `TESTS/SCENARIO/WAVPLAY.C` (WAVRM in real mode,
+    WAV4G with DOS/4GW) and `WAVPM.ASM` (32-bit DPMI client). They play
+    `TESTS/DATA/DRMAPAN.WAV` (a drum panned in a circle, mixed down to
+    stereo) through SB16 8-bit stereo auto-init DMA. All three play the
+    whole file (26 of 26 blocks), as on QEMU's own SB16.
 
-  DOS/4GW games remain to be tested.
+## DOS extenders and 16-bit stacks
+
+* **No VCPI while traps are installed.** 386MAX steers DOS/4GW, Phar Lap
+  and FoxPro to VCPI. While the HDPMI API traps ports or CLI/STI it stops
+  doing so, because through VCPI they would bypass the traps.
+* **Clean ESP on 16-bit stacks.** An IRET to a 16-bit stack loads only
+  SP; ESP's high-order word stays the one of the host's ring 0 stack.
+  HDPMI's ring 0 stack is below 64 KB, so that word is 0 there. 386MAX's
+  ring 0 stack is above 64 KB. 32-bit code on such a stack that addresses
+  it with ESP faults: for example VSBHDA's INT 31h hook or its CLI
+  handler, called by DOS/4GW. When 386MAX enters a client's interrupt or
+  exception handler, or returns to the client, it switches to an alias of
+  its stack (`DTE_ESPFIX`) first, so ESP's high-order word becomes 0, as
+  under HDPMI. The CLI/STI handlers go through a small stub that does
+  `movzx esp,sp`.
 
 ## Tests
 

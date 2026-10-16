@@ -239,6 +239,7 @@ JCODE	 segment use16 dword public 'jcode' ; Start JCODE segment
 
 	 extrn	 INT4B_INTRETPM:far
 	 extrn	 DPMI_RSPRET:far
+	 extrn	 HDP_IRETD:far
 
 JCODE	 ends			; End JCODE segment
 
@@ -2756,7 +2757,8 @@ PMFLTCOM_IRETDCOM:
 	 mov	 ebx,[ebp].DPMI_FLT_EBX ; ...
 	 mov	 ebp,[ebp].DPMI_FLT_EBP ; ...
 
-	 iretd			; Call the next handler in sequence
+	 FIXIJMP JGROUP:HDP_IRETD,DTE_CSJG ; IRETD (clean ESP on 16-bit stacks)
+				; to call the next handler in sequence
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
@@ -3388,7 +3390,8 @@ PMINTCOM_CLI:
 	 mov	 ebx,[ebp].DPMI_INT_EBX ; ...
 	 mov	 ebp,[ebp].DPMI_INT_EBP ; ...
 
-	 iretd			; Call the next handler in sequence
+	 FIXIJMP JGROUP:HDP_IRETD,DTE_CSJG ; IRETD (clean ESP on 16-bit stacks)
+				; to call the next handler in sequence
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
@@ -3836,7 +3839,8 @@ DPMI_COM_IRETD:
 	 and	 [esp].ELO,not (mask $NT) ; NT=0
 	 popf			; Restore
 
-	 iretd			; Return to caller
+	 FIXIJMP JGROUP:HDP_IRETD,DTE_CSJG ; IRETD (clean ESP on 16-bit stacks)
+				; to return to caller
 
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
