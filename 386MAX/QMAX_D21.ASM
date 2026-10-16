@@ -1856,12 +1856,9 @@ INT21_DPMI_IOCTL2:
 
 ; 440E:  Check multiple drives per block device
 ; 440F:  Change logical drive
+; and all others (4410h/4411h:  query IOCTL handle/drive)
 
-	 cmp	 al,0Fh 	; Izit pass through?
-	 jbe	 short INT21_DPMI_IOCTL2_PASSTHRU ; Jump if so
-
-	 lods	 JMPTAB21[si]	; Get next action
-	 jmp	 ax		; Take appropriate action
+	 jmp	 short INT21_DPMI_IOCTL2_PASSTHRU ; Pass through
 
 
 INT21_DPMI_IOCTL2_PASSTHRU:
@@ -1876,6 +1873,8 @@ INT21_DPMI_IOCTL2_READBLK:
 	 mov	 ebx,[ebp].INTXX_ECX ; Get # bytes to read
 ;;;;;;;; IF16ZX  bx,IG		; Zero to use as dword if 16-bit client
 INT21_DPMI_IOCTL2_READ:
+	 mov	 ax,1		; # leading bytes to copy
+INT21_DPMI_IOCTL2_READL:	; Entry with AX = # leading bytes to copy
 	 push	 [ebp].INTXX_EDX ; Save over following code as
 				; we'll clobber it
 	 call	 SAVE_VMCREGS	; Save current values of VMCREGS on stack
@@ -1888,7 +1887,7 @@ INT21_DPMI_IOCTL2_READ:
 @@:
 	 push	 bx		; LOW2EXT:  # bytes to release
 	 push	 bx		; LOW2EXT:  # trailing bytes to copy
-	 push	 1		; GETBUF:   # leading bytes to copy
+	 push	 ax		; GETBUF:   # leading bytes to copy
 	 push	 bx		; GETBUF:   # bytes to allocate
 
 	 lea	 si,INT21_DPMIJMP_READDEV ; CS:SI ==> action stream
@@ -1940,10 +1939,10 @@ INT21_DPMI_IOCTL2_GENDEV:
 	 cmp	 al,6Bh 	; Izit Get Prepare List?
 	 je	 short INT21_DPMI_IOCTL2_GENDEV_GPL ; Jump if so
 
-; The subfunction code is not supported
+; The other subfunctions are passed through (Open 386MAX:  falling into
+; the next action stream ran GETBUF with arguments never pushed)
 
-	 lods	 JMPTAB21[si]	; Get next action
-	 jmp	 ax		; Take appropriate action
+	 jmp	 INT21_DPMI_IOCTL2_PASSTHRU ; Pass through
 
 
 INT21_DPMI_IOCTL2_GENDEV_PS:
@@ -2020,10 +2019,31 @@ INT21_DPMI_IOCTL2_GENBLK:
 	 cmp	 al,67h 	; Izit Get Access Flag?
 	 je	 near ptr INT21_DPMI_IOCTL2_READ ; Jump if so
 
-; The subfunction code is not supported
+; Open 386MAX:  media ID (info level, serial, label, FS type) and media type
 
-	 lods	 JMPTAB21[si]	; Get next action
-	 jmp	 ax		; Take appropriate action
+	 mov	 bx,2+4+11+8	; Size of the media ID structure
+
+	 cmp	 al,46h 	; Izit Set Media ID?
+	 je	 near ptr INT21_DPMI_IOCTL2_WRITE ; Jump if so
+
+	 cmp	 al,66h 	; Izit Get Media ID?
+	 jne	 short @F	; Jump if not
+
+	 mov	 ax,2		; Copy the info level word (must be 0)
+	 jmp	 INT21_DPMI_IOCTL2_READL ; Join common code
+@@:
+
+	 mov	 bx,2		; Size of the media type result
+
+	 cmp	 al,68h 	; Izit Sense Media Type?
+	 je	 near ptr INT21_DPMI_IOCTL2_READ ; Jump if so
+
+; The other subfunctions are passed through:  the DOS 7 volume locks
+; (4Ah/4Bh/6Ah/6Bh, required before INT 26h) and lock queries carry no
+; pointer (Open 386MAX:  falling into the next action stream ran GETBUF
+; with arguments never pushed and hung or corrupted DOS memory)
+
+	 jmp	 INT21_DPMI_IOCTL2_PASSTHRU ; Pass through
 
 	 assume  ds:nothing,es:nothing ; Tell the assembler about it
 
