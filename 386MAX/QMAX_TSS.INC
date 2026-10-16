@@ -67,6 +67,7 @@ DPTSS_VMM_RSP_cb32 dd ? 	;134-137: RSP 32-bit callback entry offset
 DPTSS_VMM_RSP_cb16 dw ? 	;138-139: RSP 16-bit callback entry offset
 DPTSS_VMM_P2LMapTable dd ?	;13A-13D: LA of P2L mapping table
 DPTSS_VMM_P2LMapSize dd ?	;13E-141: size (bytes) of mapping table
+DPTSS_MEI_0C dw ?		;142-143: 1 = handler set with INT 33h AX=000Ch
 
 if (($-DPTSS_TSS) mod 4)
 	 db	 (4-(($-DPTSS_TSS) mod 4)) dup (?) ; For dword alignment

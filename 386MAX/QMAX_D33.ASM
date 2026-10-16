@@ -430,7 +430,7 @@ INT33_DPMI_HOOKMEI:
 
 	 mov	 ebx,[ebp].INTXX_EDX ; Get offset
 	 mov	 PGROUP:[eax].DPTSS_MEI_FVEC.FOFF,ebx ; Set offset
-
+	 mov	 PGROUP:[eax].DPTSS_MEI_0C,1 ; Remove it from the driver on exit
 	 mov	 bx,PGROUP:[eax].DPTSS_HPDASEG ; Get segment of HPDA
 	 mov	 VMCREGS.VMC_ES,bx ; Pass to VM
 	 mov	 VMCREGS.VMC_EDX.ELO,offset HPDA_MEI ; Save offset
@@ -961,7 +961,15 @@ Restore mouse event interrupt
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of current TSS
 
 	 cmp	 PGROUP:[edx].DPTSS_MEI_ORIG_VEC,0 ; Izit valid?
+	 jne	 short @F	; Jump if so (restore the swapped one)
+
+; If the client set a handler with AX=000Ch, the driver would keep
+; calling its HPDA after termination:  set the call mask to 0 (0:0)
+
+	 cmp	 PGROUP:[edx].DPTSS_MEI_0C,0 ; Did it set one?
 	 je	 short INT33_DPMI_RESTMEI_EXIT ; Jump if not
+@@:
+	 mov	 PGROUP:[edx].DPTSS_MEI_0C,0 ; Only once
 
 	 lea	 si,INT33_DPMIJMP_RESTMEI ; CS:SI ==> action stream
 	 lods	 JMPTAB33[si]	; Get next action
