@@ -19,6 +19,7 @@ check (OK / FAIL) and ends with errorlevel 0 when all checks passed.
 | DPMI | XMSMAP  | XMS block allocated first thing by a DPMI client, locked, mapped with 0800h (sound driver DMA buffers: VSBHDA, SBEMU) |
 | DPMI | HDPAPI  | HDPMI vendor API ("HDPMI" through 168Ah): 5 (HDPMI=32 flag), 8 (simulate I/O: IN/OUT, port in DX or BH, REP INS/OUTS) |
 | DPMI | HDPTRAP | HDPMI vendor API 6/7/9: protected-mode port traps (handler called with HDPMI's error code for IN/OUT DX and immediate, word/dword, ES: REP OUTSB), ports outside the ranges, CLI handler |
+| DPMI | EXEC32  | INT 21h 4B00h from a 32-bit client: parameter block with 8-byte slots (command line, FCB 1, FCB 2), as HDPMI, Windows 9x/XP and DPMIONE have it; the real-mode child checks PSP:80h/5Ch/6Ch |
 | DPMI | HDPSHR  | HDPMI vendor API 5 (shared context): a resident client with a port trap and a PM INT 60h hook starts itself from real mode; the nested client sees both, its memory and selectors are freed when it ends, the parent's state is unchanged (VSBHDA with protected-mode games) |
 | DPMI | MOUSE12, MOUSE18 | INT 33h 0Ch/12h/18h/19h handlers (need a mouse driver) |
 | QPI  | QPITEST | QEMM programming interface (INT 2Fh D201h, INT 67h 3Fh) |

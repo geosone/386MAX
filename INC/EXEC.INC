@@ -17,11 +17,16 @@ EXEC_FCB2 dd	 ?		; ...		 #2
 EXEC_STR ends
 
 
-EXECD_STR struc 		; Used for 32-bit EXEC calls
+EXECD_STR struc 		; Used for 32-bit EXEC calls (Open 386MAX:
+				; 8-byte slots as HDPMI, Windows 9x/XP,
+				; DPMIONE and 32RTM have them)
 
 EXECD_CMD df	 ?		; Sel|off of command line
+	 dw	 ?		; (filler)
 EXECD_FCB1 df	 ?		; ...	     FCB #1
+	 dw	 ?		; (filler)
 EXECD_FCB2 df	 ?		; ...		 #2
+	 dw	 ?		; (filler)
 
 EXECD_STR ends
 

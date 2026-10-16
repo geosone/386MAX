@@ -6,7 +6,7 @@
 ; must see the parent's INT 60h handler and port trap, and it leaves a
 ; memory block and selectors allocated.  Afterwards the parent's vector,
 ; memory and LDT must be as before, the child's selectors freed.
-; Open 386MAX answers "HDPMI" after "386MAX" AX=0200h BL=1.
+; Open 386MAX answers "HDPMI" unless "386MAX" AX=0200h BL=0 hid it.
 ; The 32-bit clients stay in a 16-bit code segment.
 ; Errorlevel 0 = all OK, 1 = a check failed, 2 = no 32-bit DPMI host.
 ; Build: jwasm -mz HDPSHR.ASM
@@ -40,7 +40,8 @@ entry	dd	?
 child	db	0			; 1 = started with the argument C
 rmds	dw	?			; real mode segment of the data
 maxapi	df	0			; '386MAX' vendor API (0 = none)
-hdpapi	df	0			; 'HDPMI' vendor API
+hdpapi	df	0
+oldname	db	1			; "HDPMI" answered before the test			; 'HDPMI' vendor API
 nmax	db	'386MAX',0
 nhdp	db	'HDPMI',0
 procs	dd	offset inproc		; TRAPPROCS
@@ -219,6 +220,7 @@ pm:	movzx	esp,sp
 	mov	ax,0200h
 	mov	bl,1
 	call	[maxapi]
+	mov	oldname,al
 @@:	call	ds2es
 	mov	si,offset nhdp
 	call	vendor
@@ -394,7 +396,7 @@ pm:	movzx	esp,sp
 	or	eax,eax
 	jz	done
 	mov	ax,0200h
-	mov	bl,0
+	mov	bl,oldname		; as it was
 	call	[maxapi]
 done:	call	finish
 

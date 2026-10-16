@@ -39,6 +39,9 @@ with HDPMI16I/HDPMI32I, the IOPL 0 variants with the full HDPMI API).
 exits with 1 when a test got worse (PASS/END -> FAIL/HANG/CRASH);
 --update merges the results into the baseline; --matrix writes
 build/suite/matrix.md from the baselines.
+
+MAXBIN=<dir> takes the 386MAX files from there instead of build/bin, e.g.
+MAXBIN=build/386MAX-hdpon for a variant build.
 """
 import argparse
 import os
@@ -179,7 +182,8 @@ def make_image(dos, profile, suites, tests, out):
         subprocess.run(['mmd', '-i', p, '::/' + d.replace('\\', '/')], env=ENV,
                        capture_output=True)
     for f in ['386MAX.SYS', '386MAX.VXD', '386LOAD.SYS', '386LOAD.COM', '386UTIL.COM']:
-        f = os.path.join(ROOT, 'build', 'bin', f)
+        g = os.path.join(os.environ.get('MAXBIN', ''), f)
+        f = g if os.environ.get('MAXBIN') and os.path.exists(g) else os.path.join(ROOT, 'build', 'bin', f)
         if os.path.exists(f):
             sh('mcopy', '-o', '-i', p, f, '::/MAX/')
     cfg, ref, _ = PROFILES[profile]

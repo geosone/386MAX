@@ -34,7 +34,9 @@ clients sharing the parent's context; see docs/hdpmi.md) gives the same
 results as HDPMI32i (`maxhdpmii`).  DPMI memory handles are never 0 any
 more, and starting a nested client no longer leaves a selector for its
 PSP in the parent's LDT (the Phar Lap check of 1687h used the DOS
-translation).  On
+translation).  The 32-bit INT 21h 4B00h parameter block has 8-byte slots
+like on HDPMI (it had 6-byte ones).  The "HDPMI" vendor name is answered
+by default.  On
 HDPMI's IOPL 3 variants (`hdpmi`, `maxhdpmi`) functions 6-10 don't exist
 and the tests skip them.  VSBHDA 2.0 with protected-mode support on
 386MAX's own DPMI host (HDPMI API switched on in a test build): SBPM, a
@@ -172,6 +174,7 @@ the value around old DOS extenders), DE06h accepts page 100h (as QEMM).
 | DOSXLAT | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | FAIL | SKIP | SKIP | FAIL |  | PASS | PASS | PASS | PASS | PASS |
 | DPMI10 | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |  | PASS | PASS | PASS | PASS | PASS |
 | EMSFUNC | PASS | SKIP | CRASH | FAIL | FAIL | SKIP | SKIP | SKIP | PASS | PASS |  | PASS | PASS | PASS | PASS | PASS |
+| EXEC32 |  |  |  |  |  |  | PASS | SKIP | SKIP | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
 | HDPAPI |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
 | HDPSHR |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
 | HDPTRAP |  |  |  |  |  |  | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |

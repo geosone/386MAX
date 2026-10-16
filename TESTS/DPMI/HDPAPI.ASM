@@ -1,8 +1,8 @@
 ; HDPAPI.ASM - the HDPMI vendor API ("HDPMI" through INT 2Fh AX=168Ah)
 ; as a 32-bit client sees it:  function 5 (HDPMI=32 flag) and function 8
 ; (simulate I/O:  IN/OUT with the port in DX or BH, INS/OUTS with REP).
-; Open 386MAX answers the name after its own vendor API "386MAX" AX=0200h
-; BL=1 (until the HDPMI support is complete); HDPMI answers it always.
+; Open 386MAX answers the name by default; its own vendor API "386MAX"
+; AX=0200h BL=0 hides it, BL=1 answers it again.  HDPMI answers it always.
 ; The 32-bit client stays in a 16-bit code segment.
 ; Errorlevel 0 = all OK, 1 = a check failed, 2 = no 32-bit DPMI host.
 ; Build: jwasm -mz HDPAPI.ASM
@@ -88,15 +88,17 @@ pm:	movzx	esp,sp
 	mov	word ptr maxapi+4,es
 	push	ds
 	pop	es
-	mov	si,offset nhdp		; not yet
+	mov	si,offset nhdp		; answered by default
 	call	vendor
-	CHECK	'386MAX:  not answered by default', c
+	CHECK	'386MAX:  answered by default', nc
+	push	ds
+	pop	es
 	mov	ax,0200h
 	mov	bl,1
 	call	[maxapi]
 	pushf
-	cmp	al,0
-	CHECK	'386MAX AX=0200h BL=1:  AL=0 (was off)', e
+	cmp	al,1
+	CHECK	'386MAX AX=0200h BL=1:  AL=1 (was on)', e
 	popf
 	CHECK	'... CF=0', nc
 @@:	push	ds
@@ -238,6 +240,9 @@ pm:	movzx	esp,sp
 	push	ds
 	pop	es
 	CHECK	'"HDPMI" no longer answered', c
+	mov	ax,0200h		; on again
+	mov	bl,1
+	call	[maxapi]
 done:	call	finish
 
 	end	start

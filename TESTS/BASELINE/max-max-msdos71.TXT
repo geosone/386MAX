@@ -2,6 +2,7 @@ max/DISKIO               PASS
 max/DOSXLAT              PASS
 max/DPMI10               PASS
 max/EMSFUNC              PASS
+max/EXEC32               PASS
 max/HDPAPI               PASS
 max/HDPSHR               PASS
 max/HDPTRAP              PASS

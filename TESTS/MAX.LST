@@ -18,6 +18,7 @@ DPMI/XMSMAP   needs=dpmi,xms
 DPMI/HDPAPI   needs=dpmi32
 DPMI/HDPTRAP  needs=dpmi32
 DPMI/HDPSHR   needs=dpmi32
+DPMI/EXEC32   needs=dpmi32,xlat
 DPMI/MOUSE12  needs=dpmi,mouse
 DPMI/MOUSE18  needs=dpmi,mouse
 QPI/QPITEST   needs=qpi

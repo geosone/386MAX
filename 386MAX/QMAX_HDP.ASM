@@ -133,11 +133,8 @@ JDATA	 segment use16 dword public 'jcode' ; Start JDATA segment
 	 extrn	 QPI_PORT:word
 
 	 public  HDP_FLAG,HDP_SEP,HDP_IOPLF
-ifdef @HDP_ON
-HDP_FLAG db	 01h		; Flags (test build:  'HDPMI' answered)
-else
-HDP_FLAG db	 0		; Flags
-endif				; IFDEF @HDP_ON
+HDP_FLAG db	 @HDP_NAME	; Flags ('HDPMI' answered unless the
+				; "386MAX" vendor API AX=0200h BL=0 hid it)
 @HDP_NAME equ	 01h		; The name 'HDPMI' is answered
 @HDP_GPON equ	 02h		; GP_ACT entries point to GP_HDPSTUB
 HDP_SEP  db	 1		; HDPMI=32 flag:  1 = new clients get a

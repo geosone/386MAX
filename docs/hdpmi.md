@@ -13,16 +13,12 @@ the tests in `TESTS/DPMI` and the `maxhdpmii` profile of
 
 ## Status
 
-The API is **not answered by default yet**. VSBHDA asks for `"HDPMI"`. If
-it finds the API, it installs protected-mode port traps and relies on
-nested clients sharing its context. Both are implemented now, but the
-name stays hidden until VSBHDA with protected-mode games has been tested
-(see below). Without the name, VSBHDA runs as before, with real-mode
-support only.
+The API is answered by default. VSBHDA finds it and gets protected-mode
+support (port traps, shared context for the games it serves) on 386MAX's
+own DPMI host, without HDPMI.
 
-To enable the name, call the `"386MAX"` vendor API with `AX=0200h`, `BL=1`
-(`BL=0` hides it again). `AL` returns the previous setting. The tests use
-this switch.
+The `"386MAX"` vendor API `AX=0200h` hides the name (`BL=0`) or answers
+it again (`BL=1`); `AL` returns the previous setting.
 
 ## Entry point
 
@@ -106,10 +102,9 @@ flag at 1, the child gets its own context, as 386MAX always did.
 
 ## Still missing for VSBHDA with protected-mode games
 
-* **More tests with real games** before the name is answered by
-  default. Tested so far, with the name switched on in a test build
-  (`make -C 386MAX DEFS="@HDP_ON"`): VSBHDA 2.0 on QEMU HDA with all three
-  test programs. Each gets 3 IRQs and 440 Hz, as under HDPMI32i:
+* **More tests with real games.** Tested so far: VSBHDA 2.0 on QEMU HDA
+  with all three test programs. Each gets 3 IRQs and 440 Hz, as under
+  HDPMI32i:
   * SBPLAY in real mode
   * `TESTS/SCENARIO/SBPM`, a 32-bit DPMI client
   * `TESTS/SCENARIO/SB4G`, a DOS/4GW program

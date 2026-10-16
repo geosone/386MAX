@@ -4,7 +4,7 @@
 ; OUTSB with a segment prefix:  the handler sees HDPMI's error code and
 ; port, returns IN values and advances EIP.  Ports outside the ranges
 ; go to the hardware.  A CLI handler is called with an IRET frame.
-; Open 386MAX answers "HDPMI" after "386MAX" AX=0200h BL=1.
+; Open 386MAX answers "HDPMI" unless "386MAX" AX=0200h BL=0 hid it.
 ; The 32-bit client stays in a 16-bit code segment.
 ; Errorlevel 0 = all OK, 1 = a check failed, 2 = no 32-bit DPMI host.
 ; Build: jwasm -mz HDPTRAP.ASM
@@ -16,7 +16,8 @@
 	.data
 entry	dd	?
 maxapi	df	0			; '386MAX' vendor API (0 = none)
-hdpapi	df	0			; 'HDPMI' vendor API
+hdpapi	df	0
+oldname	db	1			; "HDPMI" answered before the test			; 'HDPMI' vendor API
 nmax	db	'386MAX',0
 nhdp	db	'HDPMI',0
 procs	dd	offset inproc		; TRAPPROCS:  IN  handler
@@ -196,6 +197,7 @@ pm:	movzx	esp,sp
 	mov	ax,0200h
 	mov	bl,1
 	call	[maxapi]
+	mov	oldname,al
 @@:	call	ds2es
 	mov	si,offset nhdp
 	call	vendor
@@ -440,7 +442,7 @@ nobig:
 	or	eax,eax
 	jz	done
 	mov	ax,0200h
-	mov	bl,0
+	mov	bl,oldname		; as it was
 	call	[maxapi]
 done:	call	finish
 
