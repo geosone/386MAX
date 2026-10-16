@@ -17,3 +17,4 @@ max/VCPIFUNC             PASS
 max/VDSFUNC              PASS
 max/XLAT32               FAIL
 max/XMSFUNC              PASS
+max/XMSMAP               PASS

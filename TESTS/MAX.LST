@@ -3,30 +3,15 @@
 # needs: xms ems vcpi vds qpi mouse; dpmi (16-bit clients) dpmi32 dpmi1 (DPMI 1.0)
 #        xlat (DOS/BIOS API translation in protected mode: 386MAX, HDPMI; not CWSDPMI)
 # Errorlevel 0 = PASS.  Run with linux/test/suite.py (QEMU) or RUNTESTS.BAT (DOS).
+# 8.x (maintenance):  the tests of 9.x features (DOS/BIOS translation beyond
+# 8.x, INT 33h 12h/18h, the HDPMI API, the full QPI) are in the tree but not
+# listed here; 9.x lists them.
 XMS/XMSFUNC   needs=xms timeout=120
 EMS/EMSFUNC   needs=ems
 VCPI/VCPIFUNC needs=vcpi
 VDS/VDSFUNC   needs=vds
 V86/V86FUNC
 DPMI/DPMI10   needs=dpmi,dpmi1
-DPMI/DOSXLAT  needs=dpmi,xlat
-DPMI/XLAT32   needs=dpmi32,xlat
 DPMI/PM26     needs=dpmi timeout=60
-DPMI/DISKIO   needs=dpmi,xlat timeout=60
 DPMI/STKFLT   needs=dpmi term
 DPMI/XMSMAP   needs=dpmi,xms
-DPMI/HDPAPI   needs=dpmi32
-DPMI/HDPTRAP  needs=dpmi32
-DPMI/HDPSHR   needs=dpmi32
-DPMI/EXEC32   needs=dpmi32,xlat
-DPMI/MOUSE12  needs=dpmi,mouse
-DPMI/MOUSE18  needs=dpmi,mouse
-QPI/QPITEST   needs=qpi
-QPI/QPITRAP   needs=qpi
-QPI/QPIMISC   needs=qpi
-QPI/QPICTX    needs=qpi,ems
-QPI/QPIIRQ    needs=qpi
-QPI/QPITIMER  needs=qpi
-QPI/QPICRT    needs=qpi
-QPI/QPIVID    needs=qpi
-QPI/QPIPROT   needs=qpi

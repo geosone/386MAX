@@ -4,6 +4,9 @@ DOS programs that check the services of a memory manager: XMS, EMS, DPMI
 (with the DOS and BIOS translation), QPI.  Every test prints one line per
 check (OK / FAIL) and ends with errorlevel 0 when all checks passed.
 
+On this branch (8.x, maintenance) `MAX.LST` lists only the tests of
+services 8.x has; the rows marked (9.x) test features of Open 386MAX 9.
+
 | Directory | Test | What it checks |
 |---|---|---|
 | XMS  | XMSFUNC | XMS 2.0/3.0: version, A20 (03h-07h), free memory (08h/88h), allocate/free, moves conventional/extended in all directions with data checks, lock counts, handle information (0Eh/8Eh), resize (0Fh/8Fh) keeping the contents, error codes A2h-A7h/AAh/ABh, handle exhaustion, a pattern over the whole largest block |
@@ -11,26 +14,26 @@ check (OK / FAIL) and ends with errorlevel 0 when all checks passed.
 | VCPI | VCPIFUNC | VCPI 1.0: DE00h-DE0Bh (memory, CR0, debug registers, 8259 vectors), 100 round trips V86 -> protected mode -> V86 through DE0Ch with an own GDT/TSS/page tables, a DE04h page used in protected mode |
 | VDS  | VDSFUNC | Virtual DMA Services: 8102h-810Ch, lock of conventional memory and of an UMB, scatter/gather, DMA buffer with copy in/out, translation counting, error codes |
 | DPMI | DPMI10  | DPMI 1.0 functions (16-bit client) |
-| DPMI | DOSXLAT | DOS API translation in protected mode: LFN (71xxh), FAT32 (73xxh), country, DBCS, swappable data area |
-| DPMI | XLAT32  | the same for a 32-bit client |
+| DPMI (9.x) | DOSXLAT | DOS API translation in protected mode: LFN (71xxh), FAT32 (73xxh), country, DBCS, swappable data area |
+| DPMI (9.x) | XLAT32  | the same for a 32-bit client |
 | DPMI | PM26    | INT 25h/26h through 0301h with DOS buffers (host's V86 side, mode switches) |
-| DPMI | DISKIO  | INT 13h/25h/26h and 7305h from protected mode, buffers above 4 KB, DOS 7 volume lock |
+| DPMI (9.x) | DISKIO  | INT 13h/25h/26h and 7305h from protected mode, buffers above 4 KB, DOS 7 volume lock |
 | DPMI | STKFLT  | a 32-bit client with an invalid stack calls INT 21h (must not reset the machine) |
 | DPMI | XMSMAP  | XMS block allocated first thing by a DPMI client, locked, mapped with 0800h (sound driver DMA buffers: VSBHDA, SBEMU) |
-| DPMI | HDPAPI  | HDPMI vendor API ("HDPMI" through 168Ah): 5 (HDPMI=32 flag), 8 (simulate I/O: IN/OUT, port in DX or BH, REP INS/OUTS) |
-| DPMI | HDPTRAP | HDPMI vendor API 6/7/9: protected-mode port traps (handler called with HDPMI's error code for IN/OUT DX and immediate, word/dword, ES: REP OUTSB), ports outside the ranges, CLI handler |
-| DPMI | EXEC32  | INT 21h 4B00h from a 32-bit client: parameter block with 8-byte slots (command line, FCB 1, FCB 2), as HDPMI, Windows 9x/XP and DPMIONE have it; the real-mode child checks PSP:80h/5Ch/6Ch |
-| DPMI | HDPSHR  | HDPMI vendor API 5 (shared context): a resident client with a port trap and a PM INT 60h hook starts itself from real mode; the nested client sees both, its memory and selectors are freed when it ends, the parent's state is unchanged (VSBHDA with protected-mode games) |
-| DPMI | MOUSE12, MOUSE18 | INT 33h 0Ch/12h/18h/19h handlers (need a mouse driver) |
-| QPI  | QPITEST | QEMM programming interface (INT 2Fh D201h, INT 67h 3Fh) |
-| QPI  | QPITRAP | port trapping with callback (1A06h-1A0Ah), default callback, 1A05h |
-| QPI  | QPIMISC | 1B07h, 1E03h/1E04h, 22h (DESQview/X pool block), 23h (VCPI quota), 28h, 2Ah |
-| QPI  | QPICTX  | mapping contexts 04h-08h, 0Ah, 0Bh (EMS handle), 0Fh (DESQview's per-task address spaces) |
-| QPI  | QPIIRQ  | IRQ calldowns 1C00h-1C04h |
-| QPI  | QPITIMER | timer channel 0 virtualization 15h |
-| QPI  | QPICRT  | CRTC/DAC trapping 0Dh with cursor callbacks 0Eh, 3DAh retrace pattern, 1A02h/1A03h past it |
-| QPI  | QPIVID  | VIDRAM 13h for text background windows: 1301h dirty pages, 130Ah DAC buffer, 1308h all CRT ports, 1309h Hercules callback |
-| QPI  | QPIPROT | DESQview protection levels 14h (initialization, level 0 as DESQview uses it) |
+| DPMI (9.x) | HDPAPI  | HDPMI vendor API ("HDPMI" through 168Ah): 5 (HDPMI=32 flag), 8 (simulate I/O: IN/OUT, port in DX or BH, REP INS/OUTS) |
+| DPMI (9.x) | HDPTRAP | HDPMI vendor API 6/7/9: protected-mode port traps (handler called with HDPMI's error code for IN/OUT DX and immediate, word/dword, ES: REP OUTSB), ports outside the ranges, CLI handler |
+| DPMI (9.x) | EXEC32  | INT 21h 4B00h from a 32-bit client: parameter block with 8-byte slots (command line, FCB 1, FCB 2), as HDPMI, Windows 9x/XP and DPMIONE have it; the real-mode child checks PSP:80h/5Ch/6Ch |
+| DPMI (9.x) | HDPSHR  | HDPMI vendor API 5 (shared context): a resident client with a port trap and a PM INT 60h hook starts itself from real mode; the nested client sees both, its memory and selectors are freed when it ends, the parent's state is unchanged (VSBHDA with protected-mode games) |
+| DPMI (9.x) | MOUSE12, MOUSE18 | INT 33h 0Ch/12h/18h/19h handlers (need a mouse driver) |
+| QPI (9.x) | QPITEST | QEMM programming interface (INT 2Fh D201h, INT 67h 3Fh) |
+| QPI (9.x) | QPITRAP | port trapping with callback (1A06h-1A0Ah), default callback, 1A05h |
+| QPI (9.x) | QPIMISC | 1B07h, 1E03h/1E04h, 22h (DESQview/X pool block), 23h (VCPI quota), 28h, 2Ah |
+| QPI (9.x) | QPICTX  | mapping contexts 04h-08h, 0Ah, 0Bh (EMS handle), 0Fh (DESQview's per-task address spaces) |
+| QPI (9.x) | QPIIRQ  | IRQ calldowns 1C00h-1C04h |
+| QPI (9.x) | QPITIMER | timer channel 0 virtualization 15h |
+| QPI (9.x) | QPICRT  | CRTC/DAC trapping 0Dh with cursor callbacks 0Eh, 3DAh retrace pattern, 1A02h/1A03h past it |
+| QPI (9.x) | QPIVID  | VIDRAM 13h for text background windows: 1301h dirty pages, 130Ah DAC buffer, 1308h all CRT ports, 1309h Hercules callback |
+| QPI (9.x) | QPIPROT | DESQview protection levels 14h (initialization, level 0 as DESQview uses it) |
 
 `MAX.LST` lists the tests with what they need (`needs=xms,ems,dpmi,...`)
 and their timeout; `INC/TESTLIB.INC` has the output and counting macros.

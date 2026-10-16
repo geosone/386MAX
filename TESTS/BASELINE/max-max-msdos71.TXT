@@ -1,0 +1,9 @@
+max/DPMI10               PASS
+max/EMSFUNC              PASS
+max/PM26                 PASS
+max/STKFLT               PASS
+max/V86FUNC              PASS
+max/VCPIFUNC             PASS
+max/VDSFUNC              PASS
+max/XMSFUNC              PASS
+max/XMSMAP               PASS

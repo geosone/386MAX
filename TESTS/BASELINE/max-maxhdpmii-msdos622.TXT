@@ -1,4 +1,13 @@
+max/DPMI10               SKIP
+max/EMSFUNC              PASS
 max/EXEC32               PASS
 max/HDPAPI               PASS
 max/HDPSHR               PASS
 max/HDPTRAP              PASS
+max/PM26                 PASS
+max/STKFLT               PASS
+max/V86FUNC              PASS
+max/VCPIFUNC             PASS
+max/VDSFUNC              PASS
+max/XMSFUNC              PASS
+max/XMSMAP               PASS

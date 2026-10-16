@@ -8,6 +8,7 @@ max/HDPSHR               PASS
 max/HDPTRAP              PASS
 max/MOUSE12              SKIP
 max/MOUSE18              SKIP
+max/PM26                 SKIP
 max/QPITEST              SKIP
 max/STKFLT               SKIP
 max/V86FUNC              PASS
@@ -15,3 +16,4 @@ max/VCPIFUNC             PASS
 max/VDSFUNC              PASS
 max/XLAT32               SKIP
 max/XMSFUNC              PASS
+max/XMSMAP               SKIP
