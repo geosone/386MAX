@@ -9,6 +9,8 @@
 #
 #   make            tools and all projects
 #   make 386MAX     one project
+#   make TESTS      the DOS regression tests (linux/test/suite.py runs them)
+#   make devpkg     ZIP with the built programs and the tests
 #   make MAXLANG=GR the German version (linux/scripts/buildlang.sh builds
 #                   each language in its own tree, mkmedia.sh the media)
 #   make clean      remove build/ (except the Windows test images);
@@ -21,13 +23,15 @@ PROJECTS := 386MAX 386LOAD 386DISK MEMLIMIT ROMSRCH XLAT RAMBASIC QMT EXTRADOS M
 NEWPROJECTS := HELPENG VERLIB HHELP QSHELL
 # Windows programs (OpenWatcom, linux/mk/win.mk) and help files
 WINPROJECTS := CTL3D SFTTABS MAXMETER MAXEDIT QPOPUP QPIFEDIT DOSMAX16 DOSMAX32 RDOSMAX MAXCTRL GOAHEAD MAXSETUP STATUTIL WINMXMZ DOSHELP MAXHELP
+# DOS regression tests (TESTS/README.md) -> build/TESTS
+TESTPROJECTS := TESTS
 
 JWASM_SRC  := $(wildcard linux/jwasm/src/*.c linux/jwasm/src/H/*.h)
 JWLINK_SRC := $(shell find linux/jwlink -name '*.[ch]' -not -path '*/build/*')
 
-.PHONY: all tools $(PROJECTS) $(NEWPROJECTS) $(WINPROJECTS) clean distclean
+.PHONY: all tools $(PROJECTS) $(NEWPROJECTS) $(WINPROJECTS) $(TESTPROJECTS) devpkg clean distclean
 
-all: $(PROJECTS) $(NEWPROJECTS) $(WINPROJECTS)
+all: $(PROJECTS) $(NEWPROJECTS) $(WINPROJECTS) $(TESTPROJECTS)
 
 tools: linux/bin/jwasm linux/bin/jwlink
 
@@ -43,8 +47,13 @@ linux/bin/jwlink: $(JWLINK_SRC) linux/jwlink/GccUnix.mak
 	mkdir -p linux/bin
 	cp linux/jwlink/build/jwlinkLR/jwlink $@
 
-$(PROJECTS) $(NEWPROJECTS) $(WINPROJECTS): tools
+$(PROJECTS) $(NEWPROJECTS) $(WINPROJECTS) $(TESTPROJECTS): tools
 	$(MAKE) -C $@
+
+# development snapshot: the programs of build/bin and the regression tests
+# (release/open386max-<ver>-dev-<commit>.zip)
+devpkg: all
+	linux/scripts/mkdevpkg.sh
 
 # libraries used by other projects
 ASQ: QUILIB ASQENG HELPENG VERLIB
