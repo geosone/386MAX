@@ -12,6 +12,7 @@ on the screen; the runner reads the screen through the QEMU monitor:
     END           an external test ended (it has no pass/fail convention)
     HANG          no end within the test's timeout
     CRASH         the machine reset (QEMU runs with -no-reboot)
+    QEMUFAULT     QEMU itself died with a signal (a QEMU bug, not the guest)
 
 After a HANG or CRASH the runner boots again and continues with the next test.
 QEMU runs with TCG (ACCEL="-accel kvm" for a quick run: KVM is unreliable on
@@ -103,7 +104,7 @@ AUTOEXTRA = {'hdpmi': ['C:\\REF\\HDPMI16.EXE -r > NUL', 'C:\\REF\\HDPMI32.EXE -r
              'maxcws': ['C:\\REF\\CWSDPMI.EXE -p > NUL'],
              'maxhdpmi': ['C:\\REF\\HDPMI16.EXE -r > NUL', 'C:\\REF\\HDPMI32.EXE -r > NUL'],
              'maxhdpmii': ['C:\\REF\\HDPMI16I.EXE -r > NUL', 'C:\\REF\\HDPMI32I.EXE -r > NUL']}
-WORSE = {'FAIL', 'HANG', 'CRASH', 'MISSING'}
+WORSE = {'FAIL', 'HANG', 'CRASH', 'QEMUFAULT', 'MISSING'}
 # TCG by default: KVM on this host is unreliable (KVM and VirtualBox modules
 # loaded together), results under KVM only as a quick pre-test
 ACCEL = os.environ.get('ACCEL', '-accel tcg')
@@ -286,6 +287,9 @@ def boot(img, out, tests, results, log):
                 killed = cur
                 save_screen(out, t.id, scr)
         if killed:
+            # stop the CPU first:  QEMU 10.2 (TCG) sometimes crashed on quit
+            # with a hung guest (SIGSEGV in the shutdown)
+            m.cmd('stop')
             m.cmd('quit')
             break
         time.sleep(0.5)
@@ -312,6 +316,8 @@ def boot(img, out, tests, results, log):
         results['boot'] = ('HANG', '')
     elif last and last not in results:
         st = 'HANG' if killed == last else 'CRASH'
+        if st == 'CRASH' and qemu.returncode is not None and qemu.returncode < 0:
+            st = 'QEMUFAULT'            # QEMU itself died (signal), not the guest
         results[last] = (st, '')
         log('%s %s' % (last, st))
     if killed == 'boot' and last and last not in results:
