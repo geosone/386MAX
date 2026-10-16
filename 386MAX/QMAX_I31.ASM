@@ -217,6 +217,7 @@ EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 extrn	 PPL0STK_DERR:dword
 	 extrn	 PPL0STK_DNRM:dword
 	 extrn	 PPL0STK_MIN:dword
+@VM2PM_STKRES equ 1536		; PL0 stack a new client needs at least
 	 extrn	 PPL0STK_MAP:dword
 
 	 extrn	 PVMTSS:dword
@@ -1318,6 +1319,23 @@ VM2PM_STR ends
 ; 様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様様
 ; From this point on we can signal an error
 
+; Open 386MAX:  ensure there's room on our PL0 stack for one more client.
+; Each nested client (a client that EXECs a program which enters PM in
+; turn) keeps its frames on this stack; without the check a deep nesting
+; (HX's NEWCL) ran past the bottom into the RPN/PAGELINK tables below and
+; corrupted the memory chains.
+
+	 mov	 eax,esp	; Get current stack offset
+	 sub	 eax,PPL0STK_MIN ; Less the minimum = room left
+	 jb	 short INT31_VM2PM_NOSTK ; Jump if none at all
+
+	 cmp	 eax,@VM2PM_STKRES ; Izit enough for another client?
+	 jae	 short @F	; Jump if so
+INT31_VM2PM_NOSTK:
+	 mov	 VM2PM_ERR,8010h ; Internal resource unavailable
+	 jmp	 INT31_VM2PM_ERRCOM ; Join common error code
+
+@@:
 ; Ensure we're not running out of TSSs
 
 	 mov	 esi,PVMTSS	; Get offset in PGROUP of the 1st TSS
