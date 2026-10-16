@@ -87,6 +87,7 @@ ECODE	 ends			; End ECODE segment
 EDATA	 segment use16 dword public 'edata' ; Start EDATA segment
 	 assume  ds:PGROUP
 
+	 extrn	 DPMI_CPFHOOK:byte
 	 extrn	 SEL_4GB:word
 	 extrn	 LAST_INTCOM:dword
 	 extrn	 LAST_INTFLG:dword
@@ -218,6 +219,11 @@ IDATA	 segment use16 dword public 'idata' ; Start IDATA segment
 	 assume  ds:IGROUP
 
 	 extrn	 DPMITYPEIG:byte
+	 extrn	 DPMIOPLF:dword
+	 extrn	 HDP_OVRFLG:byte
+	 extrn	 HDP_OVRHOOK:byte
+	 extrn	 HDP_OVR32:fword
+	 extrn	 HDP_OVR16:dword
 	 extrn	 PMINT_FVECS:fword
 	 extrn	 PMINT_DVECS:dword
 	 extrn	 PMFLT_FVECS:fword
@@ -538,6 +544,30 @@ PMVSAPI32_386MAX equ $-PMIDEF	; Offset in DTE_DPMIDEF
 	 sub	 esp,@VSAPI_DDSTKSIZE*4 ; Make room for args to avoid confusion
 				;   in case there's a Fault
 	 PUSHD	 @VSAPI_386MAX	; Pass flag for 386MAX caller
+	 pushfd 		; Save flags as dword (restored by VSAPI)
+	 cli			; Disallow interrupts in case we're on the LPM
+				; stack so we don't have to save LPMSTK_FVEC
+	 FICALL  0,DTE_DPMI_VSAPI ; Call gate to MAX code in DPMIFN_VSAPI
+
+	 retfd			; Return to 32-bit code
+
+	 public  PMVSAPI16_HDPMI
+PMVSAPI16_HDPMI equ $-PMIDEF	; Offset in DTE_DPMIDEF
+	 sub	 sp,@VSAPI_DDSTKSIZE*4 ; Make room for args to avoid confusion
+				;   in case there's a Fault
+	 PUSHD	 @VSAPI_HDPMI	; Pass flag for HDPMI caller
+	 pushfd 		; Save flags as dword (restored by VSAPI)
+	 cli			; Disallow interrupts in case we're on the LPM
+				; stack so we don't have to save LPMSTK_FVEC
+	 FICALL  0,DTE_DPMI_VSAPI ; Call gate to MAX code in DPMIFN_VSAPI
+
+	 retf			; Return to 16-bit code
+
+	 public  PMVSAPI32_HDPMI
+PMVSAPI32_HDPMI equ $-PMIDEF	; Offset in DTE_DPMIDEF
+	 sub	 esp,@VSAPI_DDSTKSIZE*4 ; Make room for args to avoid confusion
+				;   in case there's a Fault
+	 PUSHD	 @VSAPI_HDPMI	; Pass flag for HDPMI caller
 	 pushfd 		; Save flags as dword (restored by VSAPI)
 	 cli			; Disallow interrupts in case we're on the LPM
 				; stack so we don't have to save LPMSTK_FVEC
@@ -2515,6 +2545,7 @@ PMFLTCOM_XINFO:
 
 	 imul	 eax,type PMFLT_FVECS ; Times size of FVECS
 	 lea	 eax,PMFLT_FVECS[eax] ; Get its offset in IGROUP
+	 call	 PMFLT_HDPOVR	; Use a pending HDPMI API trap handler
 
 	 jmp	 short PMFLTCOM32_COM1 ; Join common code
 
@@ -2638,6 +2669,7 @@ PMFLTCOM_DPMI_FLT16:
 
 	 imul	 eax,type PMFLT_DVECS ; Times size of DVECS
 	 lea	 eax,PMFLT_DVECS[eax] ; Get its offset in IGROUP
+	 call	 PMFLT_HDPOVR	; Use a pending HDPMI API trap handler
 
 	 jmp	 short PMFLTCOM16_COM1 ; Join common code
 
@@ -2696,7 +2728,10 @@ PMFLTCOM_IRETDCOM:
 
 	 and	 [esp].DPMI_IRETD_EFL,not ((mask $VMHI) or (mask $RFHI) \
 		 or (mask $NT) or (mask $IOPL) or (mask $IF) or (mask $TF))
-	 or	 [esp].DPMI_IRETD_EFL,@DPMIOPL shl $IOPL ; IOPL=@DPMIOPL
+	 push	 eax		; Save for a moment
+	 mov	 eax,DPMIOPLF	; Get the IOPL bits
+	 or	 [esp+4].DPMI_IRETD_EFL,eax ; IOPL=DPMIOPLF
+	 pop	 eax		; Restore
 
 	 mov	 ds,[ebp].DPMI_FLT_DS ; Restore original DS
 	 assume  ds:nothing	; Tell the assembler about it
@@ -2715,6 +2750,55 @@ PMFLTCOM_IRETDCOM:
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 PMFLTCOM endp			; End PMFLTCOM procedure
+	 NPPROC  PMFLT_HDPOVR -- Use a Pending HDPMI API Trap Handler
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Open 386MAX:  HDP_GPIO (QMAX_HDP) has a port trap handler called like
+the client's INT 0Dh handler:  it set HDP_OVRFLG, the handler in
+HDP_OVR32/16 and the INT 0Dh bit in DPMI_CPFHOOK (its old value in
+HDP_OVRHOOK).  Use the handler this once and restore the bit.
+
+On entry:
+
+EAX	 =	 offset in IGROUP of the client's vector
+
+On exit:
+
+EAX	 =	 offset in IGROUP of the vector to use
+
+|
+
+	 cmp	 HDP_OVRFLG,0	; Izit pending?
+	 je	 short PMFLT_HDPOVR_EXIT ; Jump if not
+
+	 cmp	 HDP_OVRHOOK,0	; Was INT 0Dh hooked?
+	 jne	 short @F	; Jump if so
+
+	 and	 DPMI_CPFHOOK[1],not (1 shl (0Dh-8)) ; Not hooked again
+@@:
+	 push	 ds		; Save for a moment
+	 push	 DTE_DSIG	; Get IGROUP data selector
+	 pop	 ds		; Address it
+	 assume  ds:IGROUP	; Tell the assembler about it
+
+	 mov	 HDP_OVRFLG,0	; Not pending any more
+
+	 pop	 ds		; Restore
+	 assume  ds:PGROUP	; Tell the assembler about it
+
+	 lea	 eax,HDP_OVR32	; Use it (32-bit)
+
+	 cmp	 DPMITYPEIG,@DPMITYPE16 ; Izit a 16-bit client?
+	 jne	 short PMFLT_HDPOVR_EXIT ; Jump if not
+
+	 lea	 eax,HDP_OVR16	; Use it (16-bit)
+PMFLT_HDPOVR_EXIT:
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+PMFLT_HDPOVR endp		; End PMFLT_HDPOVR procedure
 	 FPPROC  PMINTCOM -- PM HW/SW Interrupt From DPMI Client
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
@@ -3278,7 +3362,10 @@ PMINTCOM_CLI:
 @@:
 	 and	 [esp].DPMI_IRETD_EFL,not ((mask $VMHI) or (mask $RFHI) \
 		 or (mask $NT) or (mask $IOPL) or (mask $TF))
-	 or	 [esp].DPMI_IRETD_EFL,@DPMIOPL shl $IOPL ; IOPL=@DPMIOPL
+	 push	 eax		; Save for a moment
+	 mov	 eax,DPMIOPLF	; Get the IOPL bits
+	 or	 [esp+4].DPMI_IRETD_EFL,eax ; IOPL=DPMIOPLF
+	 pop	 eax		; Restore
 
 	 mov	 es,NEXT_DPMI_ES ; Restore
 	 assume  es:nothing	; Tell the assembler about it

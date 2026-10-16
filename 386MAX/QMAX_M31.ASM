@@ -53,6 +53,7 @@ if @OEM_DPMI
 
 PGROUP	 group	 CODE,ECODE,EDATA
 IGROUP	 group	 LDATA,LCODZ,ICODE,IDATA,IDATZ
+JGROUP	 group	 JCODE
 XGROUP	 group	 XCODE
 
 
@@ -135,6 +136,8 @@ LCODZ	 ends			; End LCODZ segment
 
 IDATA	 segment use16 dword public 'idata' ; Start IDATA segment
 	 assume  ds:IGROUP
+
+	 extrn	 DPMIOPLF:dword
 
 if @OEM_VIRTUALMEM
 	 extrn	 @BSCSize:abs
@@ -583,6 +586,7 @@ S32  rep movs	 <AGROUP:[edi].LO,AGROUP:[esi].LO> ; Copy it
 	 push	 [ebp].old_LA	; pass address to free
 	 FIXICALL PGROUP:FDEALLOCMEM,DTE_CS2 ; Free old LDT
 @@:
+	 FIXICALL JGROUP:HDP_SYNCLDT,DTE_CSJG ; Tell the clients sharing it
 	 clc			; Indicate we succeeded
 
 	 jmp	 short DPMIFN_GROWLDT_EXIT ; Join common error code
@@ -1645,9 +1649,28 @@ RETFDPI1_ARG1 dd  ?		 ; 0C:	Argument #1
 
 RETFDPI1_STR ends
 
+	 cmp	 [esp].RETFDPI1_ARG1,@VSAPI_HDPMI ; Izit HDPMI calling?
+	 jne	 short @F	; Jump if not
+
+	 FIXICALL JGROUP:HDP_API,DTE_CSJG ; HDPMI API (QMAX_HDP), CF significant
+
+; The caller continues with the IOPL the API set (as on HDPMI's IOPL 0
+; variants, where all clients run at IOPL 0)
+
+	 pushfd 		; Save CF
+	 push	 eax		; Save for a moment
+	 mov	 eax,DPMIOPLF	; Get the IOPL bits
+	 and	 [esp+8].RETFDPI1_EFL,not (mask $IOPL) ; Clear the old ones
+	 or	 [esp+8].RETFDPI1_EFL,eax ; Set the new ones
+	 pop	 eax		; Restore
+	 popfd			; Restore CF
+	 jnc	 near ptr DPMIFN_VSAPI_CLC ; Jump if successful
+
+	 jmp	 near ptr DPMIFN_VSAPI_ERR ; Join common error code
+
+@@:
 	 cmp	 ax,0000h	; Izit get version #?
 	 jne	 short DPMIFN_VSAPI1 ; Jump if not
-
 	 mov	 ax,0100h	; Return version # of MS-DOS extensions
 				; This number is the same as what
 				; Windows 3.10 returns.
@@ -1699,6 +1722,20 @@ DPMIFN_VSAPI_CLC:
 	 jmp	 short DPMIFN_VSAPI_EXIT ; Join common exit code
 
 DPMIFN_VSAPI2:
+
+; 386MAX:  0200h answers the vendor name 'HDPMI' (BL=1) or not (BL=0),
+; AL = previous setting
+
+	 cmp	 ax,0200h	; Izit enable 'HDPMI'?
+	 jne	 short DPMIFN_VSAPI_ERR ; Jump if not
+
+	 cmp	 [esp].RETFDPI1_ARG1,@VSAPI_386MAX ; Izit 386MAX calling?
+	 jne	 short DPMIFN_VSAPI_ERR ; Jump if not
+
+	 FIXICALL JGROUP:HDP_ENABLE,DTE_CSJG ; Enable or disable it
+
+	 jmp	 short DPMIFN_VSAPI_CLC ; Join common success code
+
 DPMIFN_VSAPI_ERR:
 	 or	 [esp].RETFDPI1_EFL.ELO,mask $CF ; Indicate not supported (CF=1)
 DPMIFN_VSAPI_EXIT:
@@ -2019,6 +2056,16 @@ ROOM_DPMI2_EXIT:
 ROOM_DPMI2 endp 		; End ROOM_DPMI2 procedure
 
 XCODE	 ends			; End XCODE segment
+
+
+JCODE	 segment use16 dword public 'jcode' ; Start JCODE segment
+	 assume  cs:JGROUP
+
+	 extrn	 HDP_API:far
+	 extrn	 HDP_ENABLE:far
+	 extrn	 HDP_SYNCLDT:far
+
+JCODE	 ends			; End JCODE segment
 endif				; IF @OEM_DPMI
 
 	 MEND			; End QMAX_M31 module

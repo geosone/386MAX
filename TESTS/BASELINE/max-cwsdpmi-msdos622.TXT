@@ -2,6 +2,9 @@ max/DISKIO               SKIP
 max/DOSXLAT              SKIP
 max/DPMI10               SKIP
 max/EMSFUNC              SKIP
+max/HDPAPI               PASS
+max/HDPSHR               PASS
+max/HDPTRAP              PASS
 max/MOUSE12              SKIP
 max/MOUSE18              SKIP
 max/QPITEST              SKIP

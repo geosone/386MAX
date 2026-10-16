@@ -1,0 +1,3 @@
+max/HDPAPI               PASS
+max/HDPSHR               PASS
+max/HDPTRAP              PASS

@@ -235,6 +235,8 @@ JDATA	 ends			; End JDATA segment
 JCODE	 segment use16 dword public 'jcode' ; Start JCODE segment
 	 assume  cs:JGROUP
 
+	 extrn	 HDP_PORTUSED:far
+
 	 extrn	 PHYS2LIN:near
 
 	 public  @QMAX_QPI_JCODE
@@ -2139,6 +2141,9 @@ QPI_API_UNTRAP:
 
 	 cmp	 QPI_OWN[edi],0 ; Did we trap it already?
 	 jne	 short @F	; Jump if so
+
+	 FIXICALL JGROUP:HDP_PORTUSED,DTE_CSJG ; Trapped via the HDPMI API?
+	 jc	 short @F	; Jump if so (leave it set)
 
 	 movzx	 esi,dx 	; Copy the I/O port #
 	 mov	 ebx,PIOBIT	; Get offset in PGROUP of I/O bit map

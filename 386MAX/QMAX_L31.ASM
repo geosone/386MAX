@@ -238,11 +238,13 @@ DBGREGS_ACT dw	 IGROUP:DPMI_DBGSET_DR0 ; Action to take to set DR0
 	 dw	 IGROUP:DPMI_DBGSET_DR2 ; ...			DR2
 	 dw	 IGROUP:DPMI_DBGSET_DR3 ; ...			DR3
 
-	 public  VSAPI_MSDOS,VSAPI_386MAX
+	 public  VSAPI_MSDOS,VSAPI_386MAX,VSAPI_HDPMI
 VSAPI_MSDOS dw	 PMVSAPI16_MSDOS  ; Entry points for MS-DOS VSAPI routines
 	 dw	 PMVSAPI32_MSDOS
 VSAPI_386MAX dw  PMVSAPI16_386MAX ; Entry points for 386MAX VSAPI routines
 	 dw	 PMVSAPI32_386MAX
+VSAPI_HDPMI dw	 PMVSAPI16_HDPMI  ; Entry points for HDPMI VSAPI routines
+	 dw	 PMVSAPI32_HDPMI
 
 	 public  DBGCTL,DBGSTA
 DBGCTL	 db	 0		; Debug watchpoint control bits
@@ -294,6 +296,8 @@ ICODE	 segment use16 dword public 'icode' ; Start ICODE segment
 	 extrn	 PMVSAPI16_386MAX:abs
 	 extrn	 PMVSAPI32_MSDOS:abs
 	 extrn	 PMVSAPI32_386MAX:abs
+	 extrn	 PMVSAPI16_HDPMI:abs
+	 extrn	 PMVSAPI32_HDPMI:abs
 	 extrn	 DPMIFN_LMSW:near
 if @OEM_VIRTUALMEM
 	 extrn	 VMM_MARK_CANDIDATES:near
@@ -816,6 +820,7 @@ DPMI_GETMEM1:
 	 mov	 eax,PGROUP:[edx].DPTSS_DPMIHNDL_CNT ; Get total # handles
 	 sub	 eax,ecx	; Less countdown value to get handle #
 				; in origin-0, unit increments
+	 call	 DPMIFN_HNDLENC ; Make it a handle
 	 mov	 [ebp].INTXX_EDI.ELO,ax ; Save the low-order word
 	 shr	 eax,16 	; Shift down to low-order word
 	 mov	 [ebp].INTXX_ESI.ELO,ax ; Save the high-order word
@@ -867,6 +872,7 @@ All other registers except EBP, FS, GS, and SS may be clobbered.
 
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of the current TSS
 
+	 call	 DPMIFN_HNDLDEC ; EAX = index, EDX = owner's TSS (or -1)
 	 cmp	 eax,PGROUP:[edx].DPTSS_DPMIHNDL_CNT ; Check against total # handles
 	 jae	 near ptr INT31_ERR_INVHNDL ; Jump if it's out of range
 
@@ -943,6 +949,7 @@ All other registers except EBP, FS, GS, and SS may be clobbered.
 
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of the current TSS
 
+	 call	 DPMIFN_HNDLDEC ; EAX = index, EDX = owner's TSS (or -1)
 	 cmp	 eax,PGROUP:[edx].DPTSS_DPMIHNDL_CNT ; Check against total # handles
 	 jae	 near ptr INT31_ERR_INVHNDL ; Jump if it's out of range
 
@@ -1330,6 +1337,7 @@ DPMI_GETLMB1:
 	 mov	 eax,PGROUP:[edx].DPTSS_DPMIHNDL_CNT ; Get total # handles
 	 sub	 eax,ecx	; Less countdown value to get handle #
 				; in origin-0, unit increments
+	 call	 DPMIFN_HNDLENC ; Make it a handle
 	 mov	 [ebp].INTXX_ESI,eax ; Save the handle
 
 	 popf			; Restore flags
@@ -1389,6 +1397,7 @@ All other registers except EBP, FS, GS, and SS may be clobbered.
 
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of the current TSS
 
+	 call	 DPMIFN_HNDLDEC ; EAX = index, EDX = owner's TSS (or -1)
 	 cmp	 eax,PGROUP:[edx].DPTSS_DPMIHNDL_CNT ; Check against total # handles
 	 jae	 near ptr INT31_ERR_INVHNDL ; Jump if it's out of range
 
@@ -1591,6 +1600,7 @@ All other registers except EBP, FS, GS, and SS may be clobbered.
 
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of the current TSS
 
+	 call	 DPMIFN_HNDLDEC ; EAX = index, EDX = owner's TSS (or -1)
 	 cmp	 eax,PGROUP:[edx].DPTSS_DPMIHNDL_CNT ; Check against total # handles
 	 jae	 near ptr INT31_ERR_INVHNDL ; Jump if it's out of range
 
@@ -1672,6 +1682,7 @@ All other registers except EBP, FS, GS, and SS may be clobbered.
 
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of the current TSS
 
+	 call	 DPMIFN_HNDLDEC ; EAX = index, EDX = owner's TSS (or -1)
 	 cmp	 eax,PGROUP:[edx].DPTSS_DPMIHNDL_CNT ; Check against total # handles
 	 jae	 near ptr INT31_ERR_INVHNDL ; Jump if it's out of range
 
@@ -1763,6 +1774,7 @@ All other registers except EBP, FS, GS, and SS may be clobbered.
 
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of the current TSS
 
+	 call	 DPMIFN_HNDLDEC ; EAX = index, EDX = owner's TSS (or -1)
 	 cmp	 eax,PGROUP:[edx].DPTSS_DPMIHNDL_CNT ; Check against total # handles
 	 jae	 near ptr INT31_ERR_INVHNDL ; Jump if it's out of range
 
@@ -1863,6 +1875,7 @@ All other registers except EBP, FS, GS, and SS may be clobbered.
 
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of the current TSS
 
+	 call	 DPMIFN_HNDLDEC ; EAX = index, EDX = owner's TSS (or -1)
 	 cmp	 eax,PGROUP:[edx].DPTSS_DPMIHNDL_CNT ; Check against total # handles
 	 jae	 near ptr INT31_ERR_INVHNDL ; Jump if it's out of range
 
@@ -1947,6 +1960,7 @@ All other registers except EBP, GS, and SS may be clobbered.
 
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of the current TSS
 
+	 call	 DPMIFN_HNDLDEC ; EAX = index, EDX = owner's TSS (or -1)
 	 cmp	 eax,PGROUP:[edx].DPTSS_DPMIHNDL_CNT ; Check against total # handles
 	 jae	 near ptr INT31_ERR_INVHNDL ; Jump if it's out of range
 
@@ -2762,6 +2776,106 @@ All other registers except EBP, FS, GS, and SS may be clobbered.
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 DPMI_GETIF endp 		; End DPMI_GETIF procedure
+	 NPPROC  DPMIFN_HNDLENC -- Memory Block Handle From Index
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Open 386MAX:  a DPMI memory block handle names its table:  the high-order
+word is the owner's TSS slot (1 or more), the low-order word the index in
+that TSS's handle table.  So a handle is never 0 (HDPMI's never are, the
+HX runtime relies on it) and stays valid for clients sharing the owner's
+context (HDPMI API function 5).
+
+On entry:
+
+EAX	 =	 index in the handle table
+EDX	 =	 offset in PGROUP of the owner's TSS
+
+On exit:
+
+EAX	 =	 handle
+
+|
+
+	 REGSAVE <ecx,edx>	; Save registers
+
+	 push	 eax		; Save the index
+
+	 mov	 eax,edx	; Copy the TSS offset
+	 sub	 eax,PVMTSS	; Less the first one
+	 xor	 edx,edx	; Zero to use as dword
+	 mov	 ecx,type DPTSS_STR ; Size of a TSS
+	 div	 ecx		; EAX = slot
+
+	 shl	 eax,16 	; Slot to the high-order word
+	 pop	 ecx		; Restore the index
+	 mov	 ax,cx		; Index to the low-order word
+
+	 REGREST <edx,ecx>	; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+DPMIFN_HNDLENC endp		; End DPMIFN_HNDLENC procedure
+	 NPPROC  DPMIFN_HNDLDEC -- Index From Memory Block Handle
+	 assume  ds:PGROUP,es:nothing,fs:nothing,gs:nothing,ss:nothing
+COMMENT|
+
+Open 386MAX:  the table and index a memory block handle names (see
+DPMIFN_HNDLENC).  The owner must be the current client or share its
+context (the same LDT).
+
+On entry:
+
+EAX	 =	 handle
+EDX	 =	 PCURTSS
+
+On exit:
+
+EAX	 =	 index in the owner's handle table, -1 if invalid
+EDX	 =	 offset in PGROUP of the owner's TSS (PCURTSS if invalid)
+
+|
+
+	 REGSAVE <ebx,ecx>	; Save registers
+
+	 mov	 ecx,eax	; Copy the handle
+	 shr	 ecx,16 	; Slot
+	 jz	 short DPMIFN_HNDLDEC_ERR ; Jump if none
+
+	 cmp	 ecx,@TSS_MAX	; Izit valid?
+	 jae	 short DPMIFN_HNDLDEC_ERR ; Jump if not
+
+	 imul	 ecx,type DPTSS_STR ; Offset of the slot
+	 add	 ecx,PVMTSS	; Plus the first one
+
+	 cmp	 ecx,edx	; Izit the current client's?
+	 je	 short DPMIFN_HNDLDEC_OK ; Jump if so
+
+	 cmp	 PGROUP:[ecx].TSS_LINK,-1 ; Izit in use?
+	 je	 short DPMIFN_HNDLDEC_ERR ; Jump if not
+
+	 mov	 bx,PGROUP:[ecx].TSS_LDT ; Get its LDT
+	 cmp	 bx,PGROUP:[edx].TSS_LDT ; Izit the current client's (shared)?
+	 jne	 short DPMIFN_HNDLDEC_ERR ; Jump if not
+
+	 mov	 edx,ecx	; Use the owner's table
+DPMIFN_HNDLDEC_OK:
+	 movzx	 eax,ax 	; Index
+
+	 jmp	 short DPMIFN_HNDLDEC_EXIT ; Join common exit code
+
+DPMIFN_HNDLDEC_ERR:
+	 or	 eax,-1 	; Invalid
+DPMIFN_HNDLDEC_EXIT:
+	 REGREST <ecx,ebx>	; Restore
+
+	 ret			; Return to caller
+
+	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
+
+DPMIFN_HNDLDEC endp		; End DPMIFN_HNDLDEC procedure
 	 FPPROC  DPMIFN_CHKVSAPI -- Check on Vendor-Specific API
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 COMMENT|
@@ -2815,12 +2929,17 @@ CHKVSAPI_STR ends
 	 lea	 bx,VSAPI_386MAX ; Assume it's '386MAX'
 
 	 cmp	 ds:[eax].EDD,'M683' ; Izit bytes 0-3 of '386MAX',0?
-	 jne	 short DPMIFN_CHKVSAPI_EXIT ; Jump if not (note ZF=0)
+	 jne	 short DPMIFN_CHKVSAPI_HDP ; Jump if not
 
 	 cmp	 ds:[eax+4].ELO,'XA' ; Izit bytes 4-5 of '386MAX',0?
-	 jne	 short DPMIFN_CHKVSAPI_EXIT ; Jump if not (note ZF=0)
+	 jne	 short DPMIFN_CHKVSAPI_HDP ; Jump if not
 
 	 cmp	 ds:[eax+6].LO,0 ; Izit byte 6 of '386MAX',0?
+	 je	 short DPMIFN_CHKVSAPI_MATCH ; Jump if so
+DPMIFN_CHKVSAPI_HDP:
+	 lea	 bx,VSAPI_HDPMI ; Assume it's 'HDPMI'
+
+	 FIXICALL JGROUP:HDP_CHKNAME,DTE_CSJG ; Izit 'HDPMI',0 (ZF=1)?
 	 jne	 short DPMIFN_CHKVSAPI_EXIT ; Jump if not (note ZF=0)
 DPMIFN_CHKVSAPI_MATCH:
 
@@ -3872,7 +3991,7 @@ JCODE	 segment use16 dword public 'jcode' ; Start JCODE segment
 
 	 extrn	 FDPMI_TSRSRV:far
 	 extrn	 FDPMI_TSRXIT:far
-
+	 extrn	 HDP_CHKNAME:far
 JCODE	 ends			; End JCODE segment
 endif				; IF @OEM_DPMI
 

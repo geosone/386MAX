@@ -70,7 +70,12 @@ DPTSS_VMM_P2LMapSize dd ?	;13E-141: size (bytes) of mapping table
 DPTSS_ALT_FVEC df 3 dup (?)	;142-153: Sel|Off of alternate mouse handlers
 DPTSS_ALT_MASK dw 3 dup (?)	;154-159: Their call masks (0 = slot free)
 DPTSS_MEI_0C dw ?		;15A-15B: 1 = handler set with INT 33h AX=000Ch
-
+DPTSS_SHRTSS dd ?		;15C-15F: Offset in PGROUP of the TSS whose LDT and
+				;	  address space we share (0 = our own,
+				;	  HDPMI API function 5, QMAX_HDP)
+DPTSS_LDTSNAP dd ?		;160-163: Linear address of the LDT entries in use
+				;	  when we started (bitmap), if shared
+DPTSS_LDTSNAPN dd ?		;164-167: # LDT entries in that bitmap
 if (($-DPTSS_TSS) mod 4)
 	 db	 (4-(($-DPTSS_TSS) mod 4)) dup (?) ; For dword alignment
 endif				; IF (($-DPTSS_TSS) MOD 4)

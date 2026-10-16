@@ -152,6 +152,7 @@ IDATA	 segment use16 dword public 'idata' ; Start IDATA segment
 
 	 extrn	 ISEL_DS3:word
 	 extrn	 DPMITYPEIG:byte
+	 extrn	 DPMIOPLF:dword
 
 DLBL	 macro	 LBL
 INT33_DPMIJMP_&LBL label word
@@ -1099,7 +1100,10 @@ DPMI_MEI_COM:
 	 push	 [ebp].INTXX_EFL ; Pass EFL
 	 and	 [esp].EDD,not ((mask $VMHI) or (mask $RFHI) \
 			     or (mask $IOPL) or (mask $TF)) ; VM=RF=IOPL=TF=0
-	 or	 [esp].EDD,@DPMIOPL shl $IOPL ; IOPL=@DPMIOPL
+	 push	 eax		; Save for a moment
+	 mov	 eax,DPMIOPLF	; Get the IOPL bits
+	 or	 [esp+4].EDD,eax ; IOPL=DPMIOPLF
+	 pop	 eax		; Restore
 
 	 mov	 ebx,PCURTSS	; Get offset in PGROUP of current TSS
 

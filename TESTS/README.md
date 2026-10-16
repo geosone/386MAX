@@ -17,6 +17,9 @@ check (OK / FAIL) and ends with errorlevel 0 when all checks passed.
 | DPMI | DISKIO  | INT 13h/25h/26h and 7305h from protected mode, buffers above 4 KB, DOS 7 volume lock |
 | DPMI | STKFLT  | a 32-bit client with an invalid stack calls INT 21h (must not reset the machine) |
 | DPMI | XMSMAP  | XMS block allocated first thing by a DPMI client, locked, mapped with 0800h (sound driver DMA buffers: VSBHDA, SBEMU) |
+| DPMI | HDPAPI  | HDPMI vendor API ("HDPMI" through 168Ah): 5 (HDPMI=32 flag), 8 (simulate I/O: IN/OUT, port in DX or BH, REP INS/OUTS) |
+| DPMI | HDPTRAP | HDPMI vendor API 6/7/9: protected-mode port traps (handler called with HDPMI's error code for IN/OUT DX and immediate, word/dword, ES: REP OUTSB), ports outside the ranges, CLI handler |
+| DPMI | HDPSHR  | HDPMI vendor API 5 (shared context): a resident client with a port trap and a PM INT 60h hook starts itself from real mode; the nested client sees both, its memory and selectors are freed when it ends, the parent's state is unchanged (VSBHDA with protected-mode games) |
 | DPMI | MOUSE12, MOUSE18 | INT 33h 0Ch/12h/18h/19h handlers (need a mouse driver) |
 | QPI  | QPITEST | QEMM programming interface (INT 2Fh D201h, INT 67h 3Fh) |
 | QPI  | QPITRAP | port trapping with callback (1A06h-1A0Ah), default callback, 1A05h |
@@ -57,9 +60,11 @@ and their timeout; `INC/TESTLIB.INC` has the output and counting macros.
   the programs: `jemmex`, `jemm386` (HimemX + Jemm386), `himemx` (XMS only),
   `hdpmi` (HimemX + HDPMI16/32, DPMI), `cwsdpmi` (HimemX + CWSDPMI, the DPMI
   host of DJGPP and so of many games; 32-bit clients only), `maxcws`
-  (386MAX with NODPMI + CWSDPMI as its VCPI client) and `maxhdpmi` (386MAX
+  (386MAX with NODPMI + CWSDPMI as its VCPI client), `maxhdpmi` (386MAX
   with NODPMI + HDPMI16/32 as its VCPI client, as VSBHDA setups use it:
-  separates 386MAX's DPMI host from its V86/VCPI side).
+  separates 386MAX's DPMI host from its V86/VCPI side) and `maxhdpmii`
+  (the same with HDPMI16I/HDPMI32I, the IOPL 0 variants with the port
+  traps of the HDPMI API: the reference for HDPAPI/HDPTRAP).
 
   MS-DOS has no DPMI host of its own: programs got DPMI from the Windows
   3.x/9x DOS box, from MSDPMI (Microsoft C 7), from their extender (CWSDPMI,

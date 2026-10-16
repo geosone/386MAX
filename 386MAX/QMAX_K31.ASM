@@ -147,6 +147,7 @@ IDATA	 segment use16 dword public 'idata' ; Start IDATA segment
 	 assume  ds:IGROUP
 
 	 extrn	 DPMITYPEIG:byte
+	 extrn	 DPMIOPLF:dword
 
 	 extrn	 PMINT_DVECS:dword
 	 extrn	 PMINT_FVECS:fword
@@ -1661,7 +1662,10 @@ DPMI_VMCB_COM:
 	 and	 [esp].EDD,not ((mask $VMHI) or (mask $RFHI) or \
 				(mask $NT)   or (mask $IOPL) or \
 				(mask $TF)) ; VM=RF=NT=IOPL=TF=0
-	 or	 [esp].EDD,@DPMIOPL shl $IOPL ; IOPL=@DPMIOPL
+	 push	 eax		; Save for a moment
+	 mov	 eax,DPMIOPLF	; Get the IOPL bits
+	 or	 [esp+4].EDD,eax ; IOPL=DPMIOPLF
+	 pop	 eax		; Restore
 	 push	 AGROUP:[ebx].HPDAVMC_CALLFVEC.FSEL.EDD ; Pass selector w/filler
 	 push	 AGROUP:[ebx].HPDAVMC_CALLFVEC.FOFF	; Pass offset
 
@@ -1732,7 +1736,10 @@ DPMI_RMSVM2PM:
 	 push	 [ebp].INTXX_EBX ; Get new ESP
 	 push	 [ebp].INTXX_EFL ; Get new EFL
 	 and	 [esp].EDD,not ((mask $VMHI) or (mask $IOPL)) ; VM=IOPL=0
-	 or	 [esp].EDD,@DPMIOPL shl $IOPL ; IOPL=@DPMIOPL
+	 push	 eax		; Save for a moment
+	 mov	 eax,DPMIOPLF	; Get the IOPL bits
+	 or	 [esp+4].EDD,eax ; IOPL=DPMIOPLF
+	 pop	 eax		; Restore
 	 push	 [ebp].INTXX_ESI ; Get new CS (with undefined filler)
 	 or	 [esp].EDD.ELO,ax ; Ensure LDT and DPMI CPL
 	 push	 [ebp].INTXX_EDI ; Get new EIP
@@ -2660,7 +2667,15 @@ SWITCH_STR ends
 	 assume  ds:IGROUP	; Tell the assembler about it
 
 	 mov	 eax,[ebp].SWITCH_ITSS ; Get the offset in PGROUP of the incoming TSS
+	 push	 eax		; Save for a moment
+
+	 cmp	 PGROUP:[eax].DPTSS_SHRTSS,0 ; Open 386MAX:  sharing a context?
+	 je	 short @F	; Jump if not
+
+	 mov	 eax,PGROUP:[eax].DPTSS_SHRTSS ; The VMM client is that one
+@@:
 	 mov	 di,PGROUP:[eax].DPTSS_SEL ; Get incoming TSS's selector
+	 pop	 eax		; Restore
 	 mov	 VMMcurrentClient,di ; Set as current client
 	 mov	 eax,PGROUP:[eax].TSS_CR3 ; Get the incoming CR3
 	 mov	 LCL_CR3,eax	; Save in local data for FLUSH_TLB

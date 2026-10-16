@@ -108,6 +108,7 @@ HICODE	 segment use16 dword public 'prog' ; Start HICODE segment
 	 assume  cs:PGROUP,ds:PGROUP
 
 	 extrn	 EXITRCHI:word
+	 extrn	 SIRBCUR2B:far
 
 HICODE	 ends			; End HICODE segment
 
@@ -347,6 +348,18 @@ IDATA	 segment use16 dword public 'idata' ; Start IDATA segment
 	 public  DPMITYPEIG
 DPMITYPEIG db	 @DPMITYPEXX	; DPMI client type:  (same as DPMITYPE)
 
+; Open 386MAX:  the IOPL in DPMI clients' flags (0 while the HDPMI API
+; traps ports or CLI/STI, QMAX_HDP), and the trap handler PMFLTCOM calls
+; once instead of the client's INT 0Dh handler
+
+	 public  DPMIOPLF
+DPMIOPLF dd	 @DPMIOPL shl $IOPL ; IOPL bits for DPMI clients' flags
+
+	 public  HDP_OVRFLG,HDP_OVRHOOK,HDP_OVR32,HDP_OVR16
+HDP_OVRFLG db	 0		; 1 = use HDP_OVR32/16 for the next fault
+HDP_OVRHOOK db	 0		; 1 = INT 0Dh was hooked by the client
+HDP_OVR32 df	 ?		; Trap handler (32-bit client)
+HDP_OVR16 dd	 ?		; ...	       (16-...)
 IDATA	 ends			; End IDATA segment
 
 
@@ -1403,6 +1416,10 @@ INT31_VM2PM_NOSTK:
 	 test	 [ebp].INTXX_EAX.ELO,@BIT0 ; Set ==> 32-bit, Clr ==> 16-bit
 	 setnz	 DPMITYPE	; Save to check the next time
 
+; Open 386MAX:  share the parent's context (HDPMI API function 5)?
+
+	 FIXICALL JGROUP:HDP_SHRCHK,DTE_CSJG ; EAX = TSS whose context we share
+	 mov	 PGROUP:[edx].DPTSS_SHRTSS,eax ; Save (0 = our own)
 	 call	 DPMIFN_INITVARS ; Initialize TSS and HPDA
 
 ; In case the user specified EMS=0 and there hasn't been any XMS
@@ -1468,9 +1485,37 @@ endif				; IF @OEM_VIRTUALMEM
 ; and re-initialize PMxxT_xVECS.
 
 	 push	 PGROUP:[edx].DPTSS_PLNKTSS ; Point to previous TSS
-	 push	 1		; Tell 'em to re-initialize
+	 cmp	 PGROUP:[edx].DPTSS_SHRTSS,1 ; CF=1 if our own context
+	 sbb	 ax,ax		; -1 if our own, 0 if shared
+	 neg	 ax		; 1:  re-initialize, 0:  inherit (shared)
+	 push	 ax		; Tell 'em
 	 call	 DPMIFN_SAVEOLDPM ; Save 'em
 
+; Open 386MAX:  a client sharing a context inherits the parent's software
+; interrupt redirection bitmap (VME), as it inherits its vectors
+
+	 cmp	 PGROUP:[edx].DPTSS_SHRTSS,0 ; Sharing a context?
+	 je	 short @F	; Jump if not
+
+	 test	 CPUFET_FLAG,mask $CPUFET_VME ; Is VME supported?
+	 jz	 short @F	; Jump if not
+
+	 REGSAVE <ecx,esi,edi,es> ; Save registers
+
+	 mov	 es,SEL_4GB3	; Get AGROUP data selector at PL3
+	 assume  es:AGROUP	; Tell the assembler about it
+
+	 mov	 esi,PGROUP:[edx].DPTSS_PLNKTSS ; Get the parent
+	 mov	 esi,PGROUP:[esi].DPTSS_LaSIRBCUR ; Its SIRB
+	 mov	 edi,PGROUP:[edx].DPTSS_LaSIRBCUR ; Ours
+	 mov	 ecx,(256/8)/4	; Size of the table in dwords
+S32  rep movs	 <AGROUP:[edi].EDD,AGROUP:[esi].EDD> ; Copy it
+
+	 REGREST <es,edi,esi,ecx> ; Restore
+	 assume  es:IGROUP	; Tell the assembler about it
+
+	 FIXICALL PGROUP:SIRBCUR2B,DTE_CS2 ; Copy SIRBCUR values to SIRB
+@@:
 if @OEM_VIRTUALMEM
 
 ; If the swapfile is not active for this client, clear the bit now
@@ -1506,10 +1551,20 @@ if @OEM_VIRTUALMEM
 @@:
 INT31_VM2PM_NOSWAP:
 
+; Open 386MAX:  a client sharing a context uses its address space
+
+	 cmp	 PGROUP:[edx].DPTSS_SHRTSS,0 ; Sharing a context?
+	 je	 short @F	; Jump if not
+
+	 FIXICALL JGROUP:HDP_SHRVMM,DTE_CSJG ; Use its address space
+
+	 jmp	 INT31_VM2PM_SHRVMM ; Join common code
+
+@@:
+
 ; If this is the first DPMI client, and VMM is present,
 ; initialize the VMM system.  If that fails, we disallow
 ; further VMM calls.
-
 	 and	 VMM_FLAG,not @VMM_CTRLBREAK ; Clear Ctrl-Break flag
 
 	 mov	 eax,PVMTSS	; Get offset in PGROUP of the 1st TSS
@@ -1535,7 +1590,7 @@ INT31_VM2PM_NOSWAP:
 	 jnz	 near ptr INT31_VM2PM_ERR_NOMEM7 ; Jump if so
 
 endif				; IF @OEM_VIRTUALMEM
-
+INT31_VM2PM_SHRVMM:
 ; If there's no HMA, ensure the 1MB wrap is disabled as we might allocate
 ; to a DPMI client the extended memory at 1MB to 1.1MB
 
@@ -1553,7 +1608,10 @@ endif				; IF @OEM_VIRTUALMEM
 @@:
 
 ; Allocate a Locked Protected Mode stack
+; (Open 386MAX:  a client sharing a context continues on its LPM stack)
 
+	 cmp	 PGROUP:[edx].DPTSS_SHRTSS,0 ; Sharing a context?
+	 jne	 near ptr INT31_VM2PM_SHRLPM ; Jump if so
 	 mov	 VM2PM_ERR,8012h ; Assume we run out of linear memory
 
 	 push	 @ALLOC_DPMI	; Tell 'em what kind of memory we're allocating
@@ -1595,9 +1653,23 @@ endif				; IF @OEM_VIRTUALMEM
 	 pop	 es		; Restore
 	 assume  es:IGROUP	; Tell the assembler about it
 
+INT31_VM2PM_SHRLPM:
+
+; Open 386MAX:  a client sharing a context uses its LDT
+
+	 cmp	 PGROUP:[edx].DPTSS_SHRTSS,0 ; Sharing a context?
+	 je	 short @F	; Jump if not
+
+	 mov	 VM2PM_ERR,8012h ; Assume we run out of linear memory
+	 FIXICALL JGROUP:HDP_SHRLDT,DTE_CSJG ; Use the parent's LDT
+	 jc	 near ptr INT31_VM2PM_ERR_NOMEM4 ; Jump if no memory found
+
+	 jmp	 INT31_VM2PM_SHRLDT ; Join common code
+
+@@:
+
 ; Allocate memory for our extended LDT
 ; and save its address in the new DPTSS_STR
-
 	 mov	 VM2PM_ERR,8012h ; Assume we run out of linear memory
 
 	 push	 @ALLOC_DPMI	; Tell 'em what kind of memory we're allocating
@@ -1630,7 +1702,7 @@ endif				; IF @OEM_VIRTUALMEM
 
 	 call	 DPMIFN_INITLDT ; Initialize the contents of the LDT
 				; and install it
-
+INT31_VM2PM_SHRLDT:
 ; Allocate memory for our DPMI memory handle structure
 ; and save its address in the new DPTSS_STR
 
@@ -1906,13 +1978,21 @@ S16  rep movs	 <MSG_DPMIAPPLNAME.LO[di],MSG_APPLNAME.LO[si]> ; Copy to local sav
 	 mov	 PGROUP:[edx].DPTSS_LPMSTK_CNT,eax ; Save for later use
 
 ; Save new value for LPM stack pointer and count
+; (Open 386MAX:  not for a client sharing a context:  it continues on
+; the LPM stack of the one it shares)
+
+	 push	 edx		; Save for a moment
+	 mov	 edx,PCURTSS	; Get offset in PGROUP of the new TSS
+	 cmp	 PGROUP:[edx].DPTSS_SHRTSS,0 ; Sharing a context?
+	 pop	 edx		; Restore
+	 jne	 short INT31_VM2PM_SHRLPM2 ; Jump if so
 
 	 mov	 ax,LPMSTK_SEL	; Get the default selector
 	 mov	 LPMSTK_FVEC.FSEL,ax ; Save the new selector
 	 mov	 eax,LPMSTK_SIZ ; Get initial stack offset
 	 mov	 LPMSTK_FVEC.FOFF,eax ; Save for later use
 	 mov	 LPMSTK_CNT,0	; Set initial LPM stack usage count
-
+INT31_VM2PM_SHRLPM2:
 	 and	 LAST_INTFLG,not @INTCOM_VAL ; Mark as invalid
 
 ; Call Resident Service Providers
@@ -2315,11 +2395,22 @@ INT31_VM2PM_ERR_NOMEM3:
 
 ; Deallocate old LDT and restore new one
 
+	 cmp	 PGROUP:[edx].DPTSS_SHRTSS,0 ; Sharing a context?
+	 je	 short @F	; Jump if not
+
+	 FIXICALL JGROUP:HDP_SHREND,DTE_CSJG ; Free our LDT entries only
+
+	 jmp	 short INT31_VM2PM_ERR_NOMEM4 ; Join common code
+
+@@:
 	 call	 DPMIFN_FREELDT ; Free it
 INT31_VM2PM_ERR_NOMEM4:
 INT31_VM2PM_ERR_NOMEM5:
 
 ; Deallocate DPMI LPM stack
+
+	 cmp	 PGROUP:[edx].DPTSS_LPMBASE,0 ; Izit allocated?
+	 je	 short INT31_VM2PM_ERR_NOMEM6 ; Jump if not (shared context)
 
 	 push	 LPMSTK_SIZ	; Pass byte length
 	 push	 PGROUP:[edx].DPTSS_LPMBASE ; Pass starting linear address
@@ -2377,6 +2468,8 @@ if @OEM_VIRTUALMEM
 	 test	 VMM_FLAG,@VMM_SYSINIT ; Is VMM active?
 	 jz	 short @F	; Jump if not
 
+	 cmp	 PGROUP:[edx].DPTSS_SHRTSS,0 ; Sharing a context?
+	 jne	 short @F	; Jump if so (its address space stays)
 	 call	 VMM_TERMINATE_CLIENT ; Terminate the current client (PCURTSS)
 @@:
 endif				; IF @OEM_VIRTUALMEM
@@ -2807,6 +2900,7 @@ ES	 =	 PGROUP
 	 FIXICALL JGROUP:DPMIFN_CALL_RSPS,DTE_CSJG ; Notify RSPs
 
 	 mov	 edx,PCURTSS	; Get offset in PGROUP of the current TSS
+	 FIXICALL JGROUP:HDP_CLIENTEND,DTE_CSJG ; Remove its HDPMI API traps
 	 and	 PGROUP:[edx].DPTSS_FLAG,not (mask $DPTSS_INIT) ; Mark as not initialized
 
 ; If the terminating DPMI client is Windows 3.00, restore PL1 state to @DPMI_CPL
@@ -2877,6 +2971,16 @@ ES	 =	 PGROUP
 	 mov	 es,ISEL_DS3	; Get PGROUP data selector at PL3
 	 assume  es:PGROUP	; Tell the assembler about it
 
+; Open 386MAX:  a client sharing a context leaves its LDT and address space
+
+	 cmp	 PGROUP:[edx].DPTSS_SHRTSS,0 ; Sharing a context?
+	 je	 short @F	; Jump if not
+
+	 FIXICALL JGROUP:HDP_SHREND,DTE_CSJG ; Free our LDT entries only
+
+	 jmp	 short DPMIFN_TERMINATE1 ; Join common code
+
+@@:
 if @OEM_VIRTUALMEM
 	 test	 VMM_FLAG,@VMM_SYSINIT ; Is VMM active?
 	 jz	 short @F	; Jump if not
@@ -2918,6 +3022,11 @@ JCODE	 segment use16 dword public 'jcode' ; Start JCODE segment
 	 assume  cs:JGROUP
 
 	 extrn	 DPMIFN_CALL_RSPS:far
+	 extrn	 HDP_CLIENTEND:far
+	 extrn	 HDP_SHRCHK:far
+	 extrn	 HDP_SHRVMM:far
+	 extrn	 HDP_SHRLDT:far
+	 extrn	 HDP_SHREND:far
 
 	 FPPROC  CPY_DL2GROUP -- Copy Int 23 code to HPDA
 	 assume  ds:PGROUP,es:IGROUP,fs:nothing,gs:AGROUP

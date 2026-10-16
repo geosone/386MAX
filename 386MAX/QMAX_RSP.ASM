@@ -106,6 +106,8 @@ ICODE	 ends			; End ICODE segment
 JDATA	 segment use16 dword public 'jcode' ; Start JDATA segment
 	 assume  ds:JGROUP
 
+	 extrn	 HDP_IOPLF:dword
+
 	 public  RSPs
 RSPs	 RSPdata @MAX_RSPS dup (<>) ; Declare RSP strucs
 
@@ -1280,7 +1282,7 @@ DPMI_RSPS_FRAME:
 	 movzx	 ax,ah		; Set init/term arg to RSP
 	 push	 LPMSTK_FVEC.FSEL.EDD ; Stack to run RSP on - selector
 	 push	 ebx		; Stack to run RSP on - offset
-	 push	 dword ptr (@DPMIOPL shl $IOPL) ; Flags for RSP
+	 push	 dword ptr cs:HDP_IOPLF ; Flags for RSP (IOPL)
 	 push	 edx		; RSP code selector (w/filler)
 	 push	 ecx		; RSP entry offset
 

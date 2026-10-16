@@ -64,6 +64,7 @@ if @OEM_SOFT
 	 extrn	 QPI_VPOUT:far
 	 extrn	 QPI_VPIN:far
 endif				; IF @OEM_SOFT
+	 extrn	 HDP_GPIO:far
 
 JCODE	 ends			; End JCODE segment
 
@@ -2722,6 +2723,13 @@ QPI_PORTDONE:
 	 stc			; The access is done (or suppressed)
 	 ret			; Return to caller
 
+; Open 386MAX:  the GP_ACT entries of IN/OUT/INS/OUTS/CLI/STI once the
+; HDPMI API traps something (QMAX_HDP)
+
+	 public  GP_HDPSTUB
+GP_HDPSTUB:
+	 FIXICALL JGROUP:HDP_GPIO,DTE_CSJG ; DI = where to continue
+	 jmp	 di		; Continue there
 	 assume  ds:nothing,es:nothing,fs:nothing,gs:nothing,ss:nothing
 
 CHECK_OUT endp			; End CHECK_OUT procedure

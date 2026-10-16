@@ -1329,6 +1329,11 @@ On exit:
 FS:EDI		=	pointer to free list structure for the current client
 |
 	mov	edi, PCURTSS
+	cmp	PGROUP:[edi].DPTSS_SHRTSS,0 ; Open 386MAX:  sharing a context?
+	je	short @F	; Jump if not
+
+	mov	edi,PGROUP:[edi].DPTSS_SHRTSS ; Use its list (HDPMI API 5)
+@@:
 	lea	edi,PGROUP:[edi].DPTSS_VMM_FreeList ; point to free list struc
 
 	mov	fs, SEL_DS3		; fs <- PGROUP

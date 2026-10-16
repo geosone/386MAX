@@ -355,6 +355,7 @@ CNT	 =	 CNT + 1
 	 endm			; REPT 32
 
 	 extrn	 DPMITYPEIG:byte
+	 extrn	 DPMIOPLF:dword
 
 	 public  KRNL386
 KRNL386  db	 'KRNL386.EXE',0 ; Windows DPMI client
@@ -432,6 +433,7 @@ CNT	 =	 CNT + 1
 
 
 	 extrn	 DPMIFN_NEWLINE:near
+	 extrn	 DPMIFN_GETPSP:near
 
 	 extrn	 @ENVLEN:abs
 
@@ -564,13 +566,29 @@ CF	 =	 0 if we have a match and should fail the 1687 call
 ; Check for Phar Lap copyright message at PSP:0100 with either
 ; 'P3', 'P5', or 'P6' at PSP:PHARLAP_CFG_ESIG
 
+; Open 386MAX:  with a DPMI client active, take the PSP segment from VM.
+; The DOS translation (DOSCALL) left a selector for the new program's PSP
+; in that client's LDT for good, one per nested client.
+
+	 mov	 eax,PCURTSS	; Get offset in PGROUP of the current TSS
+	 cmp	 eax,PVMTSS	; Izit a DPMI client?
+	 je	 short IMM2_USEVCPI_PSPDOS ; Jump if not
+
+	 push	 eax		; Pass offset in PGROUP of TSS
+	 call	 DPMIFN_GETPSP	; Get PSP segment into BX
+	 movzx	 edi,bx 	; Copy the segment
+	 shl	 edi,4-0	; Convert from paras to bytes
+
+	 jmp	 short IMM2_USEVCPI_PSPX ; Join common code
+
+IMM2_USEVCPI_PSPDOS:
 	 DOSCALL @GETPS0	; Get PSP into BX
 
 	 push	 bx		; Pass selector as argument
 	 FIXICALL IGROUP:GETSELBASE,DTE_CSIG ; Return with EAX = base address of selector
 
 	 mov	 edi,eax	; Copy to string register
-
+IMM2_USEVCPI_PSPX:
 PHARLAP_CFGBLK_STR struc
 
 	 db	 100h dup (?)	; The PSP
@@ -803,7 +821,7 @@ S32  rep movs	 <AGROUP:[edi].EDD,HPDA_TEMPLATE.EDD> ; Copy template to HPDA
 
 	 mov	 eax,[ebp].INTXX_EFL ; Get the return EFL
 	 and	 eax,not ((mask $VMHI) or (mask $IOPL) or (mask $CF))
-	 or	 eax,@DPMIOPL shl $IOPL ; IOPL=@DPMIOPL
+	 or	 eax,DPMIOPLF ; IOPL=DPMIOPLF
 	 mov	 PGROUP:[edx].TSS_EFL,eax ; Save for later use
 
 ; Save our important registers into our own TSS to restore upon return

@@ -169,6 +169,7 @@ L1:
 
 @VSAPI_MSDOS  equ 0		; Caller is for MS-DOS
 @VSAPI_386MAX equ 1		; ...		386MAX
+@VSAPI_HDPMI  equ 2		; ...		HDPMI (QMAX_HDP)
 
 ; Equates for INT23_TYP
 

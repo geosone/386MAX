@@ -285,6 +285,7 @@ IDATA	 segment use16 dword public 'idata' ; Start IDATA segment
 	 assume  ds:IGROUP
 
 	 extrn	 DPMITYPEIG:byte
+	 extrn	 DPMIOPLF:dword
 
 DLBL	 macro	 LBL
 INT21_DPMIJMP_&LBL label word
@@ -4392,7 +4393,7 @@ SS:EBP	 ==>	 INTXX_STR (nothing above INTXX_SS is valid)
 
 	 mov	 ax,VMCREGS.VMC_FL ; Get FL from structure
 	 and	 ax,not ((mask $NT) or (mask $IOPL)); NT=IOPL=0
-	 or	 ax,@DPMIOPL shl $IOPL ; IOPL=@DPMIOPL
+	 or	 ax,DPMIOPLF.ELO ; IOPL=DPMIOPLF
 	 mov	 [ebp].INTXX_EFL.ELO,ax ; Return to caller
 
 	 REGREST <eax>		; Restore
